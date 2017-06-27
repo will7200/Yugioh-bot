@@ -1,0 +1,51 @@
+from os.path import expanduser, join
+HIGH_CORR = 3
+LOW_CORR = 2
+battlemode = "NPC Battle Mode,Points: (%d,%d) at location: (%d), message: %s"
+home_location = expanduser("~")
+assets_location = join(home_location, "assets")
+bin_location = join(home_location, "bin")
+log_location = join(home_location, "log")
+
+defaults_locations = {
+    "home": home_location,
+    "assets": assets_location,
+    "bin_l": bin_location,
+    "log": log_location,
+}
+
+
+class locations(object):
+    home = home_location
+    assets = assets_location
+    bin_l = bin_location
+    log = log_location
+    take = ["home", "assets", "bin_l", "log"]
+
+    def __init__(self, dictionary):
+        self.assign(dictionary)
+
+    def assign(self, d):
+        for key, value in d.items():
+            if key in self.take:
+                setattr(self, key, value)
+            if key == "bin":
+                rkey = "bin_l"
+                setattr(self, rkey, value)
+
+    def getdict(self):
+        return {
+            "home": self.home,
+            "assets": self.assets,
+            "bin": self.bin_l,
+            "log": self.log,
+        }
+
+    def newRoot(self, rootpath):
+        self.home = rootpath
+        self.assets = join(rootpath, "assets")
+        self.bin_l = join(rootpath, "bin")
+        self.log = join(rootpath, "log")
+
+
+defaultlocations = locations(defaults_locations)
