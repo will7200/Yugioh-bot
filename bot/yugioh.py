@@ -10,6 +10,7 @@ from PIL import Image, ImageOps, ImageChops
 import bot.utils as utils
 import bot.trainer_matches as tm
 from bot.shared import *
+import threading
 root = logging.getLogger('bot')
 
 class Logger:
@@ -38,33 +39,39 @@ class Logger:
         root.info(self.getMessage())
 
 
-def SetupLogger(path,stream=False):
+def SetupLogger(path,level,stream=False,includeap=False):
     "With set up the logger and stream if wanted"
-    root.setLevel(logging.DEBUG)
+    level = getattr(logging,level,logging.DEBUG)
+    root.setLevel(level)
     fh = RotatingFileHandler(os.path.join(path, "events.log"), maxBytes=100000, backupCount=5)
-    fh.setLevel(logging.DEBUG)
+    fh.setLevel(level)
     ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.DEBUG)
+    ch.setLevel(level)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     fh.setFormatter(formatter)
     root.addHandler(fh)
     if stream:
-        rsched = logging.getLogger('apscheduler')
-        rsched.setLevel(logging.DEBUG)
-        rsched.addHandler(ch)
+        if includeap:
+            rsched = logging.getLogger('apscheduler')
+            rsched.setLevel(logging.DEBUG)
+            rsched.addHandler(ch)
         root.addHandler(ch)
-        r = logging.getLogger()
-        r.setLevel(logging.DEBUG)
-        rsched.addHandler(ch)
+        #r = logging.getLogger()
+        #r.setLevel(logging.DEBUG)
+        #r.addHandler(ch)
     return root
 
-def Auto():
+def Auto(callback):
     for x in range(0, 8):
-        time.sleep(1)
-        compareWithBackButton()
-        swipeRight()
-        Scan()
+        t = threading.currentThread()
+        callback(t)
+        while getattr(t, "do_run", True):
+            compareWithBackButton()
+            swipeRight()
+            Scan()
+        break
+    callback(None)
 
 def Scan():
     img = utils.GetImgFromScreenShot()

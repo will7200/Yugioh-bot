@@ -4,7 +4,9 @@ import bot.utils as utils
 
 data_object = {
     'next_run_at':None,
-    'last_run_at':None
+    'last_run_at':None,
+    'runnow':False,
+    'stop':False
 }
 data_object = utils.dotdict(data_object)
 data_file = "run_at.json"
@@ -17,9 +19,9 @@ def readDatefile(key=None):
         with open(data_file) as f:
             date = json.load(f, object_hook=date_hook)
     except:
-        return None
+        return utils.dotdict(data_object)
     if key == None:
-        return date
+        return utils.dotdict(date)
     if key != None and key in date:
         return date[key]
     return None
