@@ -5,6 +5,7 @@ import sys
 import cv2
 import numpy as np
 from logging.handlers import RotatingFileHandler
+import inspect
 from PIL import Image, ImageOps, ImageChops
 import bot.utils as utils
 import bot.trainer_matches as tm
@@ -53,6 +54,9 @@ def SetupLogger(path,stream=False):
         rsched.setLevel(logging.DEBUG)
         rsched.addHandler(ch)
         root.addHandler(ch)
+        r = logging.getLogger()
+        r.setLevel(logging.DEBUG)
+        rsched.addHandler(ch)
     return root
 
 def Auto():
@@ -77,20 +81,22 @@ def Scan():
             img = utils.GetImgFromScreenShot()
             logger = Logger(x, y, current_page, 'failure/BackButton', "Checking, prompts or pop ups")
             compareWithBackButton(log=logger)
+            logger.updateMessage("failure/closeButton")
+            ScanForClose(log=logger)
             logger.updateMessage("success/Gift")
             ScanForWord('ok', log=logger)
-            if utils.DiffImgPercent(img, img1) > .25:
-                logger.updateMessage("failure/closeButton")
-                ScanForClose(log=logger)
+            #if utils.DiffImgPercent(img, img1) > .25:
+        time.sleep(2)
 
 
 def Battle(x,y,current_page):
     "The main battle mode"
     root.info(battlemode %(x, y, current_page, "Starting Battle"))
-    time.sleep(1.5)
+    time.sleep(2.5)
     tapnsleep((150, 400), 2.5)
     root.debug("LOOK FOR WORD 'OK' LOW CORRERLATION")
     ScanForWord('ok', LOW_CORR)
+    #time.sleep(1)
     utils.Tap(230, 690)
     root.debug("WAITING FOR AUTODUEL BUTTON TO APPEAR")
     waitForAutoDuel()
@@ -149,6 +155,9 @@ def getcurrentPage(img):
     #print(utils.ImgToString(area, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"))
 
 def tapnsleep(point,time_sleep):
+    curframe = inspect.currentframe()
+    calframe = inspect.getouterframes(curframe, 2)
+    print('caller name:', calframe[1][3])
     x , y = point
     utils.Tap(x,y)
     time.sleep(time_sleep)
@@ -244,3 +253,14 @@ def ScanForClose(corr=HIGH_CORR, log=None):
         if log:
             log.writeLog()
         utils.Tap(x, y)
+
+def compareWithFile(x,y,filename,corr=HIGH_CORR,log=None):
+    t = tm.Trainer(img, x, y)
+    location = defaultlocations.assets
+    location = os.path.join(location, filename)
+    if t.getMatches(location, corr):
+        x, y = t.kmeans.cluster_centers_[0]
+        if log:
+            log.writeLog()
+        utils.Tap(x, y)
+    

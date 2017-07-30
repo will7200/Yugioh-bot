@@ -12,16 +12,17 @@ data_file = "run_at.json"
 def setDatafile(filepath):
     data_file=filepath
 
-def readDatefile():
+def readDatefile(key=None):
     try:
         with open(data_file) as f:
             date = json.load(f, object_hook=date_hook)
     except:
         return None
-    if 'next_run_at' in date:
-        return date['next_run_at']
-    else:
-        return None
+    if key == None:
+        return date
+    if key != None and key in date:
+        return date[key]
+    return None
 
 def datetime_handler(x):
     if isinstance(x, datetime.datetime):
@@ -38,4 +39,5 @@ def date_hook(json_dict):
 
 def writeDatefile(data):
     with open(data_file, 'w') as f:
-        json.dump(data, f, default=datetime_handler)
+        json.dump(data, f, sort_keys=True,
+        indent=4, separators=(',', ': '),default=datetime_handler)
