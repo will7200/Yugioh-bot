@@ -63,14 +63,15 @@ def SetupLogger(path,level,stream=False,includeap=False):
     return root
 
 def Auto(callback):
+    t = threading.currentThread()
+    callback(t)
     for x in range(0, 8):
-        t = threading.currentThread()
-        callback(t)
-        while getattr(t, "do_run", True):
-            compareWithBackButton()
-            swipeRight()
-            Scan()
-        break
+        if not getattr(t, "do_run", True):
+            break
+        compareWithBackButton()
+        time.sleep(1)
+        swipeRight()
+        Scan()
     callback(None)
 
 def Scan():
@@ -79,6 +80,8 @@ def Scan():
     t.whiteCircles()
     current_page = getcurrentPage(img)
     for x, y in t.circlePoints:
+        compareWithBackButton(log=None)
+        time.sleep(1)
         tapnsleep((x, y), .5)
         img1 = utils.GetImgFromScreenShot()
         battle = checkIfBattle(img1)
