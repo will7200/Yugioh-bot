@@ -3,3 +3,5 @@ log/
 tmp/
 *.pyc
 *.lnk
+temp.py
+run_at.json
