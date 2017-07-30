@@ -23,7 +23,6 @@ class Trainer:
     def getMatches(self,train,corr):
         img1 = cv2.imread(train,0) # trainImage
         img2 = self.query # queryImage
-        print(img1)
         # Initiate SIFT detector
         sift = cv2.xfeatures2d.SIFT_create()
 

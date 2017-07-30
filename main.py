@@ -28,7 +28,8 @@ bin_dir = Config.get("locations", "bin")
 log_dir = Config.get("locations", "log")
 data_file = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), "run_at.json")
-root = SetupLogger(log_dir, stream=True)
+level = Config.get("logger","level")
+root = SetupLogger(log_dir, level,stream=Config.getboolean("logger","stream"),includeap=Config.getboolean("logger","includeapischeduler"))
 defaultlocations.assign({
     "home": root_dir,
     "assets": assets_dir,
@@ -45,24 +46,27 @@ sched = BlockingScheduler()
 eventLock = threading.Lock()
 class MyEventHandler(PatternMatchingEventHandler):
     runnable = True
+    thread = None
     def on_moved(self, event):
         super(MyEventHandler, self).on_moved(event)
-        root.info("File %s was just moved" % event.src_path)
+        root.debug("File %s was just moved" % event.src_path)
 
     def on_created(self, event):
         super(MyEventHandler, self).on_created(event)
-        root.info("File %s was just created" % event.src_path)
+        root.debug("File %s was just created" % event.src_path)
 
     def on_deleted(self, event):
         super(MyEventHandler, self).on_deleted(event)
-        root.info("File %s was just deleted" % event.src_path)
+        root.debug("File %s was just deleted" % event.src_path)
 
     def on_modified(self, event):
         super(MyEventHandler, self).on_modified(event)
-        root.info("File %s was just modified" % event.src_path)
+        root.debug("File %s was just modified" % event.src_path)
         if self.runnable:
+            self.lock()
             self.check_runat()
             self.check_stop()
+            self.scheduleunlock()
     def lock(self):
         eventLock.acquire()
         self.runnable = False
@@ -75,48 +79,55 @@ class MyEventHandler(PatternMatchingEventHandler):
         when = datetime.datetime.now()+datetime.timedelta(seconds=4)
         sched.add_job(self.unlock, trigger='date', id='unlock_file at %s' %(when.isoformat()), run_date=when)
     def check_runat(self):
-        self.lock()
         next_run_at = readDatefile()
         if 'runnow' in next_run_at and next_run_at['runnow'] is True:
             root.debug("Forcing run now")
-            sched.remove_all_jobs()
-            sched.add_job(main, id='cron_main_force')
+            if self.thread is None:
+                sched.remove_all_jobs()
+                sched.add_job(main, id='cron_main_force')
+            else:
+                root.debug("Thread is currently running")
             next_run_at['runnow'] = False
             writeDatefile(next_run_at)
-            self.scheduleunlock()
     def check_stop(self):
         data = readDatefile()
-        root.debug(eventLock)
-        self.lock()
-        root.debug(data)
+        if self.thread is None:
+            data.stop = False
+            writeDatefile(data)
+            return
         if 'stop' in data and data['stop'] is True:
-            #emit stop event
+            for x in threading.enumerate():
+                if x == self.thread:
+                    x.do_run = False
             root.debug("Emitting stop event")
+            data.stop = False
+            writeDatefile(data)
         elif 'stop' in data and data['stop'] is False:
             root.debug("Emitting resume event")
-        self.scheduleunlock()
-
+    def current_thread(self,thread):
+        self.thread = thread
+    
+event_handler = MyEventHandler(patterns=[data_file])
 def main():
     data = readDatefile()
-    data = utils.dotdict(data)
     data.last_run_at = datetime.datetime.now()
     writeDatefile(data)
     try:
-        pass
         if not utils.IsNoxRunning():
             utils.StartNoxProcess("C:\\Program Files (x86)\\Nox\\bin\\Nox.exe")
             time.sleep(30)
             tapnsleep((25, 550), 10)
             tapnsleep((240, 540), 45)
         compareWithBackButton()
-        Auto()
-        utils.KillNoxProcess()
+        Auto(event_handler.current_thread)
+        if Config.getboolean("bot", "killnoxondone"):
+            utils.KillNoxProcess()
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         print(exc_type, fname, exc_tb.tb_lineno)
         print(traceback.format_exc())
-    utils.KillNoxProcess()
+    #utils.KillNoxProcess()
     data.next_run_at = datetime.datetime.now()+datetime.timedelta(hours=4)
     d = data.next_run_at
     writeDatefile(data)
@@ -148,7 +159,6 @@ if __name__ == "__main__":
         ) + datetime.timedelta(seconds=nextAt.total_seconds())
     sched.add_job(main, trigger='date', id='cron_main_at_%s' %(next_run_at.isoformat()), run_date=next_run_at)
     root.info("Tracking %s" % (data_file))
-    event_handler = MyEventHandler(patterns=[data_file])
     observer = Observer()
     observer.schedule(event_handler,os.path.dirname(
     os.path.realpath(__file__)),recursive=True)

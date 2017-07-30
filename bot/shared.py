@@ -12,6 +12,8 @@ defaults_locations = {
     "assets": assets_location,
     "bin_l": bin_location,
     "log": log_location,
+    "level": "INFO",
+    "killnoxondone":True
 }
 
 
