@@ -62,6 +62,7 @@ def SetupLogger(path,stream=False):
 def Auto():
     for x in range(0, 8):
         time.sleep(1)
+        compareWithBackButton()
         swipeRight()
         Scan()
 
