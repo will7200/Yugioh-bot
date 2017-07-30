@@ -15,6 +15,7 @@ import re
 import win32gui
 import subprocess
 import logging
+import inspect
 root = logging.getLogger('bot')
 
 #Rotate a python list
@@ -23,6 +24,10 @@ def rotate_list(l,n):
 
 
 def Tap(x, y):
+    curframe = inspect.currentframe()
+    calframe = inspect.getouterframes(curframe, 2)
+    #print('caller name:', calframe[1][3])
+    root.info("Tapping at location ({},{})".format(x,y))
     Command = "bin\\adb.exe shell input tap %d %d" % (x, y)
     os.system(Command)
 
@@ -58,33 +63,6 @@ def IsColorInCeil(ColorToCheck, RefColor, Ceil):
                 return True
     return False
 
-def RemoveColor(img, Color, Ceil):
-    pixdata = img.load()
-    for y in range(img.size[1]):
-        for x in range(img.size[0]):
-            if IsColorInCeil(pixdata[x, y], Color, Ceil):
-                pixdata[x, y] = (255, 255, 255)
-
-def RemoveBlue(img, Limit):
-    pixdata = img.load()
-    for y in range(img.size[1]):
-        for x in range(img.size[0]):
-            if pixdata[x, y][2] > Limit:
-                pixdata[x, y] = (255, 255, 255)
-
-def RemoveInSquare(img, x, y, xs, ys):
-    pixdata = img.load()
-    for yr in range(img.size[1]):
-        for xr in range(img.size[0]):
-            if (x+xs >= xr >= x) and (y+ys >= yr >= y):
-                pixdata[xr, yr] = (255, 255, 255)
-
-def RemoveNotInSquare(img, x, y, xs, ys):
-    pixdata = img.load()
-    for yr in range(img.size[1]):
-        for xr in range(img.size[0]):
-            if not((x+xs >= xr >= x) and (y+ys >= yr >= y)):
-                pixdata[xr, yr] = (255, 255, 255)
 
 def GetMeanColor(img, x, y, size=10):
     MeanColor = [0, 0, 0]
@@ -105,15 +83,6 @@ def GetImgFromScreenShot():
     img = img.convert("RGB")
     return img
 
-def HighContrast(img, Limit=126):
-    pixdata1 = img.load()
-    for xr in range(img.size[0]):
-        for yr in range(img.size[1]):
-            if pixdata1[xr, yr] >= Limit:
-                pixdata1[xr, yr] = 255
-            else:
-                pixdata1[xr, yr] = 0
-    return pixdata1
 
 def OnlyPureWhite(img1):
     pixdata1 = img1.load()
@@ -127,32 +96,6 @@ def OnlyPureWhite(img1):
                 pixdataout[xr, yr] = (0, 0, 0)
     return output
 
-def GetImgFromFile(File):
-    img = Image.open(File)
-    img = img.convert("RGB")
-    return img
-
-#END OF UTILS
-
-def BlackOrWhite(img):
-    BlackCount = 0.0
-    pixdata = img.load()
-    for xr in range(img.size[0]):
-        for yr in range(img.size[1]):
-            if pixdata[xr, yr] != (255, 255, 255):
-               pixdata[xr, yr] = (0, 0, 0)
-               BlackCount += 1
-    return (BlackCount/(img.size[0]*img.size[1]))*100
-
-def RemoveColorList(img, ColorList):
-    pixdata = img.load()
-    for x in range(img.size[0]):
-        for y in range(img.size[1]):
-            if pixdata[x, y] in ColorList:
-                pixdata[x, y] = (255, 255, 255)
-
-def random_lat_long_delta():
-    return ((random.random() * 0.00001) - 0.000005) * 3
 
 def ImgToString(img, CharSet=None):
     img.save("tmp\\ocr.png")

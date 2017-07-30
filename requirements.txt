@@ -1,0 +1,7 @@
+watchdog==0.8.3
+numpy==1.13.0
+APScheduler==3.3.1
+matplotlib==2.0.2
+Pillow==4.2.1
+scikit_learn==0.18.2
+win32gui==221.5

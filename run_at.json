@@ -1,1 +1,7 @@
-{"last_run_at": "2017-06-26T17:30:27.353347", "next_run_at": null}
+{
+    "how": "YES",
+    "last_run_at": "2017-07-30T10:25:31.865175",
+    "next_run_at": "2017-07-29T22:09:02.325631",
+    "runnow": false,
+    "stop": true
+}
