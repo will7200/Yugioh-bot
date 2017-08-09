@@ -27,7 +27,7 @@ def Tap(x, y):
     curframe = inspect.currentframe()
     calframe = inspect.getouterframes(curframe, 2)
     #print('caller name:', calframe[1][3])
-    root.info("Tapping at location ({},{})".format(x,y))
+    root.debug("Tapping at location ({},{})".format(x,y))
     Command = "bin\\adb.exe shell input tap %d %d" % (x, y)
     os.system(Command)
 
