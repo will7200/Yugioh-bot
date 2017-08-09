@@ -149,6 +149,7 @@ if __name__ == "__main__":
     t = threading.Thread(target=start, args=())
     t.start()
     next_run_at = readDatefile('next_run_at')
+    #print(next_run_at)
     if next_run_at == None:
         next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
     elif datetime.datetime.now() > next_run_at:

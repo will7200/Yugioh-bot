@@ -92,8 +92,10 @@ def Scan():
             img = utils.GetImgFromScreenShot()
             logger = Logger(x, y, current_page, 'failure/BackButton', "Checking, prompts or pop ups")
             compareWithBackButton(log=logger)
+            time.sleep(1)
             logger.updateMessage("failure/closeButton")
             ScanForClose(log=logger)
+            time.sleep(1)
             logger.updateMessage("success/Gift")
             ScanForWord('ok', log=logger)
             #if utils.DiffImgPercent(img, img1) > .25:
@@ -168,7 +170,7 @@ def getcurrentPage(img):
 def tapnsleep(point,time_sleep):
     curframe = inspect.currentframe()
     calframe = inspect.getouterframes(curframe, 2)
-    print('caller name:', calframe[1][3])
+    #print('caller name:', calframe[1][3])
     x , y = point
     utils.Tap(x,y)
     time.sleep(time_sleep)
