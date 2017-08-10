@@ -1,4 +1,6 @@
-bin/
+bin/tess/*
+bin/*.exe
+bin/*.dll
 log/
 tmp/
 *.pyc
