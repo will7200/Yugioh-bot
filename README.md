@@ -1,11 +1,7 @@
-
-Thanks to:
-* tellomichmich (https://github.com/tellomichmich/PokeNoxBot)
-</pre>
-# Yugioh Bot
+## Yugioh Bot
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
-[![Software License][ico-license]](LICENSE.md)
+[![Software License][ico-license]](LICENSE)
 [![Build Status][ico-travis]][link-travis]
 [![Coverage Status][ico-scrutinizer]][link-scrutinizer]
 [![Quality Score][ico-code-quality]][link-code-quality]
@@ -15,16 +11,16 @@ Thanks to:
 Bot to help with those npc in Yugioh Duel Links.
 
 ## Features
-Auto-duel npc
-Collect worlds rewards
+- Auto-duel npc
+- Collect worlds rewards
 
 
 ## Prerequisites
 
-Have Nox installed (https://www.bignox.com)
-Python 3.5.3 (https://www.python.org/downloads/)
-Install tesseract (http://3.onj.me/tesseract/) 
-Install cv2+contrib 3.2.0 (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv)
+Have Nox installed (https://www.bignox.com)  
+Python 3.5.3 (https://www.python.org/downloads/)  
+Install tesseract (http://3.onj.me/tesseract/)  
+Install cv2+contrib 3.2.0 (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv)  
 
 ## Install
 
@@ -37,14 +33,13 @@ $ pip install -r requirements.txt (or use conda if using)
 $ pip install (wheel_file) (cv2+contrib)
 ```
 
-Copy downloaded terreract folder into bin\tess\
-Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\nox_adb.exe as adb.exe into bin directory
-Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\AdbWinApi.dll into bin directory
-Set Nox as 480x800 phone
-Download Yugioh app
-Setup Yugioh app (first time only)
-Set Yugioh app to the most left of app and bottom on the first page(not the bottom app drawer though, checkout app_placement.png for example)
-Start the Bot
+- Copy downloaded terreract folder into bin\tess\
+- Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\nox_adb.exe as adb.exe into bin directory
+- Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\AdbWinApi.dll into bin directory
+- Set Nox as 480x800 phone
+- Download Yugioh app
+- Setup Yugioh app, link, etc... (first time only)
+- Set Yugioh app to the most left of app and bottom on the first page(not the bottom app drawer though, checkout app_placement.png for example)
 
 ## Usage
 
@@ -74,7 +69,7 @@ If you discover any security related issues, please open a issue with "Security 
 - tellomichmich (https://github.com/tellomichmich/PokeNoxBot) for the idea and some basic guides for nox usage with python
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+The MIT License (MIT). Please see [License File](LICENSE) for more information.
 
 [ico-version]: https://img.shields.io/packagist/v/:vendor/:package_name.svg?style=flat-square
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
