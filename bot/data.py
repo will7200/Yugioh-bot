@@ -17,13 +17,13 @@ def setDatafile(filepath):
 def readDatefile(key=None):
     try:
         with open(data_file) as f:
-            date = json.load(f, object_hook=date_hook)
+            data = json.load(f, object_hook=date_hook)
     except:
-        return utils.dotdict(data_object)
+        data = utils.dotdict(data_object)
     if key == None:
-        return utils.dotdict(date)
-    if key != None and key in date:
-        return date[key]
+        return data
+    if key != None and key in data:
+        return data[key]
     return None
 
 def datetime_handler(x):
