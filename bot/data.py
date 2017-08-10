@@ -18,6 +18,7 @@ def readDatefile(key=None):
     try:
         with open(data_file) as f:
             data = json.load(f, object_hook=date_hook)
+            data = utils.dotdict(data)
     except:
         data = utils.dotdict(data_object)
     if key == None:
