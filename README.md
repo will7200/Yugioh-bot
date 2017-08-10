@@ -43,7 +43,7 @@ Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\AdbWinApi.dll into bin directory
 Set Nox as 480x800 phone
 Download Yugioh app
 Setup Yugioh app (first time only)
-Set Yugioh app to the most left of app and bottom on the first page(not the bottom app drawer though)
+Set Yugioh app to the most left of app and bottom on the first page(not the bottom app drawer though, checkout app_placement.png for example)
 Start the Bot
 
 ## Usage
