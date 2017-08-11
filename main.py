@@ -29,13 +29,14 @@ log_dir = Config.get("locations", "log")
 data_file = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), "run_at.json")
 level = Config.get("logger","level")
-root = SetupLogger(log_dir, level,stream=Config.getboolean("logger","stream"),includeap=Config.getboolean("logger","includeapischeduler"))
 defaultlocations.assign({
     "home": root_dir,
     "assets": assets_dir,
     "log": log_dir,
     "bin": bin_dir,
 })
+defaultlocations.makedirs()
+root = SetupLogger(log_dir, level,stream=Config.getboolean("logger","stream"),includeap=Config.getboolean("logger","includeapischeduler"))
 setDatafile(data_file)
 sched = BlockingScheduler()
 
@@ -44,23 +45,23 @@ sched = BlockingScheduler()
 
 # implent mutex
 eventLock = threading.Lock()
-class MyEventHandler(PatternMatchingEventHandler):
+class WatchFile(PatternMatchingEventHandler):
     runnable = True
     thread = None
     def on_moved(self, event):
-        super(MyEventHandler, self).on_moved(event)
+        super(WatchFile, self).on_moved(event)
         root.debug("File %s was just moved" % event.src_path)
 
     def on_created(self, event):
-        super(MyEventHandler, self).on_created(event)
+        super(WatchFile, self).on_created(event)
         root.debug("File %s was just created" % event.src_path)
 
     def on_deleted(self, event):
-        super(MyEventHandler, self).on_deleted(event)
+        super(WatchFile, self).on_deleted(event)
         root.debug("File %s was just deleted" % event.src_path)
 
     def on_modified(self, event):
-        super(MyEventHandler, self).on_modified(event)
+        super(WatchFile, self).on_modified(event)
         root.debug("File %s was just modified" % event.src_path)
         if self.runnable:
             self.lock()
@@ -107,7 +108,7 @@ class MyEventHandler(PatternMatchingEventHandler):
     def current_thread(self,thread):
         self.thread = thread
     
-event_handler = MyEventHandler(patterns=[data_file])
+event_handler = WatchFile(patterns=[data_file])
 def main():
     data = readDatefile()
     data.last_run_at = datetime.datetime.now()

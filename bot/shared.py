@@ -1,4 +1,5 @@
 from os.path import expanduser, join
+import os as _os
 HIGH_CORR = 3
 LOW_CORR = 2
 battlemode = "NPC Battle Mode,Points: (%d,%d) at location: (%d), message: %s"
@@ -26,6 +27,7 @@ class locations(object):
 
     def __init__(self, dictionary):
         self.assign(dictionary)
+        #self.makedirs()
 
     def assign(self, d):
         for key, value in d.items():
@@ -48,6 +50,12 @@ class locations(object):
         self.assets = join(rootpath, "assets")
         self.bin_l = join(rootpath, "bin")
         self.log = join(rootpath, "log")
+
+    def makedirs(self):
+        for folder in self.take:
+            folder = getattr(self,folder)
+            if not _os.path.exists(folder):
+                _os.mkdir(folder)
 
 
 defaultlocations = locations(defaults_locations)
