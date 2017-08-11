@@ -170,7 +170,7 @@ def IsNoxRunning():
 
 def StartNoxProcess(NoxPath):
     try:
-        root.warning("Starting Nox...")
+        root.info("Starting Nox...")
         process = subprocess.Popen(NoxPath, shell=True, stdout=subprocess.PIPE)
     except:
         root.error("The program can't run Nox")
