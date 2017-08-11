@@ -13,10 +13,10 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 from bot.data import setDatafile, writeDatefile, readDatefile, data_object
 from bot.yugioh import tapnsleep, SetupLogger, compareWithBackButton, Auto
-from bot.shared import defaults_locations, home_location, defaultlocations
+from bot.shared import defaults_config, home_location, defaultlocations
 
 #sys.stdout = open(os.path.dirname(os.path.realpath(__file__))+'\\file1.txt', 'a')
-Config = configparser.SafeConfigParser(defaults=defaults_locations)
+Config = configparser.SafeConfigParser(defaults=defaults_config)
 Config.read("config.ini")
 root_dir = Config.get("locations", "home")
 if root_dir != home_location:
@@ -115,7 +115,7 @@ def main():
     writeDatefile(data)
     try:
         if not utils.IsNoxRunning():
-            utils.StartNoxProcess("C:\\Program Files (x86)\\Nox\\bin\\Nox.exe")
+            utils.StartNoxProcess(os.path.join(Config.get('bot','noxlocation'),'Nox.exe'))
             time.sleep(30)
             tapnsleep((25, 550), 10)
             tapnsleep((240, 540), 45)

@@ -8,13 +8,14 @@ assets_location = join(home_location, "assets")
 bin_location = join(home_location, "bin")
 log_location = join(home_location, "log")
 
-defaults_locations = {
+defaults_config = {
     "home": home_location,
     "assets": assets_location,
     "bin_l": bin_location,
     "log": log_location,
     "level": "INFO",
-    "killnoxondone":True
+    "killnoxondone":True,
+    "noxlocation":r'C:\Program Files (x86)\Nox\bin'
 }
 
 
@@ -58,4 +59,4 @@ class locations(object):
                 _os.mkdir(folder)
 
 
-defaultlocations = locations(defaults_locations)
+defaultlocations = locations(defaults_config)
