@@ -31,7 +31,7 @@ $ pip install -r requirements.txt (or use conda if using)
 $ pip install (wheel_file) (cv2+contrib)
 ```
 
-- Copy downloaded terreract folder into bin\tess\
+- Copy downloaded tesseract folder into bin\tess\
 - Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\nox_adb.exe as adb.exe into bin directory
 - Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\AdbWinApi.dll into bin directory
 - Set Nox as 480x800 phone
@@ -44,6 +44,11 @@ $ pip install (wheel_file) (cv2+contrib)
 ``` bash
 $ python main.py
 ```
+
+## Wakatime
+
+Check out what files I'm working on through [WakaTime](https://wakatime.com/@will2700/projects/fofjloaywu)  
+
 
 ## Change log
 
