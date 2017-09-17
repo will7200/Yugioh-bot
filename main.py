@@ -26,19 +26,19 @@ if root_dir != home_location:
 log_dir = Config.get("locations", "log")
 data_file = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), "run_at.json")
-level = Config.get("logger","level")
-root = SetupLogger(log_dir, level,stream=Config.getboolean("logger","stream"),includeap=Config.getboolean("logger","includeapischeduler"))
+level = Config.get("logger", "level")
+root = SetupLogger(log_dir, level, stream=Config.getboolean(
+    "logger", "stream"), includeap=Config.getboolean("logger", "includeapischeduler"))
 setDatafile(data_file)
 sched = BlockingScheduler()
 
-
-# os.chdir("C:\\Users\\wf08\\OneDrive\\Yu-gi-oh_bot")
-
-# implent mutex
 eventLock = threading.Lock()
+
+
 class WatchFile(PatternMatchingEventHandler):
     runnable = True
     thread = None
+
     def on_moved(self, event):
         super(WatchFile, self).on_moved(event)
         root.debug("File %s was just moved" % event.src_path)
@@ -59,17 +59,22 @@ class WatchFile(PatternMatchingEventHandler):
             self.check_runat()
             self.check_stop()
             self.scheduleunlock()
+
     def lock(self):
         eventLock.acquire()
         self.runnable = False
         eventLock.release()
+
     def unlock(self):
         eventLock.acquire()
         self.runnable = True
         eventLock.release()
+
     def scheduleunlock(self):
-        when = datetime.datetime.now()+datetime.timedelta(seconds=4)
-        sched.add_job(self.unlock, trigger='date', id='unlock_file at %s' %(when.isoformat()), run_date=when)
+        when = datetime.datetime.now() + datetime.timedelta(seconds=4)
+        sched.add_job(self.unlock, trigger='date', id='unlock_file at %s' % (
+            when.isoformat()), run_date=when)
+
     def check_runat(self):
         next_run_at = readDatefile()
         if 'runnow' in next_run_at and next_run_at['runnow'] is True:
@@ -81,6 +86,7 @@ class WatchFile(PatternMatchingEventHandler):
                 root.debug("Thread is currently running")
             next_run_at['runnow'] = False
             writeDatefile(next_run_at)
+
     def check_stop(self):
         data = readDatefile()
         if self.thread is None:
@@ -96,39 +102,40 @@ class WatchFile(PatternMatchingEventHandler):
             writeDatefile(data)
         elif 'stop' in data and data['stop'] is False:
             root.debug("Emitting resume event")
-    def current_thread(self,thread):
+
+    def current_thread(self, thread):
         self.thread = thread
-    
+
+
 event_handler = WatchFile(patterns=[data_file])
+
+
 def main():
     data = readDatefile()
     data.last_run_at = datetime.datetime.now()
     writeDatefile(data)
     try:
         if not utils.IsNoxRunning():
-            utils.StartNoxProcess(os.path.join(Config.get('bot','noxlocation'),'Nox.exe'))
+            utils.StartNoxProcess(os.path.join(
+                Config.get('bot', 'noxlocation'), 'Nox.exe'))
             time.sleep(30)
             tapnsleep((25, 550), 10)
             tapnsleep((240, 540), 45)
         compareWithBackButton()
         bot = DL_Bot(sched)
         bot.Auto(event_handler.current_thread)
-        #bot.debug_battle()
         if Config.getboolean("bot", "killnoxondone"):
-            pass
-            #utils.KillNoxProcess()
+            utils.KillNoxProcess()
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         print(exc_type, fname, exc_tb.tb_lineno)
         print(traceback.format_exc())
-    #utils.KillNoxProcess()
-    data.next_run_at = datetime.datetime.now()+datetime.timedelta(hours=4)
+    data.next_run_at = datetime.datetime.now() + datetime.timedelta(hours=4)
     d = data.next_run_at
     writeDatefile(data)
-    sched.add_job(main, trigger='date', id='cron_main_at_%s' %(d.isoformat()), run_date=data.next_run_at)
-    # ScanForWord('ok')
-    # runmusic()
+    sched.add_job(main, trigger='date', id='cron_main_at_%s' %
+                  (d.isoformat()), run_date=data.next_run_at)
 
 
 def start():
@@ -144,7 +151,7 @@ if __name__ == "__main__":
     t = threading.Thread(target=start, args=())
     t.start()
     next_run_at = readDatefile('next_run_at')
-    if Config.getboolean("bot","startonstartup"):
+    if Config.getboolean("bot", "startonstartup"):
         next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=1)
     elif next_run_at == None:
         next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
@@ -154,12 +161,13 @@ if __name__ == "__main__":
         nextAt = next_run_at - datetime.datetime.now()
         next_run_at = datetime.datetime.now(
         ) + datetime.timedelta(seconds=nextAt.total_seconds())
-    sched.add_job(main, trigger='date', id='cron_main_at_%s' %(next_run_at.isoformat()), run_date=next_run_at)
+    sched.add_job(main, trigger='date', id='cron_main_at_%s' %
+                  (next_run_at.isoformat()), run_date=next_run_at)
     root.info("Tracking %s" % (data_file))
-    root.info('Next run at %s' %(next_run_at.isoformat()))
+    root.info('Next run at %s' % (next_run_at.isoformat()))
     observer = Observer()
-    observer.schedule(event_handler,os.path.dirname(
-    os.path.realpath(__file__)),recursive=True)
+    observer.schedule(event_handler, os.path.dirname(
+        os.path.realpath(__file__)), recursive=True)
     observer.start()
     t.join()
     #r = input("Get Some Input")
