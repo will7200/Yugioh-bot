@@ -12,7 +12,7 @@ from watchdog.events import PatternMatchingEventHandler
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 from bot.data import setDatafile, writeDatefile, readDatefile, data_object
-from bot.yugioh import tapnsleep, SetupLogger, compareWithBackButton, Auto
+from bot.yugioh import tapnsleep, SetupLogger, compareWithBackButton, DL_Bot
 from bot.shared import defaults_config, home_location, defaultlocations
 
 #sys.stdout = open(os.path.dirname(os.path.realpath(__file__))+'\\file1.txt', 'a')
@@ -23,19 +23,10 @@ if root_dir != home_location:
     defaultlocations.newRoot(root_dir)
     Config = configparser.SafeConfigParser(defaults=defaultlocations.getdict())
     Config.read("config.ini")
-assets_dir = Config.get("locations", "assets")
-bin_dir = Config.get("locations", "bin")
 log_dir = Config.get("locations", "log")
 data_file = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), "run_at.json")
 level = Config.get("logger","level")
-defaultlocations.assign({
-    "home": root_dir,
-    "assets": assets_dir,
-    "log": log_dir,
-    "bin": bin_dir,
-})
-defaultlocations.makedirs()
 root = SetupLogger(log_dir, level,stream=Config.getboolean("logger","stream"),includeap=Config.getboolean("logger","includeapischeduler"))
 setDatafile(data_file)
 sched = BlockingScheduler()
@@ -120,9 +111,12 @@ def main():
             tapnsleep((25, 550), 10)
             tapnsleep((240, 540), 45)
         compareWithBackButton()
-        Auto(event_handler.current_thread)
+        bot = DL_Bot(sched)
+        bot.Auto(event_handler.current_thread)
+        #bot.debug_battle()
         if Config.getboolean("bot", "killnoxondone"):
-            utils.KillNoxProcess()
+            pass
+            #utils.KillNoxProcess()
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -150,7 +144,9 @@ if __name__ == "__main__":
     t = threading.Thread(target=start, args=())
     t.start()
     next_run_at = readDatefile('next_run_at')
-    if next_run_at == None:
+    if Config.getboolean("bot","startonstartup"):
+        next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=1)
+    elif next_run_at == None:
         next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
     elif datetime.datetime.now() > next_run_at:
         next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
@@ -160,6 +156,7 @@ if __name__ == "__main__":
         ) + datetime.timedelta(seconds=nextAt.total_seconds())
     sched.add_job(main, trigger='date', id='cron_main_at_%s' %(next_run_at.isoformat()), run_date=next_run_at)
     root.info("Tracking %s" % (data_file))
+    root.info('Next run at %s' %(next_run_at.isoformat()))
     observer = Observer()
     observer.schedule(event_handler,os.path.dirname(
     os.path.realpath(__file__)),recursive=True)
