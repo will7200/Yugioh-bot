@@ -7,7 +7,7 @@ home_location = expanduser("~")
 assets_location = join(home_location, "assets")
 bin_location = join(home_location, "bin")
 log_location = join(home_location, "log")
-
+cache_generation = join(assets_location,"cache_g.p")
 defaults_config = {
     "home": home_location,
     "assets": assets_location,
@@ -24,11 +24,15 @@ class locations(object):
     assets = assets_location
     bin_l = bin_location
     log = log_location
+    cache_generation = cache_generation
     take = ["home", "assets", "bin_l", "log"]
 
     def __init__(self, dictionary):
         self.assign(dictionary)
+        self.update_individual()
         #self.makedirs()
+    def update_individual(self):
+        self.cache_generation = join(self.assets,"cache_g.p")
 
     def assign(self, d):
         for key, value in d.items():
@@ -51,6 +55,7 @@ class locations(object):
         self.assets = join(rootpath, "assets")
         self.bin_l = join(rootpath, "bin")
         self.log = join(rootpath, "log")
+        self.update_individual()
 
     def makedirs(self):
         for folder in self.take:
