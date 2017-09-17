@@ -115,6 +115,7 @@ class DL_Bot(object):
         except apscheduler.jobstores.base.JobLookupError:
             if signal_done:
                 self.current_battle = False
+                self.lock.release()
                 return
         when = datetime.datetime.now() + datetime.timedelta(seconds=delay)
         job_id = 'cron_check_battle_at_%s' % (when.isoformat())
@@ -136,8 +137,9 @@ class DL_Bot(object):
             img1 = utils.GetImgFromScreenShot()
             battle = checkIfBattle(img1)
             time.sleep(2.5)
-            tapnsleep((150, 400), 2.5)
-            battle = verifyBattle()
+            if battle:
+                tapnsleep((150, 400), 2.5)
+                battle = verifyBattle()
             if battle:
                 self.current_battle = True
                 root.info(battlemode % (x, y, current_page, "Starting Battle"))
@@ -150,13 +152,20 @@ class DL_Bot(object):
                 img = utils.GetImgFromScreenShot()
                 logger = Logger(
                     x, y, current_page, 'failure/BackButton', "Checking, prompts or pop ups")
-                compareWithBackButton(log=logger)
-                time.sleep(1)
+                backbutton = True
+                while backbutton:
+                    backbutton = compareWithBackButton(log=logger)
+                    time.sleep(1)
                 logger.updateMessage("failure/closeButton")
-                ScanForClose(log=logger)
-                time.sleep(1)
+                closebutton = True
+                while closebutton:
+                    closebutton = ScanForClose(log=logger)
+                    time.sleep(1)
                 logger.updateMessage("success/Gift")
-                ScanForWord('ok', log=logger)
+                okbutton = True
+                while okbutton:
+                    okbutton = ScanForWord('ok', log=logger)
+                    time.sleep(1)
                 # if utils.DiffImgPercent(img, img1) > .25:
             time.sleep(2)
 
@@ -179,9 +188,11 @@ def Battle(x=0, y=0, current_page=0, CheckBattle=None):
     waitForWhiteBottom()
     time.sleep(.5)
     tapnsleep((230, 750), .1)
-    dialog = checkIfBattle(utils.GetImgFromScreenShot())
-    if dialog:
-        utils.Tap(230, 750)
+    dialog = True
+    while dialog:
+        dialog = checkIfBattle(utils.GetImgFromScreenShot())
+        if dialog:
+            utils.Tap(230, 750)
     time.sleep(.5)
     ScanForWord('ok', LOW_CORR)
     time.sleep(.1)
@@ -253,6 +264,7 @@ def waitFor(word, tryScanning=False):
     root.debug("WAITING FOR {} BUTTON TO APPEAR".format(word))
     ok = ''
     while ok != word:
+        #root.debug("waiting for {}".format(word))
         img = utils.GetImgFromScreenShot()
         img = np.array(img)
         img = img[745:770, 210:270]
@@ -315,6 +327,8 @@ def compareWithBackButton(corr=HIGH_CORR, log=None):
         if log:
             log.writeLog()
         utils.Tap(x, y)
+        return True
+    return False
 
 
 def ScanForWord(word, corr=HIGH_CORR, log=None):
@@ -329,6 +343,8 @@ def ScanForWord(word, corr=HIGH_CORR, log=None):
         if log:
             log.writeLog()
         utils.Tap(x, y)
+        return True
+    return False
 
 
 def ScanForClose(corr=HIGH_CORR, log=None):
@@ -343,6 +359,8 @@ def ScanForClose(corr=HIGH_CORR, log=None):
         if log:
             log.writeLog()
         utils.Tap(x, y)
+        return True
+    return False
 
 
 def compareWithFile(x, y, filename, corr=HIGH_CORR, log=None):
