@@ -7,15 +7,16 @@ home_location = expanduser("~")
 assets_location = join(home_location, "assets")
 bin_location = join(home_location, "bin")
 log_location = join(home_location, "log")
-cache_generation = join(assets_location,"cache_g.p")
+cache_generation = join(assets_location, "cache_g.p")
+pickle_version_cache = 'v2'
 defaults_config = {
     "home": home_location,
     "assets": assets_location,
     "bin_l": bin_location,
     "log": log_location,
     "level": "INFO",
-    "killnoxondone":True,
-    "noxlocation":r'C:\Program Files (x86)\Nox\bin'
+    "killnoxondone": True,
+    "noxlocation": r'C:\Program Files (x86)\Nox\bin'
 }
 
 
@@ -30,9 +31,10 @@ class locations(object):
     def __init__(self, dictionary):
         self.assign(dictionary)
         self.update_individual()
-        #self.makedirs()
+        # self.makedirs()
+
     def update_individual(self):
-        self.cache_generation = join(self.assets,"cache_g.p")
+        self.cache_generation = join(self.assets, "cache_g.p")
 
     def assign(self, d):
         for key, value in d.items():
@@ -59,7 +61,7 @@ class locations(object):
 
     def makedirs(self):
         for folder in self.take:
-            folder = getattr(self,folder)
+            folder = getattr(self, folder)
             if not _os.path.exists(folder):
                 _os.mkdir(folder)
 
