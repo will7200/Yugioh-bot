@@ -12,7 +12,7 @@ import bot.trainer_matches as tm
 from bot.shared import *
 import threading
 import datetime
-from bot.defined import auto_duel_box, determine_autoduel_stats
+from bot.defined import auto_duel_box, determine_autoduel_stats, determine_duel_variant, duel_variant_v
 import apscheduler
 root = logging.getLogger('bot')
 
@@ -79,9 +79,11 @@ class DL_Bot(object):
     current_job = None
     lock = None
     current_battle = None
+
     def __init__(self, scheduler):
         self.scheduler = scheduler
         self.lock = threading.Lock()
+
     def Auto(self, callback):
         t = threading.currentThread()
         callback(t)
@@ -144,40 +146,43 @@ class DL_Bot(object):
                 self.current_battle = True
                 root.info(battlemode % (x, y, current_page, "Starting Battle"))
                 ScanForWord('ok', LOW_CORR)
-                # time.sleep(1)
-                utils.Tap(230, 690)
+                p, v = battle
+                tapnsleep(p, 0)
                 Battle(x, y, current_page, self.CheckBattle)
             else:
                 time.sleep(2)
                 img = utils.GetImgFromScreenShot()
                 logger = Logger(
                     x, y, current_page, 'failure/BackButton', "Checking, prompts or pop ups")
-                backbutton = True
-                while backbutton:
-                    backbutton = compareWithBackButton(log=logger)
-                    time.sleep(1)
+                loopscan(compareWithBackButton, **{'log': logger})
                 logger.updateMessage("failure/closeButton")
-                closebutton = True
-                while closebutton:
-                    closebutton = ScanForClose(log=logger)
-                    time.sleep(1)
+                loopscan(ScanForClose, **{'log': logger})
                 logger.updateMessage("success/Gift")
-                okbutton = True
-                while okbutton:
-                    okbutton = ScanForWord('ok', log=logger)
-                    time.sleep(1)
+                loopscan(ScanForWord, **{'word': 'ok', 'log': logger})
                 # if utils.DiffImgPercent(img, img1) > .25:
             time.sleep(2)
 
 
-def Battle(x=0, y=0, current_page=0, CheckBattle=None):
+def loopscan(fn, **kwargs):
+    limit = 3
+    doit = True
+    l = 0
+    while doit and l <= limit:
+        l += 1
+        doit = fn(**kwargs)
+        time.sleep(1)
+
+
+def Battle(x=0, y=0, current_page=0, CheckBattle=None, version=2):
     "The main battle mode"
-    waitForAutoDuel()
-    CheckBattle()
-    root.debug("WAITING FOR DUEL TO FINISH")
+    if version != 2:
+        waitForAutoDuel()
+        CheckBattle()
+        root.debug("WAITING FOR DUEL TO FINISH")
     waitFor('OK')
     root.info(battlemode % (x, y, current_page, "Battle Ended"))
-    CheckBattle(True)
+    if version != 2:
+        CheckBattle(True)
     time.sleep(.5)
     utils.Tap(230, 750)
     waitFor('NEXT', True)
@@ -249,16 +254,37 @@ def checkIfBattle(img):
         return True
     return False
 
+
 def verifyBattle():
-    img = utils.GetImgFromScreenShot()
-    img = np.array(img)
-    img = img[680:710, 210:265]
+    try_times = 3
+    version = 0
+    while True:
+        try_times -= 1
+        img = utils.GetImgFromScreenShot()
+        img = np.array(img)
+        if determine_duel_variant(img):
+            pointer = duel_variant_v['v2-autoduel']
+            img = img[680:710, 300:420]
+            version = 2
+            break
+        else:
+            if try_times == 0:
+                pointer = duel_variant_v['v1']
+                img = img[680:710, 210:265]
+                version = 1
+
+    # img = img[680:710, 90:150] new version duel
     img = Image.fromarray(img).convert('L')
     ok = utils.ImgToString(img,
-                            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
-    if ok.startswith("Due") or ok == "Duel":
-        return True
-    return False
+                           "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").lower()
+    if version == 1:
+        if ok.startswith("due") or ok == "duel":
+            return (pointer, version)
+    if version == 2:
+        if ok.startswith("auto") or 'auto' in ok:
+            return (pointer, version)
+    return None
+
 
 def waitFor(word, tryScanning=False):
     root.debug("WAITING FOR {} BUTTON TO APPEAR".format(word))
