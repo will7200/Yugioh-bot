@@ -102,7 +102,7 @@ def generate_duel_button_stats():
 # TODO: IMPLEMENT METHOD TO DETERMINE THE ACCURACY OR THE LIKELHOOD THAT THIS IS AN AUTODUEL BUTTON
 
 
-def determine_autoduel_stats(img):
+def determine_autoduel_status(img):
     vals = get_cache()
     autodueloff = vals['auto_duel_off']
     autoduelon = vals['auto_duel_on']

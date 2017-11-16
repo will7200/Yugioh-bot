@@ -12,7 +12,7 @@ import bot.trainer_matches as tm
 from bot.shared import *
 import threading
 import datetime
-from bot.defined import auto_duel_box, determine_autoduel_stats, determine_duel_variant, duel_variant_v
+from bot.defined import auto_duel_box, determine_autoduel_status, determine_duel_variant, duel_variant_v
 import apscheduler
 root = logging.getLogger('bot')
 
@@ -23,12 +23,12 @@ class Logger:
         self.y = y
         self.page = page
         self.status = message
-        self.setMode(mode)
+        self.set_mode(mode)
 
-    def updateMessage(self, message):
+    def update_message(self, message):
         self.status = message
 
-    def setMode(self, mode=''):
+    def set_mode(self, mode=''):
         self.mode = mode
         if mode == 'Battle Mode' or mode == 1:
             self.format = battlemode
@@ -37,17 +37,17 @@ class Logger:
         else:
             self.format = "Mode Unspecified, status: %s"
 
-    def getMessage(self):
+    def get_message(self):
         if self.mode == 'Battle Mode' or self.mode == 1:
             return self.format % (self.x, self.y, self.page, self.status)
         else:
             return self.format % (self.status)
 
     def writeLog(self):
-        root.info(self.getMessage())
+        root.info(self.get_message())
 
 
-def SetupLogger(path, level, stream=False, includeap=False):
+def setup_logger(path, level, stream=False, includeap=False):
     "With set up the logger and stream if wanted"
     level = getattr(logging, level, logging.DEBUG)
     root.setLevel(level)
@@ -84,33 +84,33 @@ class DL_Bot(object):
         self.scheduler = scheduler
         self.lock = threading.Lock()
 
-    def Auto(self, callback):
+    def auto(self, callback):
         t = threading.currentThread()
         callback(t)
         for x in range(0, 8):
             if not getattr(t, "do_run", True):
                 break
-            compareWithBackButton()
+            compare_with_back_button()
             time.sleep(1)
-            swipeRight()
-            self.Scan()
+            swipe_right()
+            self.scan()
         callback(None)
 
     def debug_battle(self):
-        Battle(CheckBattle=self.CheckBattle)
+        Battle(CheckBattle=self.check_battle)
         # self.CheckBattle()
 
     def __check_battle_is_running__(self):
         root.debug("CHECKING AUTO DUEL STATUS")
         img = cv2.cvtColor(
             np.array(utils.GetImgFromScreenShot()), cv2.COLOR_RGB2BGR)
-        status = determine_autoduel_stats(img)
+        status = determine_autoduel_status(img)
         root.debug("AUTO_DUEL STATUS: {}".format(status))
         if not status and self.current_battle:
             click_auto_duel()
-            self.CheckBattle()
+            self.check_battle()
 
-    def CheckBattle(self, signal_done=False, delay=5):
+    def check_battle(self, signal_done=False, delay=5):
         self.lock.acquire()
         try:
             self.scheduler.remove_job(self.current_job)
@@ -127,43 +127,43 @@ class DL_Bot(object):
         self.lock.release()
         root.debug(job_id)
 
-    def Scan(self):
+    def scan(self):
         img = utils.GetImgFromScreenShot()
         t = tm.Trainer(img)
         t.whiteCircles()
-        current_page = getcurrentPage(img)
+        current_page = get_current_page(img)
         for x, y in t.circlePoints:
-            compareWithBackButton(log=None)
+            compare_with_back_button(log=None)
             time.sleep(1)
             tapnsleep((x, y), .5)
             img1 = utils.GetImgFromScreenShot()
-            battle = checkIfBattle(img1)
+            battle = check_if_battle(img1)
             time.sleep(2.5)
             if battle:
                 tapnsleep((150, 400), 2.5)
-                battle = verifyBattle()
+                battle = verify_battle()
             if battle:
                 self.current_battle = True
                 root.info(battlemode % (x, y, current_page, "Starting Battle"))
-                ScanForWord('ok', LOW_CORR)
+                scan_for_word('ok', LOW_CORR)
                 p, v = battle
                 tapnsleep(p, 0)
-                Battle(x, y, current_page, self.CheckBattle)
+                Battle(x, y, current_page, self.check_battle)
             else:
                 time.sleep(2)
                 img = utils.GetImgFromScreenShot()
                 logger = Logger(
                     x, y, current_page, 'failure/BackButton', "Checking, prompts or pop ups")
-                loopscan(compareWithBackButton, **{'log': logger})
-                logger.updateMessage("failure/closeButton")
-                loopscan(ScanForClose, **{'log': logger})
-                logger.updateMessage("success/Gift")
-                loopscan(ScanForWord, **{'word': 'ok', 'log': logger})
+                loop_scan(compare_with_back_button, **{'log': logger})
+                logger.update_message("failure/closeButton")
+                loop_scan(scan_for_close, **{'log': logger})
+                logger.update_message("success/Gift")
+                loop_scan(scan_for_word, **{'word': 'ok', 'log': logger})
                 # if utils.DiffImgPercent(img, img1) > .25:
             time.sleep(2)
 
 
-def loopscan(fn, **kwargs):
+def loop_scan(fn, **kwargs):
     limit = 3
     doit = True
     l = 0
@@ -176,40 +176,40 @@ def loopscan(fn, **kwargs):
 def Battle(x=0, y=0, current_page=0, CheckBattle=None, version=2):
     "The main battle mode"
     if version != 2:
-        waitForAutoDuel()
+        wait_for_auto_duel()
         CheckBattle()
         root.debug("WAITING FOR DUEL TO FINISH")
-    waitFor('OK')
+    wait_for('OK')
     root.info(battlemode % (x, y, current_page, "Battle Ended"))
     if version != 2:
         CheckBattle(True)
     time.sleep(.5)
     utils.Tap(230, 750)
-    waitFor('NEXT', True)
+    wait_for('NEXT', True)
     tapnsleep((230, 750), .5)
-    waitFor('NEXT')
+    wait_for('NEXT')
     time.sleep(.3)
     utils.Tap(230, 750)
-    waitForWhiteBottom(True)
+    wait_for_white_bottom(True)
     time.sleep(.5)
     tapnsleep((230, 750), .1)
     dialog = True
     while dialog:
-        dialog = checkIfBattle(utils.GetImgFromScreenShot())
+        dialog = check_if_battle(utils.GetImgFromScreenShot())
         if dialog:
             utils.Tap(230, 750)
     time.sleep(.5)
-    ScanForWord('ok', LOW_CORR)
+    scan_for_word('ok', LOW_CORR)
     time.sleep(.1)
-    ScanForWord('ok', LOW_CORR)
+    scan_for_word('ok', LOW_CORR)
 
 
-def swipeRight():
+def swipe_right():
     utils.Swipe(0, 500, 100, 500)
     time.sleep(2)
 
 
-def getcurrentPage(img):
+def get_current_page(img):
     left = 0
     top = 775
     width = 480
@@ -244,7 +244,7 @@ def tapnsleep(point, time_sleep):
     time.sleep(time_sleep)
 
 
-def checkIfBattle(img):
+def check_if_battle(img):
     img = np.array(img)
     img = img[750:800, 0:400]
     BLUE_MIN = np.array([250, 250, 250], np.uint8)
@@ -255,7 +255,7 @@ def checkIfBattle(img):
     return False
 
 
-def verifyBattle():
+def verify_battle():
     try_times = 3
     version = 0
     while True:
@@ -286,7 +286,7 @@ def verifyBattle():
     return None
 
 
-def waitFor(word, tryScanning=False):
+def wait_for(word, tryScanning=False):
     root.debug("WAITING FOR {} BUTTON TO APPEAR".format(word))
     ok = ''
     while ok != word:
@@ -297,7 +297,7 @@ def waitFor(word, tryScanning=False):
         img = Image.fromarray(img)
         try:
             if tryScanning:
-                ScanForWord('ok', LOW_CORR)
+                scan_for_word('ok', LOW_CORR)
             ok = utils.ImgToString(img,
                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
         except:
@@ -308,7 +308,7 @@ def waitFor(word, tryScanning=False):
         time.sleep(2)
 
 
-def waitForAutoDuel():
+def wait_for_auto_duel():
     root.debug("WAITING FOR AUTO-DUEL TO APPEAR")
     word = ''
     while 'Auto-Duel' not in word and 'AutoDuel' not in word:
@@ -329,21 +329,21 @@ def click_auto_duel():
     utils.Tap(356, 85)
 
 
-def waitForWhiteBottom(tryScanning=False):
+def wait_for_white_bottom(tryScanning=False):
     root.debug("WAITING FOR WHITE BOTTOM TO APPEAR")
     img = utils.GetImgFromScreenShot()
-    b = checkIfBattle(img)
+    b = check_if_battle(img)
     while not b:
         if tryScanning:
-            ScanForWord('ok', LOW_CORR)
+            scan_for_word('ok', LOW_CORR)
         img = utils.GetImgFromScreenShot()
-        b = checkIfBattle(img)
+        b = check_if_battle(img)
         if b:
             break
         time.sleep(1)
 
 
-def compareWithBackButton(corr=HIGH_CORR, log=None):
+def compare_with_back_button(corr=HIGH_CORR, log=None):
     corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
     root.debug("LOOKING FOR BACK BUTTON, {} CORRERLATION".format(corrword))
     img = utils.GetImgFromScreenShot()
@@ -359,7 +359,7 @@ def compareWithBackButton(corr=HIGH_CORR, log=None):
     return False
 
 
-def ScanForWord(word, corr=HIGH_CORR, log=None):
+def scan_for_word(word, corr=HIGH_CORR, log=None):
     corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
     root.debug("LOOK FOR WORD '{}', {} CORRERLATION".format(word, corrword))
     img = utils.GetImgFromScreenShot()
@@ -375,7 +375,7 @@ def ScanForWord(word, corr=HIGH_CORR, log=None):
     return False
 
 
-def ScanForClose(corr=HIGH_CORR, log=None):
+def scan_for_close(corr=HIGH_CORR, log=None):
     corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
     root.debug("LOOKING FOR CLOSE BUTTON, {} CORRERLATION".format(corrword))
     img = utils.GetImgFromScreenShot()
@@ -391,7 +391,7 @@ def ScanForClose(corr=HIGH_CORR, log=None):
     return False
 
 
-def compareWithFile(x, y, filename, corr=HIGH_CORR, log=None):
+def compare_with_file(x, y, filename, corr=HIGH_CORR, log=None):
     corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
     root.debug("Compare image with asset, {} CORRERLATION".format(corrword))
     t = tm.Trainer(img, x, y)

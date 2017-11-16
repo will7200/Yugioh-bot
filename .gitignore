@@ -9,3 +9,4 @@ temp.py
 run_at.json
 *.p
 test.py
+.vscode/

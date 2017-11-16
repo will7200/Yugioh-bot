@@ -12,7 +12,7 @@ from watchdog.events import PatternMatchingEventHandler
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 from bot.data import setDatafile, writeDatefile, readDatefile, data_object
-from bot.yugioh import tapnsleep, SetupLogger, compareWithBackButton, DL_Bot
+from bot.yugioh import tapnsleep, setup_logger, compare_with_back_button, DL_Bot
 from bot.shared import defaults_config, home_location, defaultlocations
 
 #sys.stdout = open(os.path.dirname(os.path.realpath(__file__))+'\\file1.txt', 'a')
@@ -27,7 +27,7 @@ log_dir = Config.get("locations", "log")
 data_file = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), "run_at.json")
 level = Config.get("logger", "level")
-root = SetupLogger(log_dir, level, stream=Config.getboolean(
+root = setup_logger(log_dir, level, stream=Config.getboolean(
     "logger", "stream"), includeap=Config.getboolean("logger", "includeapischeduler"))
 setDatafile(data_file)
 sched = BlockingScheduler()
@@ -121,9 +121,9 @@ def main():
             time.sleep(30)
             tapnsleep((25, 550), 10)
             tapnsleep((240, 540), 45)
-        compareWithBackButton()
+        compare_with_back_button()
         bot = DL_Bot(sched)
-        bot.Auto(event_handler.current_thread)
+        bot.auto(event_handler.current_thread)
         if Config.getboolean("bot", "killnoxondone"):
             utils.KillNoxProcess()
     except Exception as e:
