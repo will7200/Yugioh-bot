@@ -190,7 +190,7 @@ def Battle(x=0, y=0, current_page=0, CheckBattle=None, version=2):
     waitFor('NEXT')
     time.sleep(.3)
     utils.Tap(230, 750)
-    waitForWhiteBottom()
+    waitForWhiteBottom(True)
     time.sleep(.5)
     tapnsleep((230, 750), .1)
     dialog = True
@@ -329,11 +329,13 @@ def click_auto_duel():
     utils.Tap(356, 85)
 
 
-def waitForWhiteBottom():
+def waitForWhiteBottom(tryScanning=False):
     root.debug("WAITING FOR WHITE BOTTOM TO APPEAR")
     img = utils.GetImgFromScreenShot()
     b = checkIfBattle(img)
     while not b:
+        if tryScanning:
+            ScanForWord('ok', LOW_CORR)
         img = utils.GetImgFromScreenShot()
         b = checkIfBattle(img)
         if b:
@@ -361,7 +363,7 @@ def ScanForWord(word, corr=HIGH_CORR, log=None):
     corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
     root.debug("LOOK FOR WORD '{}', {} CORRERLATION".format(word, corrword))
     img = utils.GetImgFromScreenShot()
-    t = tm.Trainer(img, 480, 0)
+    t = tm.Trainer(img, 480, 50)
     location = defaultlocations.assets
     location = os.path.join(location, "ok_box.png")
     if t.getMatches(location, corr):
