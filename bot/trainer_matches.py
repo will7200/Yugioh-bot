@@ -34,7 +34,10 @@ class Trainer:
 
         # create BFMatcher object
         bf = cv2.BFMatcher()
-        matches = bf.knnMatch(des1, des2, k=2)
+        try:
+            matches = bf.knnMatch(des1, des2, k=2)
+        except cv2.error:
+            return False
         goodMatches = []
         cluster = []
         for m, n in matches:
