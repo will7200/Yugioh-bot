@@ -45,6 +45,9 @@ $ pip install (wheel_file) (cv2+contrib)
 $ python main.py
 ```
 
+The bot creates a file name run_at.json in the current directory that it stores some data. Changing values such as run now to true will
+force the bot to run again. Changing the value stop to true will stop the bot, and will stop the current pass through.
+
 ## Wakatime
 
 Check out what files I'm working on through [WakaTime](https://wakatime.com/@will2700/projects/fofjloaywu)  
