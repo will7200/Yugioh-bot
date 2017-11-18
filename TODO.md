@@ -10,3 +10,4 @@ List of TODO items for Yugioh Bot
 ## Features
 * **Integrate With GGuardian** This can help with improved speed plays as well open the possibilty to bring gate duels
     into the bot
+* **Integrate with Steam app possibly** Get the bot to work with the steam app on windows
