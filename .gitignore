@@ -1,8 +1,14 @@
+### bin directory
 bin/tess/*
 bin/*.exe
 bin/*.dll
+### log directory
 log/
+
+### temp directory
 tmp/
+
+### compiled files
 *.pyc
 *.lnk
 temp.py
@@ -10,3 +16,4 @@ run_at.json
 *.p
 test.py
 .vscode/
+.idea/
