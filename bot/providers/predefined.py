@@ -2,11 +2,9 @@ import cv2
 import pickle as _pickle
 import os as _os
 import numpy as _np
-import bot.utils as utils
 from bot.shared import *
 from datetime import datetime
 from bot.shared import pickle_version_cache
-from PIL import Image
 
 left = 319
 top = 79
