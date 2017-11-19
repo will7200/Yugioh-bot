@@ -1,19 +1,22 @@
-import time
-import os
+import datetime
+import inspect
 import logging
+import os
 import sys
+import threading
+import time
+from logging.handlers import RotatingFileHandler
+
+import apscheduler
 import cv2
 import numpy as np
-from logging.handlers import RotatingFileHandler
-import inspect
-from PIL import Image, ImageOps, ImageChops
-import bot.utils as utils
-import bot.trainer_matches as tm
+from PIL import Image
+
+import bot.providers.trainer_matches as tm
+import bot.utils_old as utils
+from bot.providers.predefined import auto_duel_box, determine_autoduel_status, determine_duel_variant, duel_variant_v
 from bot.shared import *
-import threading
-import datetime
-from bot.defined import auto_duel_box, determine_autoduel_status, determine_duel_variant, duel_variant_v
-import apscheduler
+
 root = logging.getLogger('bot')
 
 
@@ -394,7 +397,7 @@ def scan_for_close(corr=HIGH_CORR, log=None):
 def compare_with_file(x, y, filename, corr=HIGH_CORR, log=None):
     corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
     root.debug("Compare image with asset, {} CORRERLATION".format(corrword))
-    t = tm.Trainer(img, x, y)
+    t = tm.Trainer(filename, x, y)
     location = defaultlocations.assets
     location = os.path.join(location, filename)
     if t.getMatches(location, corr):
