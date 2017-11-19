@@ -1,6 +1,7 @@
 import json
 import datetime
 import bot.utils as utils
+import os as _os
 
 data_object = {
     'next_run_at': None,
@@ -9,14 +10,15 @@ data_object = {
     'stop': False
 }
 data_object = utils.dotdict(data_object)
-data_file = "run_at.json"
+data_file_name = "run_at.json"
+data_file = data_file_name
+
+def set_data_file(file_path):
+    global data_file
+    data_file = file_path
 
 
-def setDatafile(filepath):
-    data_file = filepath
-
-
-def readDatefile(key=None):
+def read_data_file(key=None):
     try:
         with open(data_file) as f:
             data = json.load(f, object_hook=date_hook)
@@ -46,7 +48,7 @@ def date_hook(json_dict):
     return json_dict
 
 
-def writeDatefile(data):
+def write_data_file(data):
     with open(data_file, 'w') as f:
         json.dump(data, f, sort_keys=True,
                   indent=4, separators=(',', ': '), default=datetime_handler)
