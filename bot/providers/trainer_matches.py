@@ -5,7 +5,7 @@ import PIL as Pillow
 from sklearn.cluster import KMeans
 
 
-class Trainer:
+class Trainer(object):
     def __init__(self, query, x=0, y=0):
         self.query = query
         self.xThreshold = x
