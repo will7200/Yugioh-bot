@@ -21,10 +21,6 @@ root = logging.getLogger('bot')
 # Rotate a python list
 
 
-def rotate_list(l, n):
-    return l[-n:] + l[:-n]
-
-
 def Tap(x, y):
     curframe = inspect.currentframe()
     calframe = inspect.getouterframes(curframe, 2)
