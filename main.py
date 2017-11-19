@@ -11,7 +11,7 @@ from watchdog.events import LoggingEventHandler
 from watchdog.events import PatternMatchingEventHandler
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
-from bot.data import setDatafile, writeDatefile, readDatefile, data_object
+from bot.data import set_data_file, write_data_file, read_data_file, data_object
 from bot.yugioh import tapnsleep, setup_logger, compare_with_back_button, DL_Bot
 from bot.shared import defaults_config, home_location, defaultlocations
 
@@ -29,7 +29,7 @@ data_file = os.path.join(os.path.dirname(
 level = Config.get("logger", "level")
 root = setup_logger(log_dir, level, stream=Config.getboolean(
     "logger", "stream"), includeap=Config.getboolean("logger", "includeapischeduler"))
-setDatafile(data_file)
+set_data_file(data_file)
 sched = BlockingScheduler()
 
 eventLock = threading.Lock()
@@ -76,7 +76,7 @@ class WatchFile(PatternMatchingEventHandler):
             when.isoformat()), run_date=when)
 
     def check_runat(self):
-        next_run_at = readDatefile()
+        next_run_at = read_data_file()
         if 'runnow' in next_run_at and next_run_at['runnow'] is True:
             root.debug("Forcing run now")
             if self.thread is None:
@@ -85,13 +85,13 @@ class WatchFile(PatternMatchingEventHandler):
             else:
                 root.debug("Thread is currently running")
             next_run_at['runnow'] = False
-            writeDatefile(next_run_at)
+            write_data_file(next_run_at)
 
     def check_stop(self):
-        data = readDatefile()
+        data = read_data_file()
         if self.thread is None:
             data.stop = False
-            writeDatefile(data)
+            write_data_file(data)
             return
         if 'stop' in data and data['stop'] is True:
             for x in threading.enumerate():
@@ -99,7 +99,7 @@ class WatchFile(PatternMatchingEventHandler):
                     x.do_run = False
             root.debug("Emitting stop event")
             data.stop = False
-            writeDatefile(data)
+            write_data_file(data)
         elif 'stop' in data and data['stop'] is False:
             root.debug("Emitting resume event")
 
@@ -111,9 +111,9 @@ event_handler = WatchFile(patterns=[data_file])
 
 
 def main():
-    data = readDatefile()
+    data = read_data_file()
     data.last_run_at = datetime.datetime.now()
-    writeDatefile(data)
+    write_data_file(data)
     try:
         if not utils.IsNoxRunning():
             utils.StartNoxProcess(os.path.join(
@@ -133,7 +133,7 @@ def main():
         print(traceback.format_exc())
     data.next_run_at = datetime.datetime.now() + datetime.timedelta(hours=4)
     d = data.next_run_at
-    writeDatefile(data)
+    write_data_file(data)
     sched.add_job(main, trigger='date', id='cron_main_at_%s' %
                   (d.isoformat()), run_date=data.next_run_at)
 
@@ -150,7 +150,7 @@ sched.configure(executors=executors)
 if __name__ == "__main__":
     t = threading.Thread(target=start, args=())
     t.start()
-    next_run_at = readDatefile('next_run_at')
+    next_run_at = read_data_file('next_run_at')
     if Config.getboolean("bot", "startonstartup"):
         next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=1)
     elif next_run_at == None:
