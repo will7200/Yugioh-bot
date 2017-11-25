@@ -1,6 +1,6 @@
 import json
 import datetime
-from bot.utilss.common import DotDict
+from bot.utils.common import DotDict
 import os as _os
 
 data_object = {
@@ -12,6 +12,7 @@ data_object = {
 data_object = DotDict(data_object)
 data_file_name = "run_at.json"
 data_file = data_file_name
+
 
 def set_data_file(file_path):
     global data_file
@@ -32,23 +33,36 @@ def read_data_file(key=None):
     return None
 
 
+def read_json_file(file=data_file):
+    try:
+        with open(file) as f:
+            data = json.load(f, object_hook=date_hook)
+            return data
+    except FileNotFoundError:
+        return None
+
+
 def datetime_handler(x):
     if isinstance(x, datetime.datetime):
         return x.isoformat()
     raise TypeError("Unknown type")
 
 
+try_formats = ["%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S"]
+
+
 def date_hook(json_dict):
     for (key, value) in json_dict.items():
-        try:
-            json_dict[key] = datetime.datetime.strptime(
-                value, "%Y-%m-%dT%H:%M:%S.%f")
-        except:
-            pass
+        for try_format in try_formats:
+            try:
+                json_dict[key] = datetime.datetime.strptime(
+                    value, try_format)
+            except:
+                pass
     return json_dict
 
 
-def write_data_file(data):
-    with open(data_file, 'w') as f:
+def write_data_file(data, file=data_file):
+    with open(file, 'w') as f:
         json.dump(data, f, sort_keys=True,
                   indent=4, separators=(',', ': '), default=datetime_handler)
