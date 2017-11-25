@@ -6,12 +6,13 @@ import time
 import apscheduler
 import os
 
-import bot.providers.trainer_matches as tm
+from bot.providers import trainer_matches as tm
 from bot.providers.duellinks import DuelLinks
 from bot.providers.misc import Misc
+from bot.providers.actions import Actions
 
 
-class Provider(DuelLinks, Misc):
+class Provider(DuelLinks, Misc, Actions):
     scheduler = None
     current_job = None  # indicates the current job running
     lock = None
@@ -19,28 +20,31 @@ class Provider(DuelLinks, Misc):
     current_battle = None
     # logger
     root = logging.getLogger("bot.provider")
+    assets = None
 
-    _auto_duel_box = None
-    @property
-    def auto_duel_box(self):
-        "Determines the location of where the auto duel button is"
-        return self._auto_duel_box
+    def setUp(self):
+        pass
 
-    def __init__(self, scheduler):
+    def __init__(self, scheduler, config):
         self.scheduler = scheduler
+        self._config = config
+        self.assets = config.get('locations', 'assets')
         self.lock = threading.Lock()
+        self.setUp()
 
-    def auto(self, callback):
+    def auto(self):
         t = threading.currentThread()
-        callback(t)
+        self.register_thread(t)
         for x in range(0, 8):
             if not getattr(t, "do_run", True):
+                # Leaves a checkpoint when stopped
+                self.current_run(x)
                 break
             self.compare_with_back_button()
-            time.sleep(1)
+            self.wait_for_ui(1)
             self.swipe_right()
             self.scan()
-        callback(None)
+        self.register_thread(None)
 
     def debug_battle(self):
         self.battle(CheckBattle=self.check_battle)
@@ -92,22 +96,20 @@ class Provider(DuelLinks, Misc):
             try:
                 word = Provider.img_to_string(area, "Auto-Duel")
             except:
-                time.sleep(1)
+                self.wait_for_ui(1)
                 continue
-            time.sleep(.5)
+            self.wait_for_ui(.5)
         self.click_auto_duel()
 
     @staticmethod
-    def img_to_string(img, CharSet=None):
+    def img_to_string(img, char_set=None):
         img.save("tmp\\ocr.png")
         Command = "bin\\tess\\tesseract.exe --tessdata-dir bin\\tess\\tessdata tmp\\ocr.png tmp\\ocr "
-        if CharSet != None:
-            Command += "-c tessedit_char_whitelist=" + CharSet + " "
+        if char_set != None:
+            Command += "-c tessedit_char_whitelist=" + char_set + " "
         Command += "-psm 7 "
         Command += "> nul 2>&1"
-        # print Command
         os.system(Command)
-        # TODO: Remove this, as we psm 7
         # Get the largest line in txt
         with open("tmp\\ocr.txt") as f:
             content = f.read().splitlines()
