@@ -45,6 +45,7 @@ def read_json_file(file=data_file):
 def datetime_handler(x):
     if isinstance(x, datetime.datetime):
         return x.isoformat()
+    print(x, type(x))
     raise TypeError("Unknown type")
 
 
