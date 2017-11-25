@@ -1,9 +1,17 @@
 from abc import abstractmethod
+
+import time
+
 from .shared import *
+
 
 class Event(object):
     _name = None
     _args = None
+
+    def __init__(self, name, args):
+        self._name = name
+        self._args = args
 
     @property
     def name(self):
@@ -67,12 +75,57 @@ class EventExecutor(object):
         exists = getattr(self, _event.name, False)
         if exists:
             func = getattr(self, _event.name)
+            if not callable(func):
+                return False
             func(**_event.args)
             return True
         return False
 
 
 class DuelLinks(object):
+    _thread = None
+
+    @property
+    def current_thread(self):
+        return self._thread
+
+    @current_thread.setter
+    def current_thread(self, thread):
+        self.register_thread(thread)
+
+    def register_thread(self, thread):
+        self._thread = thread
+
+    _auto_duel_box = None
+
+    @property
+    def auto_duel_box(self):
+        "Determines the location of where the auto duel button is"
+        return self._auto_duel_box
+
+    _current_run = 0
+
+    @property
+    def current_run(self):
+        return self._current_run
+
+    @current_run.setter
+    def current_run(self, run):
+        self._current_run = run
+
+    _sleep_factor = 1
+
+    @property
+    def sleep_factor(self):
+        return self._sleep_factor
+
+    @sleep_factor.setter
+    def sleep_factor(self, value):
+        self.sleep_factor = value
+
+    def wait_for_ui(self, amount):
+        time.sleep(amount * self.sleep_factor)
+
     @abstractmethod
     def auto(self):
         raise NotImplementedError("auto not implemented")
@@ -99,7 +152,7 @@ class DuelLinks(object):
         raise NotImplementedError("method_name not implemented")
 
     @abstractmethod
-    def compare_with_back_button(self, info=None):
+    def compare_with_back_button(self, corr=HIGH_CORR, info=None):
         raise NotImplementedError("compare_with_back_button not implemented")
 
     @abstractmethod

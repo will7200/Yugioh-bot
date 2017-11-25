@@ -25,7 +25,7 @@ duel_variant = {
 }
 
 duel_variant_v = {
-    'v1':   (230, 690),
+    'v1': (230, 690),
     'v2-duel': (120, 690),
     'v2-autoduel': (290, 690)
 }
@@ -97,6 +97,8 @@ def generate_duel_button_stats():
         'duel_variant': a
     }
     return save
+
+
 # TODO: IMPLEMENT METHOD TO DETERMINE THE ACCURACY OR THE LIKELHOOD THAT THIS IS AN AUTODUEL BUTTON
 
 

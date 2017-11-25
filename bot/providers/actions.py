@@ -35,7 +35,7 @@ class Actions(object):
     def get_img_from_screen_shot(self):
         screen_shot = self.take_png_screenshot()
         nparr = np.fromstring(screen_shot, np.uint8)
-        img = cv2.imdecode(nparr, cv2.CV_LOAD_IMAGE_COLOR)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         return img
 
     @abstractmethod
