@@ -20,3 +20,4 @@ test.py
 *test.json
 *test.ini
 info.log
+*old*.py
