@@ -17,3 +17,6 @@ run_at.json
 test.py
 .vscode/
 .idea/
+*test.json
+*test.ini
+info.log
