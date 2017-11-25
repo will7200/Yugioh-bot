@@ -1,0 +1,36 @@
+---
+version: 1
+disable_existing_loggers: False
+formatters:
+    simple:
+        format: '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+        datefmt: '%Y-%m-%d %H:%M'
+
+handlers:
+    console:
+        class: logging.StreamHandler
+        level: DEBUG
+        formatter: simple
+
+    file_handler:
+        class: logging.handlers.RotatingFileHandler
+        level: DEBUG
+        formatter: simple
+        filename: info.log
+        maxBytes: 10485760 # 10MB
+        backupCount: 20
+        encoding: utf8
+
+loggers:
+    bot:
+        level: DEBUG
+        handlers: [console]
+        propagate: yes
+    apscheduler:
+        level: INFO
+        handlers: [console]
+        propagate: yes
+
+root:
+    level: INFO
+    handlers: [file_handler]
