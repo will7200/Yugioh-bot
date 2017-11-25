@@ -29,7 +29,7 @@ def Tap(x, y):
     Command = "bin\\adb.exe shell input tap %d %d" % (x, y)
     os.system(Command)
 
-
+# TODO add -s to shell to specifiy device
 def Swipe(x1, y1, x2, y2):
     Command = "bin\\adb.exe shell input swipe %d %d %d %d " % (x1, y1, x2, y2)
     os.system(Command)
@@ -111,7 +111,6 @@ def ImgToString(img, CharSet=None):
     Command += "> nul 2>&1"
     # print Command
     os.system(Command)
-    # TODO: Remove this, as we psm 7
     # Get the largest line in txt
     with open("tmp\\ocr.txt") as f:
         content = f.read().splitlines()
@@ -121,8 +120,6 @@ def ImgToString(img, CharSet=None):
         if len(line) > len(OutputLine):
             OutputLine = line
     return OutputLine
-
-# Todo: Take a while...
 
 
 def ZoomOut():
