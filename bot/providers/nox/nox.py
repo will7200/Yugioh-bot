@@ -8,49 +8,52 @@ import win32gui
 
 import os
 
+import sys
+
 from bot.providers.shared import *
 from bot.providers.provider import Provider
 from bot.providers.common import loop_scan
 from bot.providers.duellinks import DuelLinksInfo
 from bot.providers import trainer_matches as tm
 
-class Nox(Provider):
 
+class Nox(Provider):
     def setUp(self):
-        pass
-    def swipe_time(self, x1, y1, x2, y2, time):
-        Command = "bin\\adb.exe shell input swipe %d %d %d %d %d" % (
-            x1, y1, x2, y2, time)
-        os.system(Command)
+        super(Nox, self).setUp()
+
+    def swipe_time(self, x1, y1, x2, y2, time_amount):
+        command = "bin\\adb.exe shell input swipe %d %d %d %d %d" % (
+            x1, y1, x2, y2, time_amount)
+        os.system(command)
 
     def swipe_right(self, time_sleep=0):
-        pass
+        super(Nox, self).swipe_right()
 
     def swipe(self, x1, y1, x2, y2):
-        Command = "bin\\adb.exe shell input swipe %d %d %d %d " % (x1, y1, x2, y2)
-        os.system(Command)
+        command = "bin\\adb.exe shell input swipe %d %d %d %d " % (x1, y1, x2, y2)
+        os.system(command)
 
     def take_png_screenshot(self):
         while True:
             try:
-                Command = "bin\\adb.exe shell \"screencap -p | busybox base64\""
-                PngScreenshotData = os.popen(Command).read()
-                PngScreenshotData = base64.b64decode(PngScreenshotData)
+                command = "bin\\adb.exe shell \"screencap -p | busybox base64\""
+                png_screenshot_data = os.popen(command).read()
+                png_screenshot_data = base64.b64decode(png_screenshot_data)
                 break
             except KeyboardInterrupt:
                 sys.exit(0)
             except:
                 print("[!] Failed to get screen")
-        return PngScreenshotData
+        return png_screenshot_data
 
     def tap(self, x, y):
         self.root.debug("Tapping at location ({},{})".format(x, y))
-        Command = "bin\\adb.exe shell input tap %d %d" % (x, y)
-        os.system(Command)
+        command = "bin\\adb.exe shell input tap %d %d" % (x, y)
+        os.system(command)
 
     def key_escape(self):
-        Command = "bin\\adb.exe shell input keyevent 4"
-        os.system(Command)
+        command = "bin\\adb.exe shell input keyevent 4"
+        os.system(command)
 
     root = logging.getLogger("bot.provider.Nox")
 
@@ -59,24 +62,24 @@ class Nox(Provider):
         return "Nox"
 
     def wait_for(self, word, try_scanning=False):
-        pass
+        super(Nox, self).wait_for()
 
     def pass_through_initial_screen(self):
-        pass
+        super(Nox, self).pass_through_initial_screen()
 
     def verify_battle(self):
-        pass
+        super(Nox, self).verify_battle()
 
     def scan_for_close(self, corr=HIGH_CORR, log=None):
-        pass
+        super(Nox, self).scan_for_close()
 
     def method_name(self):
-        pass
+        super(Nox, self).method_name()
 
     def start_process(self):
         try:
             self.root.info("Starting Nox...")
-            process = os.subprocess.Popen(self.NoxPath, shell=True, stdout=subprocess.PIPE)
+            process = os.subprocess.Popen(self.NoxPath, shell=True, stdout=os.subprocess.PIPE)
         except:
             self.root.error("The program can't run Nox")
 
@@ -105,29 +108,29 @@ class Nox(Provider):
         return False
 
     def get_current_page(self, img):
-        pass
+        super(Nox, self).get_current_page()
 
     def click_auto_duel(self):
-        pass
+        super(Nox, self).click_auto_duel()
 
-    def battle(self, CheckBattle=None, info=None):
-        pass
+    def battle(self, check_battle=None, info=None):
+        super(Nox, self).battle()
 
     def check_if_battle(self, img):
         img = np.array(img)
         img = img[750:800, 0:400]
-        BLUE_MIN = np.array([250, 250, 250], np.uint8)
-        BLUE_MAX = np.array([255, 255, 255], np.uint8)
-        amount = cv2.inRange(img, BLUE_MIN, BLUE_MAX)
+        blue_min = np.array([250, 250, 250], np.uint8)
+        blue_max = np.array([255, 255, 255], np.uint8)
+        amount = cv2.inRange(img, blue_min, blue_max)
         if cv2.countNonZero(amount) > (50 * 200):
             return True
         return False
 
     def determine_autoduel_status(self):
-        pass
+        super(Nox, self).determine_autoduel_status()
 
     def check_battle_is_running(self):
-        pass
+        super(Nox, self).check_battle_is_running()
 
     def kill_process(self):
         try:
@@ -137,7 +140,7 @@ class Nox(Provider):
             self.root.error("The program could not be killed")
 
     def scan_for_word(self, word, corr=HIGH_CORR, log=None):
-        pass
+        super(Nox, self).scan_for_word()
 
     def scan(self):
         for x, y, current_page in self.possible_battle_points():

@@ -8,10 +8,12 @@ from .shared import *
 class Event(object):
     _name = None
     _args = None
+    _kwargs = None
 
-    def __init__(self, name, args):
+    def __init__(self, name, args, kwargs):
         self._name = name
         self._args = args
+        self._kwargs = kwargs
 
     @property
     def name(self):
@@ -20,6 +22,10 @@ class Event(object):
     @property
     def args(self):
         return self._args
+
+    @property
+    def kwargs(self):
+        return self._kwargs
 
 
 class DuelLinksInfo(object):
@@ -176,7 +182,7 @@ class DuelLinks(object):
         raise NotImplementedError("determine_autoduel_status not implemented")
 
     @abstractmethod
-    def battle(self, CheckBattle=None, info=None):
+    def battle(self, check_battle=None, info=None):
         raise NotImplementedError("battle not implemented")
 
     @abstractmethod

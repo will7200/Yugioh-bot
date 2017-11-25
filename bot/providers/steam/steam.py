@@ -59,7 +59,7 @@ class Steam(Provider):
     def kill_process(self):
         pass
 
-    def swipe_time(self, x1, y1, x2, y2, time):
+    def swipe_time(self, x1, y1, x2, y2, time_amount):
         pass
 
     def key_escape(self):
