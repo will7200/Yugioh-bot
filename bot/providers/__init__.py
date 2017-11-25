@@ -1,5 +1,5 @@
 from .provider import Provider
-from .nox import Nox
+from bot.providers.nox import Nox
 from .steam import Steam
 import logging
 

@@ -20,7 +20,7 @@ class Actions(object):
         raise NotImplementedError("swipe not defined")
 
     @abstractmethod
-    def swipe_time(self, x1, y1, x2, y2, time):
+    def swipe_time(self, x1, y1, x2, y2, time_amount):
         raise NotImplementedError("swipe time not defined")
 
     @abstractmethod
