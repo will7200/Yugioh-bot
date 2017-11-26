@@ -1,77 +1,13 @@
 import logging
-
-import watchdog
-
-from bot import logger
-import datetime
-import threading
+import os
 import time
 from abc import abstractmethod
 
-import os
-from watchdog.observers import Observer
+import watchdog
 from watchdog.events import LoggingEventHandler
 from watchdog.events import PatternMatchingEventHandler
+from watchdog.observers import Observer
 
-# TODO: away from watcher and make the class sync with it file system
-"""
-TODO this ->
-    def lock(self):
-        self.eventLock.acquire()
-        self.runnable = False
-        self.eventLock.release()
-
-    def unlock(self):
-        self.eventLock.acquire()
-        self.runnable = True
-        self.eventLock.release()
-
-    def scheduleunlock(self):
-        when = datetime.datetime.now() + datetime.timedelta(seconds=4)
-        self.sched.add_job(self.unlock, trigger='date', id='unlock_file at %s' % (
-            when.isoformat()), run_date=when)
-
-    def check_runat(self):
-        next_run_at = read_data_file()
-        if 'runnow' in next_run_at and next_run_at['runnow'] is True:
-            self.root.debug("Forcing run now")
-            if self.thread is None:
-                self.sched.remove_all_jobs()
-                self.sched.add_job(main, id='cron_main_force')
-            else:
-                self.root.debug("Thread is currently running")
-            next_run_at['runnow'] = False
-            write_data_file(next_run_at)
-
-    def check_stop(self):
-        data = read_data_file()
-        if self.thread is None:
-            data.stop = False
-            write_data_file(data)
-            return
-        if 'stop' in data and data['stop'] is True:
-            for x in threading.enumerate():
-                if x == self.thread:
-                    x.do_run = False
-            self.root.debug("Emitting stop event")
-            data.stop = False
-            write_data_file(data)
-        elif 'stop' in data and data['stop'] is False:
-            self.root.debug("Emitting resume event")
-        
-       if self.runnable:
-            self.lock()
-            self.check_runat()
-            self.check_stop()
-            self.scheduleunlock()
-   runnable = True
-    thread = None
-    sched = None
-    eventLock = threading.Lock()
-"""
-
-
-# IMPLEMENTATION: set so this gives event notifications
 
 class WatchFile(PatternMatchingEventHandler):
     root = logging.getLogger("bot.watcher")
