@@ -219,6 +219,13 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             else:
                 logger.debug("Thread is currently running")
             self.run_now = False
+        if value == 'next_run_at':
+            self._scheduler.remove_job(self._job)
+            self.schedule_next_run()
+            next_run_at = self.next_run_at
+            self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
+            self._scheduler.add_job(self._run_main, trigger='date', id=self._job,
+                                    run_date=next_run_at)
 
     def get_provider(self):
         return self._provider
@@ -290,7 +297,14 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self.runtime_error(mess)
 
     def schedule_next_run(self):
-        pass
+        if self.next_run_at == datetime.datetime.fromtimestamp(0):
+            self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
+        elif datetime.datetime.now() > self.next_run_at:
+            self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
+        else:
+            next_at = self.next_run_at - datetime.datetime.now()
+            self.next_run_at = datetime.datetime.now(
+            ) + datetime.timedelta(seconds=next_at.total_seconds())
 
     def main(self):
         def schedule_shutdown():
@@ -345,14 +359,8 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self._scheduler.add_job(self.looper, args=(), id="looper")
         if self._config.getboolean("bot", "startBotOnStartUp"):
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=1)
-        elif self.next_run_at == datetime.datetime.fromtimestamp(0):
-            self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
-        elif datetime.datetime.now() > self.next_run_at:
-            self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
         else:
-            next_at = self.next_run_at - datetime.datetime.now()
-            self.next_run_at = datetime.datetime.now(
-            ) + datetime.timedelta(seconds=next_at.total_seconds())
+            self.schedule_next_run()
         next_run_at = self.next_run_at
         self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
         self._scheduler.add_job(in_main, trigger='date', id=self._job,
