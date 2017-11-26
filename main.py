@@ -73,7 +73,7 @@ def bot(start, config_file):
         scheduler = BackgroundScheduler()
         dlRuntime = DuelLinkRunTime(uconfig, scheduler)
         scheduler.start()
-        dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig))
+        dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig, dlRuntime))
         dlRuntime.main()
 
         while True:
