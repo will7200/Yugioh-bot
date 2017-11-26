@@ -43,7 +43,7 @@ class Provider(DuelLinks, Misc, Actions):
         for x in range(0, 8):
             if not getattr(t, "do_run", True):
                 # Leaves a checkpoint when stopped
-                self.current_run(x)
+                self.current_run = x
                 break
             self.compare_with_back_button()
             self.wait_for_ui(1)
@@ -91,6 +91,8 @@ class Provider(DuelLinks, Misc, Actions):
         current_page = self.get_current_page(img)
         logging.debug("Current-Page {}".format(current_page))
         for x, y in t.circlePoints:
+            if not getattr(self.current_thread, "do_run", True):
+                break
             yield x, y, current_page
 
     def wait_for_auto_duel(self):
