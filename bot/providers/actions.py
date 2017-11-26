@@ -45,4 +45,8 @@ class Actions(object):
     def tapnsleep(self, point, time_sleep):
         x, y = point
         self.tap(x, y)
-        time.sleep(time_sleep)
+        self.wait_for_ui(time_sleep)
+
+    @abstractmethod
+    def wait_for_ui(self, time_sleep):
+        raise NotImplementedError("wait_for_ui not defined")
