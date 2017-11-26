@@ -60,7 +60,7 @@ class Trainer(object):
             img1, kp1, img2, kp2, goodMatches, None, flags=2)
         self.images.append(img3)
         # if train != 'assets/back__.png':
-        # plt.imshow(img3),plt.show()
+        #plt.imshow(img3),plt.show()
         return True
         # return goodMatches
         # cv2.drawMatchesKnn expects list of lists as matches.
