@@ -6,8 +6,10 @@ import time
 import apscheduler
 import os
 
+import cv2
+
 from bot.providers import trainer_matches as tm
-from bot.providers.duellinks import DuelLinks
+from bot.providers.duellinks import DuelLinks, LOW_CORR
 from bot.providers.misc import Misc
 from bot.providers.actions import Actions
 
@@ -21,20 +23,23 @@ class Provider(DuelLinks, Misc, Actions):
     # logger
     root = logging.getLogger("bot.provider")
     assets = None
+    predefined = None
 
     def setUp(self):
         pass
 
-    def __init__(self, scheduler, config):
+    def __init__(self, scheduler, config, run_time):
         self.scheduler = scheduler
         self._config = config
         self.assets = config.get('locations', 'assets')
         self.lock = threading.Lock()
+        self.run_time = run_time
         self.setUp()
 
     def auto(self):
         t = threading.currentThread()
         self.register_thread(t)
+        self.root.info("starting auto run through")
         for x in range(0, 8):
             if not getattr(t, "do_run", True):
                 # Leaves a checkpoint when stopped
@@ -84,6 +89,7 @@ class Provider(DuelLinks, Misc, Actions):
         t = tm.Trainer(img)
         t.whiteCircles()
         current_page = self.get_current_page(img)
+        logging.debug("Current-Page {}".format(current_page))
         for x, y in t.circlePoints:
             yield x, y, current_page
 
@@ -101,21 +107,34 @@ class Provider(DuelLinks, Misc, Actions):
             self.wait_for_ui(.5)
         self.click_auto_duel()
 
+    def wait_for_white_bottom(self, tryScanning=False):
+        self.root.debug("WAITING FOR WHITE BOTTOM TO APPEAR")
+        img = self.get_img_from_screen_shot()
+        b = self.check_if_battle(img)
+        while not b:
+            if tryScanning:
+                self.scan_for_word('ok', LOW_CORR)
+            img = self.get_img_from_screen_shot()
+            b = self.check_if_battle(img)
+            if b:
+                break
+            self.wait_for_ui(1)
+
     @staticmethod
     def img_to_string(img, char_set=None):
-        img.save("tmp\\ocr.png")
-        Command = "bin\\tess\\tesseract.exe --tessdata-dir bin\\tess\\tessdata tmp\\ocr.png tmp\\ocr "
-        if char_set != None:
-            Command += "-c tessedit_char_whitelist=" + char_set + " "
-        Command += "-psm 7 "
-        Command += "> nul 2>&1"
-        os.system(Command)
+        cv2.imwrite("tmp\\ocr.png", img)
+        command = "bin\\tess\\tesseract.exe --tessdata-dir bin\\tess\\tessdata tmp\\ocr.png tmp\\ocr "
+        if char_set is not None:
+            command += "-c tessedit_char_whitelist=" + char_set + " "
+        command += "-psm 7 "
+        command += "> nul 2>&1"
+        os.system(command)
         # Get the largest line in txt
         with open("tmp\\ocr.txt") as f:
             content = f.read().splitlines()
-        OutputLine = ""
+        output_line = ""
         for line in content:
             line = line.strip()
-            if len(line) > len(OutputLine):
-                OutputLine = line
-        return OutputLine
+            if len(line) > len(output_line):
+                output_line = line
+        return output_line

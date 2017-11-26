@@ -21,3 +21,7 @@ test.py
 *test.ini
 info.log
 *old*.py
+
+
+# ignore h5 cache
+*.h5
