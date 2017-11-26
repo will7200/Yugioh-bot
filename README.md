@@ -41,13 +41,23 @@ $ pip install (wheel_file) (cv2+contrib)
 
 ## Usage
 
+To Start The Bot
 ``` bash
-$ python main.py
+$ python main.py -s
 ```
 
-The bot creates a file name run_at.json in the current directory that it stores some data. Changing values such as run now to true will
-force the bot to run again. Changing the value stop to true will stop the bot, and will stop the current pass through.
+Generate Config File
+``` bash
+$ python main.py config --generate-config {optional --file-path path/to/file/config.ini}
+```
+The bot creates a file for runtime purposes that is specified in the config file name runtimepersistence under the bot section.  
 
+The following values can be changed during runtime that will control the bot until the ui has been made. 
+["run_now", "stop", "next_run_at"]
+
+run_now: if the bot is currently stopped it will schedule a run immediately
+stop: if the bot is currently running it will halt execution
+next_run_at: will schedule a run at the specified time, if currently running it will remove the current job in place of the new now
 ## Wakatime
 
 Check out what files I'm working on through [WakaTime](https://wakatime.com/@will2700/projects/fofjloaywu)  
