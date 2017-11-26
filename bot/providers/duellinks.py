@@ -1,27 +1,27 @@
-from abc import abstractmethod
-
-import time
-from datetime import datetime
-import numpy as np
-import cv2
-import h5py
 import os
+import time
+from abc import abstractmethod
+from datetime import datetime
 
+import cv2
+import numpy as np
+
+from bot.utils.data import load_dict_from_hdf5, save_dict_to_hdf5
 from .shared import *
 
 
 class Event(object):
     _name = None
-    _args = None
-    _kwargs = None
+    _args = []
+    _kwargs = {}
 
-    def __init__(self, name, args, kwargs):
-        self._name = name
+    def __init__(self, func, *args, **kwargs):
+        self._name = func
         self._args = args
         self._kwargs = kwargs
 
     @property
-    def name(self):
+    def func(self):
         return self._name
 
     @property
@@ -103,15 +103,16 @@ class Predefined(object):
         self._config = config
         self.cache_file = config.get('locations', 'cache_file')
         self.dataset = self.__class__.__name__
-        self.assets = config.get('locations','assets')
+        self.assets = config.get('locations', 'assets')
         self.version = version
+        self.get_cache()
+        self.check_cache()
 
     _cache = None
     _last_read = datetime.fromtimestamp(0)
 
     @property
     def cache(self):
-        self.get_cache()
         return self._cache
 
     @cache.setter
@@ -119,10 +120,15 @@ class Predefined(object):
         self._last_read = datetime.now()
         self._cache = value
 
+    def check_cache(self):
+        pass
+
     def get_cache(self):
         if not os.path.exists(self.cache_file):
             self.generate()
         if self.cache is None:
+            self.cache = load_dict_from_hdf5(self.cache_file)
+            """
             self.cache = h5py.File(self.cache_file)
             if self.dataset in self.cache.keys():
                 df = self.cache.get(self.dataset)
@@ -130,6 +136,7 @@ class Predefined(object):
                 if version == 0 or version != self.version:
                     self.generate()
                     self.cache = h5py.File(self.cache_file)
+                """
 
     _duel_varient = None
 
@@ -147,7 +154,7 @@ class Predefined(object):
 
 
     def determine_autoduel_status(self, img):
-        vals = self.cache
+        vals = self.cache.get(self.dataset)
         autodueloff = vals['auto_duel_off']
         autoduelon = vals['auto_duel_on']
         current = self.get_image_stats(img, **self.autoduel)
@@ -158,7 +165,7 @@ class Predefined(object):
         return False
 
     def determine_duel_variant(self, img):
-        vals = self.cache
+        vals = self.cache.get(self.dataset)
         ver_duel_variant = vals['duel_variant']
         edges = cv2.Canny(img, 240, 255)
         current = Predefined.get_image_stats(edges, **self.duel_variant)
@@ -173,6 +180,10 @@ class Predefined(object):
         (means, stds) = cv2.meanStdDev(crop_img)
         stats = np.concatenate([means, stds]).flatten()
         return stats
+
+    def write_hdf5(self, data, dataset):
+        data = {dataset: data}
+        save_dict_to_hdf5(data, self.cache_file, mode='a')
 
     @abstractmethod
     def generate(self):
@@ -295,3 +306,7 @@ class DuelLinks(object):
     @abstractmethod
     def wait_for_auto_duel(self):
         raise NotImplementedError("wait_for_auto_duel not implemented")
+
+    @abstractmethod
+    def wait_for_white_bottom(self):
+        raise NotImplementedError("wait for white bottom not implemented")

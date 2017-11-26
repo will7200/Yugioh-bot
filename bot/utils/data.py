@@ -1,7 +1,10 @@
-import json
 import datetime
+import json
+
+import h5py
+import numpy as np
+
 from bot.utils.common import DotDict
-import os as _os
 
 data_object = {
     'next_run_at': None,
@@ -45,7 +48,6 @@ def read_json_file(file=data_file):
 def datetime_handler(x):
     if isinstance(x, datetime.datetime):
         return x.isoformat()
-    print(x, type(x))
     raise TypeError("Unknown type")
 
 
@@ -67,3 +69,63 @@ def write_data_file(data, file=data_file):
     with open(file, 'w') as f:
         json.dump(data, f, sort_keys=True,
                   indent=4, separators=(',', ': '), default=datetime_handler)
+
+
+"""
+Pulled from:
+https://codereview.stackexchange.com/questions/120802/recursively-save-python-dictionaries-to-hdf5-files-using-h5py
+"""
+
+
+def save_dict_to_hdf5(dic, filename, mode='w'):
+    """
+    ....
+    """
+    with h5py.File(filename, mode) as h5file:
+        recursively_save_dict_contents_to_group(h5file, '/', dic)
+
+
+def recursively_save_dict_contents_to_group(h5file, path, dic):
+    """
+    ....
+    """
+    for key, item in dic.items():
+        if isinstance(item, (np.ndarray, np.int64, np.float64, str, bytes)):
+            h5file[path + key] = item
+        elif isinstance(item, dict):
+            recursively_save_dict_contents_to_group(h5file, path + key + '/', item)
+        else:
+            raise ValueError('Cannot save %s type' % type(item))
+
+
+def load_dict_from_hdf5(filename):
+    """
+    ....
+    """
+    with h5py.File(filename, 'r') as h5file:
+        return recursively_load_dict_contents_from_group(h5file, '/')
+
+
+def recursively_load_dict_contents_from_group(h5file, path):
+    """
+    ....
+    """
+    ans = {}
+    for key, item in h5file[path].items():
+        if isinstance(item, h5py._hl.dataset.Dataset):
+            ans[key] = item.value
+        elif isinstance(item, h5py._hl.group.Group):
+            ans[key] = recursively_load_dict_contents_from_group(h5file, path + key + '/')
+    return ans
+
+
+if __name__ == '__main__':
+    data = {'x': 'astring',
+            'y': np.arange(10),
+            'd': {'z': np.ones((2, 3)),
+                  'b': b'bytestring'}}
+    print(data)
+    filename = 'test.h5'
+    save_dict_to_hdf5(data, filename)
+    dd = load_dict_from_hdf5(filename)
+    print(dd)
