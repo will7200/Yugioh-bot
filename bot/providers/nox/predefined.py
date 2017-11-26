@@ -1,7 +1,6 @@
 import os as _os
 
 import cv2
-import h5py
 import numpy as _np
 
 from bot.providers.duellinks import Predefined
@@ -28,9 +27,7 @@ class NoxPredefined(Predefined):
         temp_dict = self.generate_duel_button_stats()
         save = {**save, **temp_dict}
         save['version'] = nox_current_version
-        hf = h5py.File(self.cache_file, 'a')
-        hf.create_dataset(self.dataset, data=save)
-        hf.close()
+        self.write_hdf5(save, self.dataset)
 
     @property
     def autoduel(self):
