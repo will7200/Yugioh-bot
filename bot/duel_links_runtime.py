@@ -96,6 +96,29 @@ class DuelLinkRunTimeOptions(object):
         self.timeout_dump()
         # IMPLEMENTATION: Notify Scheduler to Stop Now
 
+    _battle_calls = {
+        "beforeStart": [],
+        "afterStart": [],
+        "beforeEnd": [],
+        "afterEnd": []
+    }
+
+    @property
+    def battle_calls(self):
+        return self._battle_calls
+
+    @battle_calls.setter
+    def battle_calls(self, value):
+        if not isinstance(value, dict):
+            self.runtime_error_options("battle_calls", dict, type(value))
+            return
+        if self._battle_calls == value:
+            return
+        self._battle_calls = value
+        frame = inspect.currentframe()
+        logger.info("Value {} modified".format(inspect.getframeinfo(frame).function))
+        self.timeout_dump()
+
     @abstractmethod
     def runtime_error_options(self, option, expecting_type, got_type):
         raise NotImplementedError("runtime_error_options not implemented")
@@ -103,6 +126,39 @@ class DuelLinkRunTimeOptions(object):
     @abstractmethod
     def timeout_dump(self):
         raise NotImplementedError("timeout_dump not implemented")
+
+
+# TODO HP handle Events from changes in file
+"""
+TODO this ->
+    def check_runat(self):
+        next_run_at = read_data_file()
+        if 'runnow' in next_run_at and next_run_at['runnow'] is True:
+            self.root.debug("Forcing run now")
+            if self.thread is None:
+                self.sched.remove_all_jobs()
+                self.sched.add_job(main, id='cron_main_force')
+            else:
+                self.root.debug("Thread is currently running")
+            next_run_at['runnow'] = False
+            write_data_file(next_run_at)
+
+    def check_stop(self):
+        data = read_data_file()
+        if self.thread is None:
+            data.stop = False
+            write_data_file(data)
+            return
+        if 'stop' in data and data['stop'] is True:
+            for x in threading.enumerate():
+                if x == self.thread:
+                    x.do_run = False
+            self.root.debug("Emitting stop event")
+            data.stop = False
+            write_data_file(data)
+        elif 'stop' in data and data['stop'] is False:
+            self.root.debug("Emitting resume event")
+"""
 
 
 class DuelLinkRunTime(DuelLinkRunTimeOptions):
@@ -126,7 +182,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         logger.debug("Watching {} for runTime Options".format(self._file))
         self._watcher = SyncWithFile(self._file, True)
         self._watcher.settings_modified = self.settings_modified
-        self.dump()
         # scheduler.add_job(self.dump, 'interval', minutes=1)
 
     def setUp(self):
@@ -135,6 +190,8 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         if os.path.dirname(self._file) == "":
             self._file = os.path.join(os.getcwd(), self._file)
         pathlib.Path(os.path.dirname(self._file)).mkdir(parents=True, exist_ok=True)
+        if os.path.exists(self._file):
+            self.update()
 
     def get_provider(self):
         return self._provider
@@ -215,7 +272,16 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         def thread_shutdown():
             self.shutdown()
             schedule_shutdown()
-            print('done')
+
+        def handle_expection(e):
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            logger.error(e)
+            logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
+            logger.debug(traceback.format_exc())
+            logger.fatal("Provider does not have method correctly implemented cannot continue")
+            tt = threading.Thread(target=thread_shutdown, args=())
+            tt.start()  # (schedule_shutdown, args=(), id='shutdown')
 
         def in_main():
             self.last_run_at = datetime.datetime.now()
@@ -229,10 +295,13 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                 logger.info("main event")
                 provider.auto()
             except NotImplementedError as ee:
-                logger.error(ee)
-                logger.fatal("Provider does not have method correctly implemented cannot continue")
-                tt = threading.Thread(target=thread_shutdown, args=())
-                tt.start()  # (schedule_shutdown, args=(), id='shutdown')
+                handle_expection(ee)
+                return
+            except AttributeError as ee:
+                handle_expection(ee)
+                return
+            except TypeError as ee:
+                handle_expection(ee)
                 return
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -265,6 +334,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             yield from asyncio.sleep(1)
 
     _shutdown = False
+
     def shutdown(self):
         self._shutdown = True
         self._task.cancel()
