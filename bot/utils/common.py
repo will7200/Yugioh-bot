@@ -23,7 +23,8 @@ def default_config():
         'home': join(expanduser("~"), "DuelLinksBot"),
         'assets': join(expanduser("~"), "DuelLinksBot", "assets"),
         'bin': join(expanduser("~"), "DuelLinksBot", "bin"),
-        'log': join(expanduser("~"), "DuelLinksBot", "log")
+        'log': join(expanduser("~"), "DuelLinksBot", "log"),
+        'cache_file': join(expanduser("~"), "DuelLinksBot", "assets", "predefined.h5")
     }
 
     # Bot config values
