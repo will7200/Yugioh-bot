@@ -1,6 +1,24 @@
 {
-    "last_run_at": "1969-12-31T16:00:00",
-    "next_run_at": "1969-12-31T16:00:00",
+    "battle_calls": {
+        "afterEnd": [
+            {
+                "args": 0.5,
+                "func": "wait_for_ui",
+                "kwargs": {}
+            }
+        ],
+        "afterStart": [
+            {
+                "args": "OK",
+                "func": "wait_for",
+                "kwargs": {}
+            }
+        ],
+        "beforeEnd": [],
+        "beforeStart": []
+    },
+    "last_run_at": "2017-11-25T19:37:17.263692",
+    "next_run_at": "2017-11-25T19:37:17.261883",
     "run_now": false,
     "stop": false
 }
