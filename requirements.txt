@@ -1,3 +1,5 @@
+cv2
+h5py
 watchdog==0.8.3
 numpy==1.12.1
 APScheduler==3.3.1
