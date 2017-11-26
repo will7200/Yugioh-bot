@@ -1,20 +1,15 @@
 import asyncio
-import concurrent
+import datetime
 import inspect
 import os
 import pathlib
-
-import datetime
+import sys
 import threading
 import traceback
 from abc import abstractmethod
 
-import sys
-
 from bot import logger
-from bot.debug_helpers import calling_function
 from bot.debug_helpers.helpers_decorators import async_calling_function
-
 from bot.utils.data import read_json_file, write_data_file
 from bot.utils.watcher import SyncWithFile
 
@@ -57,6 +52,7 @@ class DuelLinkRunTimeOptions(object):
         frame = inspect.currentframe()
         logger.info("Value {} modified to {}".format(inspect.getframeinfo(frame).function, value))
         self.timeout_dump()
+        self.handle_option_change('next_run_at')
 
     _run_now = False
 
@@ -76,6 +72,7 @@ class DuelLinkRunTimeOptions(object):
         frame = inspect.currentframe()
         logger.info("Value {} modified".format(inspect.getframeinfo(frame).function))
         self.timeout_dump()
+        self.handle_option_change('run_now')
 
     _stop = False
 
@@ -94,6 +91,7 @@ class DuelLinkRunTimeOptions(object):
         frame = inspect.currentframe()
         logger.info("Value {} modified".format(inspect.getframeinfo(frame).function))
         self.timeout_dump()
+        self.handle_option_change('stop')
         # IMPLEMENTATION: Notify Scheduler to Stop Now
 
     _battle_calls = {
@@ -118,6 +116,7 @@ class DuelLinkRunTimeOptions(object):
         frame = inspect.currentframe()
         logger.info("Value {} modified".format(inspect.getframeinfo(frame).function))
         self.timeout_dump()
+        self.handle_option_change('battle_calls')
 
     @abstractmethod
     def runtime_error_options(self, option, expecting_type, got_type):
@@ -126,6 +125,10 @@ class DuelLinkRunTimeOptions(object):
     @abstractmethod
     def timeout_dump(self):
         raise NotImplementedError("timeout_dump not implemented")
+
+    @abstractmethod
+    def handle_option_change(self, value):
+        raise NotImplementedError("handle_option_change not implemented")
 
 
 # TODO HP handle Events from changes in file
@@ -172,6 +175,8 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _task = None
     _provider = None
     _loop = None
+    _run_main = None
+    _job = None
 
     def __init__(self, config, scheduler):
         self._config = config
@@ -192,6 +197,28 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         pathlib.Path(os.path.dirname(self._file)).mkdir(parents=True, exist_ok=True)
         if os.path.exists(self._file):
             self.update()
+
+    def handle_option_change(self, value):
+        if self._provider is None:
+            return
+        if value == 'stop':
+            if self.stop and self._provider.current_thread is not None:
+                for x in threading.enumerate():
+                    if x == self._provider.current_thread:
+                        self._provider.current_thread.do_run = False
+                        logger.info("Stopping Bot Execution")
+            elif self._provider.current_thread is not None:
+                logger.info("Resuming Bot Execution")
+            elif self.stop:
+                self.stop = False
+        if value == 'run_now' and self.run_now:
+            logger.info("Forcing run now")
+            if self._provider.current_thread is None:
+                self._scheduler.remove_job(self._job)
+                self._scheduler.add_job(self._run_main, id='cron_main_force')
+            else:
+                logger.debug("Thread is currently running")
+            self.run_now = False
 
     def get_provider(self):
         return self._provider
@@ -306,12 +333,15 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                print(exc_type, fname, exc_tb.tb_lineno)
-                print(traceback.format_exc())
+                logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
+                logger.debug(traceback.format_exc())
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(hours=4)
-            self._scheduler.add_job(in_main, trigger='date', id='cron_main_at_{}'.format(self.next_run_at.isoformat()),
-                                    run_date=self.next_run_at)
+            next_run_at = self.next_run_at
+            self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
+            self._scheduler.add_job(in_main, trigger='date', id=self._job,
+                                    run_date=next_run_at)
 
+        self._run_main = in_main
         self._scheduler.add_job(self.looper, args=(), id="looper")
         if self._config.getboolean("bot", "startBotOnStartUp"):
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=1)
@@ -323,8 +353,10 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             next_at = self.next_run_at - datetime.datetime.now()
             self.next_run_at = datetime.datetime.now(
             ) + datetime.timedelta(seconds=next_at.total_seconds())
-        self._scheduler.add_job(in_main, trigger='date', id='cron_main_at_%s' %
-                                                            (self.next_run_at.isoformat()), run_date=self.next_run_at)
+        next_run_at = self.next_run_at
+        self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
+        self._scheduler.add_job(in_main, trigger='date', id=self._job,
+                                run_date=next_run_at)
         logger.info("Tracking %s" % (self._file))
         logger.info('Next run at %s' % (self.next_run_at.isoformat()))
 
