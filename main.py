@@ -58,10 +58,6 @@ def config(generate_config, file_path):
 @click.option("-c", "--config-file", default="config.ini")
 def bot(start, config_file):
     if start:
-        """
-        Due to: forrtl: error (200): program aborting due to control-C event
-        I need to intercept control-c signal to correctly close down this program
-        """
 
         def handler(signum, frame):
             if signum == signal.SIGINT:
