@@ -25,3 +25,6 @@ info.log
 
 # ignore h5 cache
 *.h5
+
+#ignore runtime files
+runTimeOptions.json
