@@ -1,12 +1,15 @@
 import asyncio
 import datetime
 import inspect
+import json
 import os
 import pathlib
 import sys
 import threading
 import traceback
 from abc import abstractmethod
+
+from apscheduler.jobstores.base import JobLookupError
 
 from bot import logger
 from bot.debug_helpers.helpers_decorators import async_calling_function
@@ -131,39 +134,6 @@ class DuelLinkRunTimeOptions(object):
         raise NotImplementedError("handle_option_change not implemented")
 
 
-# TODO HP handle Events from changes in file
-"""
-TODO this ->
-    def check_runat(self):
-        next_run_at = read_data_file()
-        if 'runnow' in next_run_at and next_run_at['runnow'] is True:
-            self.root.debug("Forcing run now")
-            if self.thread is None:
-                self.sched.remove_all_jobs()
-                self.sched.add_job(main, id='cron_main_force')
-            else:
-                self.root.debug("Thread is currently running")
-            next_run_at['runnow'] = False
-            write_data_file(next_run_at)
-
-    def check_stop(self):
-        data = read_data_file()
-        if self.thread is None:
-            data.stop = False
-            write_data_file(data)
-            return
-        if 'stop' in data and data['stop'] is True:
-            for x in threading.enumerate():
-                if x == self.thread:
-                    x.do_run = False
-            self.root.debug("Emitting stop event")
-            data.stop = False
-            write_data_file(data)
-        elif 'stop' in data and data['stop'] is False:
-            self.root.debug("Emitting resume event")
-"""
-
-
 class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _file = None
     _unknown_options = []
@@ -177,6 +147,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _loop = None
     _run_main = None
     _job = None
+    _allow_next_run_at_change = True
 
     def __init__(self, config, scheduler):
         self._config = config
@@ -185,7 +156,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
 
         self.setUp()
         logger.debug("Watching {} for runTime Options".format(self._file))
-        self._watcher = SyncWithFile(self._file, True)
+        self._watcher = SyncWithFile(self._file)
         self._watcher.settings_modified = self.settings_modified
         # scheduler.add_job(self.dump, 'interval', minutes=1)
 
@@ -214,13 +185,19 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         if value == 'run_now' and self.run_now:
             logger.info("Forcing run now")
             if self._provider.current_thread is None:
-                self._scheduler.remove_job(self._job)
+                try:
+                    self._scheduler.remove_job(self._job)
+                except JobLookupError:
+                    pass
                 self._scheduler.add_job(self._run_main, id='cron_main_force')
             else:
                 logger.debug("Thread is currently running")
             self.run_now = False
-        if value == 'next_run_at':
-            self._scheduler.remove_job(self._job)
+        if value == 'next_run_at' and self._allow_next_run_at_change:
+            try:
+                self._scheduler.remove_job(self._job)
+            except JobLookupError:
+                pass
             self.schedule_next_run()
             next_run_at = self.next_run_at
             self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
@@ -245,7 +222,11 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
 
     def update(self):
         self._unknown_options = []
-        tmp_data = read_json_file(self._file)
+        try:
+            tmp_data = read_json_file(self._file)
+        except json.decoder.JSONDecodeError:
+            logger.error("runtime file error reading")
+            return
         if tmp_data is None:
             self.dump()
             return
@@ -297,6 +278,8 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self.runtime_error(mess)
 
     def schedule_next_run(self):
+        if self._watcher.observer:
+            self._watcher.stop_observer()
         if self.next_run_at == datetime.datetime.fromtimestamp(0):
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
         elif datetime.datetime.now() > self.next_run_at:
@@ -305,6 +288,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             next_at = self.next_run_at - datetime.datetime.now()
             self.next_run_at = datetime.datetime.now(
             ) + datetime.timedelta(seconds=next_at.total_seconds())
+        self._watcher.start_observer()
 
     def main(self):
         def schedule_shutdown():
@@ -349,12 +333,17 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
                 logger.debug(traceback.format_exc())
+            self._watcher.stop_observer()
+            self._allow_next_run_at_change = False
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(hours=4)
             next_run_at = self.next_run_at
+            self._allow_next_run_at_change = True
             self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
             self._scheduler.add_job(in_main, trigger='date', id=self._job,
                                     run_date=next_run_at)
+            self._watcher.start_observer()
 
+        self._allow_next_run_at_change = False
         self._run_main = in_main
         self._scheduler.add_job(self.looper, args=(), id="looper")
         if self._config.getboolean("bot", "startBotOnStartUp"):
@@ -365,6 +354,8 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
         self._scheduler.add_job(in_main, trigger='date', id=self._job,
                                 run_date=next_run_at)
+        self._watcher.start_observer()
+        self._allow_next_run_at_change = True
         logger.info("Tracking %s" % (self._file))
         logger.info('Next run at %s' % (self.next_run_at.isoformat()))
 
