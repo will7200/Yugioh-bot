@@ -1,9 +1,11 @@
-cv2
-h5py
-watchdog==0.8.3
-numpy==1.12.1
 APScheduler==3.3.1
+click==6.7
+numpy==1.12.1
+watchdog==0.8.3
 matplotlib==2.0.2
+h5py==2.7.1
 Pillow==4.3.0
 scikit_learn==0.19.1
 win32gui==221.6
+PyYAML==3.12
+# cv2+contrib 3.2.0
