@@ -255,7 +255,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         # TODO signal observer to turn off and then turn on again
         self._watcher.stop_observer()
         tmpdict = self.dump_options()
-        logger.debug("Dump Getting Called", tmpdict)
+        logger.debug("Dump Getting Called {}".format(tmpdict))
         write_data_file(tmpdict, self._file)
         self._watcher.start_observer()
 
