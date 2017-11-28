@@ -1,4 +1,4 @@
-import os as _os
+import os as os
 
 import cv2
 import numpy as _np
@@ -20,7 +20,19 @@ duel_variant_v = {
 
 
 class NoxPredefined(Predefined):
+    files_need = [
+        "auto_duel_on.png",
+        "auto_duel_off.png",
+        "new_duel_variant.png"
+    ]
+
+    def run_prechecks(self):
+        for file in self.files_need:
+            assert (os.path.exists(os.path.join(self.assets,
+                                                file))), "Missing File for stats generations: if you git cloned this repo you probably have a miss configured home!!!"
+
     def generate(self):
+        self.run_prechecks()
         save = {}
         temp_dict = self.generate_autoduel_stats()
         save = {**save, **temp_dict}
@@ -49,8 +61,9 @@ class NoxPredefined(Predefined):
 
     def generate_autoduel_stats(self):
         location = self.assets
-        autoduelon = _os.path.join(location, "auto_duel_on.png")
-        autodueloff = _os.path.join(location, "auto_duel_off.png")
+        autoduelon = os.path.join(location, "auto_duel_on.png")
+        autodueloff = os.path.join(location, "auto_duel_off.png")
+        print(autodueloff)
         a = self.get_image_stats(cv2.imread(autodueloff), **self.autoduel)
         b = self.get_image_stats(cv2.imread(autoduelon), **self.autoduel)
         save = {
@@ -61,7 +74,7 @@ class NoxPredefined(Predefined):
 
     def generate_duel_button_stats(self):
         location = self.assets
-        new_duel_variant = _os.path.join(location, "new_duel_variant.png")
+        new_duel_variant = os.path.join(location, "new_duel_variant.png")
         im = cv2.imread(new_duel_variant, cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(im, 240, 255)
         a = self.get_image_stats(_np.array(edges), **self.duel_variant)

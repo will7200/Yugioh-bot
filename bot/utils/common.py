@@ -14,17 +14,17 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 
-def default_config():
+def default_config(home="."):
     """Make the default configuration"""
     config = configparser.ConfigParser()
 
     # Directories to read from
     config['locations'] = {
-        'home': join(expanduser("~"), "DuelLinksBot"),
-        'assets': join(expanduser("~"), "DuelLinksBot", "assets"),
-        'bin': join(expanduser("~"), "DuelLinksBot", "bin"),
-        'log': join(expanduser("~"), "DuelLinksBot", "log"),
-        'cache_file': join(expanduser("~"), "DuelLinksBot", "assets", "predefined.h5")
+        'home': join(home),
+        'assets': join(home, "assets"),
+        'bin': join(home, "bin"),
+        'log': join(home, "log"),
+        'cache_file': join(home, "assets", "predefined.h5")
     }
 
     # Bot config values

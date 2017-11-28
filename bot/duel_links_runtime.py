@@ -370,5 +370,5 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self._shutdown = True
         self._task.cancel()
 
-    def __del__(self):
+    def __exit__(self):
         self.dump()
