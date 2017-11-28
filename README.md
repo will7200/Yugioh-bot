@@ -46,7 +46,7 @@ To Start The Bot
 $ python main.py -s
 ```
 
-Generate Config File
+Generate Config File --  Only Needed if you did not git clone master
 ``` bash
 $ python main.py config --generate-config {optional --file-path path/to/file/config.ini}
 ```
@@ -55,9 +55,9 @@ The bot creates a file for runtime purposes that is specified in the config file
 The following values can be changed during runtime that will control the bot until the ui has been made. 
 ["run_now", "stop", "next_run_at"]
 
-run_now: if the bot is currently stopped it will schedule a run immediately
-stop: if the bot is currently running it will halt execution
-next_run_at: will schedule a run at the specified time, if currently running it will remove the current job in place of the new now
+run_now: if the bot is currently stopped it will schedule a run immediately  
+stop: if the bot is currently running it will halt execution  
+next_run_at: will schedule a run at the specified time, if currently running it will remove the current job in place of the new one
 ## Wakatime
 
 Check out what files I'm working on through [WakaTime](https://wakatime.com/@will2700/projects/fofjloaywu)  

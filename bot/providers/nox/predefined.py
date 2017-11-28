@@ -63,7 +63,6 @@ class NoxPredefined(Predefined):
         location = self.assets
         autoduelon = os.path.join(location, "auto_duel_on.png")
         autodueloff = os.path.join(location, "auto_duel_off.png")
-        print(autodueloff)
         a = self.get_image_stats(cv2.imread(autodueloff), **self.autoduel)
         b = self.get_image_stats(cv2.imread(autoduelon), **self.autoduel)
         save = {
