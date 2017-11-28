@@ -20,7 +20,7 @@ class Nox(Provider):
     def setUp(self):
         super(Nox, self).setUp()
         self.predefined = NoxPredefined(self._config, nox_current_version)
-        self.NoxPath = os.path.join(self._config.get('bot','noxlocation'), 'Nox.exe')
+        self.NoxPath = os.path.join(self._config.get('bot', 'noxlocation'), 'Nox.exe')
 
     def swipe_time(self, x1, y1, x2, y2, time_amount):
         command = "bin\\adb.exe shell input swipe %d %d %d %d %d" % (
@@ -83,6 +83,7 @@ class Nox(Provider):
             self.wait_for_ui(2)
 
     def pass_through_initial_screen(self):
+        self.root.info("Passing Through Start Screen")
         self.wait_for_ui(30)
         self.tapnsleep((25, 550), 10)
         self.tapnsleep((240, 540), 45)
@@ -130,7 +131,11 @@ class Nox(Provider):
     def start_process(self):
         try:
             self.root.info("Starting Nox...")
-            process = subprocess.Popen(self.NoxPath, shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen([self.NoxPath], stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE)
+        except FileNotFoundError as e:
+            self.root.fatal("Nox executable not found")
+            raise e
         except:
             self.root.error("The program can't run Nox")
             raise NotImplementedError
@@ -214,7 +219,6 @@ class Nox(Provider):
         for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
             for value in battle_calls.get(section):
                 self.root.debug(value)
-
 
     def check_if_battle(self, img):
         img = np.array(img)
