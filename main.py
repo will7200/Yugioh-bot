@@ -67,13 +67,17 @@ def bot(start, config_file):
                 sys.exit(0)
 
         signal.signal(signal.SIGINT, handler)
-        # TODO run bot
         uconfig = default_config()
         uconfig.read(config_file)
         scheduler = BackgroundScheduler()
         dlRuntime = DuelLinkRunTime(uconfig, scheduler)
         scheduler.start()
-        dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig, dlRuntime))
+        try:
+            dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig, dlRuntime))
+        except Exception as e:
+            logger.fatal("Could not get a provider, take a look at your config file")
+            logger.fatal(e)
+            sys.exit(0)
         dlRuntime.main()
 
         while True:
