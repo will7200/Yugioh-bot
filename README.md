@@ -19,6 +19,7 @@ Have Nox installed (https://www.bignox.com)
 Python 3.5.3 (https://www.python.org/downloads/)  
 Install tesseract (http://3.onj.me/tesseract/)  
 Install cv2+contrib 3.2.0 (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv)  
+ -- opencv_python‑3.3.1+contrib works too
 
 ## Install
 
