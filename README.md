@@ -1,5 +1,6 @@
 ## Yugioh Bot
 
+[![Join the chat at https://gitter.im/Yugioh-bot/Lobby](https://badges.gitter.im/Yugioh-bot/Lobby.svg)](https://gitter.im/Yugioh-bot/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Software License][ico-license]](LICENSE)
 [![Build Status][ico-travis]][link-travis]
 [![Coverage Status][ico-scrutinizer]][link-scrutinizer]
@@ -19,6 +20,7 @@ Have Nox installed (https://www.bignox.com)
 Python 3.5.3 (https://www.python.org/downloads/)  
 Install tesseract (http://3.onj.me/tesseract/)  
 Install cv2+contrib 3.2.0 (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv)  
+ -- opencv_python‑3.3.1+contrib works too
 
 ## Install
 
