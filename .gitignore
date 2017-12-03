@@ -22,6 +22,11 @@ test.py
 info.log
 *old*.py
 
+#distribution files
+dist/
+MANIFEST
+yugioh-bot*/
+
 
 # ignore h5 cache
 *.h5
