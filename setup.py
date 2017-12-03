@@ -10,13 +10,12 @@ URL = 'https://github.com/will7200/Yugioh-bot'
 CLASSIFIERS = [
     'Development Status :: 4 - Beta',
     'Environment :: Console',
-    'Operating System :: Windows',
-    'Intended Audience :: Yugiohers',
+    'Operating System :: Microsoft :: Windows',
+    'Intended Audience :: End Users/Desktop',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.5',
-    'License :: OSI Approved :: MIT License',
-    'Topic :: Bot']
+    'License :: OSI Approved :: MIT License']
 setup(
     name=DISTNAME,
     maintainer=AUTHOR,
