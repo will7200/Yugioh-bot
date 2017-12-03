@@ -68,7 +68,7 @@ $ pythonw main.py gui -s
 This will start the bot with gui controls.  
 So far the following signals have been implemented: 
 * Stop
-* Run Now
+* Run Now  
 ![Image of Gui](https://image.ibb.co/ccQ79b/yugioh_duel_bots_gui.png)
 
 ## Wakatime
