@@ -329,12 +329,12 @@ class DuelLinksGui(QFrame):
 
     def update_values(self, force=False):
         self._counter += 1
-        if self._counter % update_intervals.get('current_time', 1) == 0 and not force:
+        if self._counter % update_intervals.get('current_time', 1) == 0 or force:
             self.current_time_value.setText(QtCore.QDateTime.currentDateTime().toString())
-        if self._counter % update_intervals.get('nox_status', 1) == 0 and not force:
+        if self._counter % update_intervals.get('nox_status', 1) == 0 or force:
             self.nox_status_value.setText(
                 (lambda: "Running" if self.dlRunTime.get_provider().is_process_running() else "Off")())
-        if self._counter % update_intervals.get('next_run_at', 1) == 0 and not force:
+        if self._counter % update_intervals.get('next_run_at', 1) == 0 or force:
             self.next_run_at_value.setText(self.dlRunTime.next_run_at.strftime("%Y-%m-%dT%H:%M:%S"))
         if self.dlRunTime.get_provider().current_thread is not None:
             self.runButton.setDisabled(False)
@@ -368,17 +368,10 @@ class DuelLinksGui(QFrame):
     def start_bot(self):
         self.dlRunTime.stop = False
         self.dlRunTime.run_now = True
-        self.runButton.setDisabled(False)
-        self.runButton.setEnabled(False)
-        self.pauseButton.setDisabled(True)
-        self.pauseButton.setEnabled(True)
 
     def pause_bot(self):
         self.dlRunTime.stop = True
-        self.runButton.setDisabled(True)
-        self.runButton.setEnabled(True)
-        self.pauseButton.setDisabled(False)
-        self.pauseButton.setEnabled(False)
+        self.dlRunTime.run_now = False
 
     def createTrayIcon(self):
         self.trayIconMenu = QMenu(self)

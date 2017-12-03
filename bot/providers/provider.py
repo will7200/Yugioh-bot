@@ -2,6 +2,7 @@ import datetime
 import logging
 import threading
 import time
+import subprocess
 
 import apscheduler
 import os
@@ -134,9 +135,11 @@ class Provider(DuelLinks, Misc, Actions):
         if not self.run_time.stop:
             super(Provider, self).wait_for_ui(amount)
 
+
     def do_system_call(self, command):
         if not self.run_time.stop:
-            os.system(command)
+            CREATE_NO_WINDOW = 0x08000000
+            subprocess.call(command, shell=True, creationflags=CREATE_NO_WINDOW)
 
     @staticmethod
     def img_to_string(img, char_set=None):
@@ -146,7 +149,8 @@ class Provider(DuelLinks, Misc, Actions):
             command += "-c tessedit_char_whitelist=" + char_set + " "
         command += "-psm 7 "
         command += "> nul 2>&1"
-        os.system(command)
+        CREATE_NO_WINDOW = 0x08000000
+        subprocess.call(command, shell=True, creationflags=CREATE_NO_WINDOW)
         # Get the largest line in txt
         with open("tmp\\ocr.txt") as f:
             content = f.read().splitlines()

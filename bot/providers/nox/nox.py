@@ -242,7 +242,9 @@ class Nox(Provider):
     def kill_process(self):
         try:
             if self.is_process_running():
-                os.system("taskkill /im Nox.exe /f")
+                command = "taskkill /im Nox.exe /f"
+                CREATE_NO_WINDOW = 0x08000000
+                subprocess.call(command, shell=True, creationflags=CREATE_NO_WINDOW)
         except:
             self.root.error("The program could not be killed")
 
