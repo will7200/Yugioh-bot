@@ -14,6 +14,7 @@ from apscheduler.jobstores.base import JobLookupError
 from bot import logger
 from bot.utils.data import read_json_file, write_data_file
 from bot.utils.watcher import SyncWithFile
+import time
 
 try:
     from bot.debug_helpers.helpers_decorators import async_calling_function
@@ -151,7 +152,8 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _loop = None
     _run_main = None
     _job = None
-    _allow_next_run_at_change = True
+    _allow_event_change = True
+    _disable_dump = False
 
     def __init__(self, config, scheduler):
         self._config = config
@@ -197,7 +199,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             else:
                 logger.debug("Thread is currently running")
             self.run_now = False
-        if value == 'next_run_at' and self._allow_next_run_at_change:
+        if value == 'next_run_at' and self._allow_event_change:
             try:
                 self._scheduler.remove_job(self._job)
             except JobLookupError:
@@ -256,12 +258,13 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
 
     @async_calling_function(2)
     def dump(self):
-        # TODO signal observer to turn off and then turn on again
-        self._watcher.stop_observer()
-        tmpdict = self.dump_options()
-        logger.debug("Dump Getting Called {}".format(tmpdict))
-        write_data_file(tmpdict, self._file)
-        self._watcher.start_observer()
+        if not self._disable_dump:
+            # TODO signal observer to turn off and then turn on again
+            self._watcher.stop_observer()
+            tmpdict = self.dump_options()
+            logger.debug("Dump Getting Called {}".format(tmpdict))
+            write_data_file(tmpdict, self._file)
+            self._watcher.start_observer()
 
     def timeout_dump(self):
         if isinstance(self._timeout_dump, asyncio.TimerHandle):
@@ -338,16 +341,16 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                 logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
                 logger.debug(traceback.format_exc())
             self._watcher.stop_observer()
-            self._allow_next_run_at_change = False
+            self._allow_event_change = False
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(hours=4)
             next_run_at = self.next_run_at
-            self._allow_next_run_at_change = True
+            self._allow_event_change = True
             self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
             self._scheduler.add_job(in_main, trigger='date', id=self._job,
                                     run_date=next_run_at)
             self._watcher.start_observer()
 
-        self._allow_next_run_at_change = False
+        self._allow_event_change = False
         self._run_main = in_main
         self._scheduler.add_job(self.looper, args=(), id="looper")
         if self._config.getboolean("bot", "startBotOnStartUp"):
@@ -359,7 +362,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self._scheduler.add_job(in_main, trigger='date', id=self._job,
                                 run_date=next_run_at)
         self._watcher.start_observer()
-        self._allow_next_run_at_change = True
+        self._allow_event_change = True
         logger.info("Tracking %s" % (self._file))
         logger.info('Next run at %s' % (self.next_run_at.isoformat()))
 
@@ -371,8 +374,15 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _shutdown = False
 
     def shutdown(self):
-        self._shutdown = True
+        """ Waits for the current thread execution to become None or else will not shutdown properly"""
+        self._disable_dump = True # will not write to run time options
+        self.stop = True    # signals all long_running operations to not execute, os calls will not occur either
+        while self._provider.current_thread is not None:
+            #print(self._provider.current_thread)
+            time.sleep(5)
         self._task.cancel()
+        self._scheduler.shutdown()
+        self._shutdown = True
 
     def __exit__(self):
         self.dump()

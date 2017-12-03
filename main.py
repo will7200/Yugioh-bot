@@ -62,7 +62,6 @@ def bot(start, config_file):
         def handler(signum, frame):
             if signum == signal.SIGINT:
                 dlRuntime.shutdown()
-                scheduler.shutdown()
                 logger.info("Exiting")
                 sys.exit(0)
 
@@ -89,8 +88,47 @@ def bot(start, config_file):
                 pass
 
 
+@click.command()
+@click.option("-s", "--start", is_flag=True, default=False)
+@click.option("-c", "--config-file", default="config.ini")
+def gui(start, config_file):
+    if start:
+        import sys
+        from PyQt5.QtWidgets import QSystemTrayIcon
+        from PyQt5.QtWidgets import QMessageBox
+        from PyQt5.QtWidgets import QApplication
+        from bot.dl_gui import DuelLinksGui
+        app = QApplication(sys.argv)
+
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            QMessageBox.critical(None, "Systray",
+                                 "Systray not dected on system.")
+            sys.exit(1)
+
+        QApplication.setQuitOnLastWindowClosed(False)
+
+        uconfig = default_config()
+        uconfig.read(config_file)
+        scheduler = BackgroundScheduler()
+        dlRuntime = DuelLinkRunTime(uconfig, scheduler)
+        scheduler.start()
+        try:
+            dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig, dlRuntime))
+        except Exception as e:
+            logger.fatal("Could not get a provider, take a look at your config file")
+            logger.fatal(e)
+            sys.exit(0)
+        dlRuntime.main()
+        window = DuelLinksGui(dlRuntime)
+        window.show()
+        sys.exit(app.exec_())
+
+
+
+
 cli.add_command(bot)
 cli.add_command(config)
+cli.add_command(gui)
 
 if __name__ == "__main__":
     cli()

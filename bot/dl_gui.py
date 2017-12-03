@@ -40,7 +40,7 @@
 # $QT_END_LICENSE$
 ##
 #############################################################################
-
+import time
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
@@ -48,6 +48,7 @@ from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
                              QMessageBox, QMenu, QPushButton, QSpinBox, QStyle, QSystemTrayIcon,
                              QTextEdit, QVBoxLayout, QDesktopWidget, QWidget, QFrame)
 from enum import Enum
+from bot.duel_links_runtime import DuelLinkRunTime
 
 
 class WINDOWS_TASKBAR_LOCATION(Enum):
@@ -64,48 +65,63 @@ default_open_offset = 7
 def mock_data(): return False
 
 
-class Window(QFrame):
+update_intervals = {
+    'next_run_at': 10,
+    'nox_status': 10,
+    'current_time': 1
+}
 
+
+class DuelLinksGui(QFrame):
     _shouldShowSystrayBox = mock_data
+    dlRunTime = None
 
-    def __init__(self):
-        super(Window, self).__init__()
-
-        self.createIconGroupBox()
+    def __init__(self, duelLinksRunTime=None):
+        super(DuelLinksGui, self).__init__()
+        # if duelLinksRunTime is None:
+        #    raise Exception("Duel Links Run Time Invalid")
+        self.dlRunTime = duelLinksRunTime  # type: DuelLinkRunTime
+        # self.createIconGroupBox()
+        self.createRunTimeFields()
         self.createMessageGroupBox()
         self.createBotControls()
 
-        #self.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-        #self.setLineWidth(2)
+        # self.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+        # self.setLineWidth(2)
         self.setObjectName("BotFrame")
         self.setStyleSheet("#BotFrame {border: 2px solid #9e3939;}")
-        self.iconLabel.setMinimumWidth(self.durationLabel.sizeHint().width())
+        # self.iconLabel.setMinimumWidth(self.durationLabel.sizeHint().width())
 
         self.createActions()
+        self.createBotActions()
         self.createTrayIcon()
         self.setShouldShowSystrayBox(mock_data)
         # self.showMessageButton.clicked.connect(self.showMessage)
         self.hideButton.clicked.connect(self.close)
-        self.exitButton.clicked.connect(QApplication.instance().quit)
-        self.showIconCheckBox.toggled.connect(self.trayIcon.setVisible)
-        self.iconComboBox.currentIndexChanged.connect(self.setIcon)
+        self.exitButton.clicked.connect(self.__quit__)
+        # self.showIconCheckBox.toggled.connect(self.trayIcon.setVisible)
+        # self.iconComboBox.currentIndexChanged.connect(self.setIcon)
         self.trayIcon.messageClicked.connect(self.messageClicked)
         self.trayIcon.activated.connect(self.iconActivated)
 
+        # bot actions connected
+
+        self.pauseButton.clicked.connect(self.pause_bot)
+        self.runButton.clicked.connect(self.start_bot)
+
         mainLayout = QVBoxLayout()
-        mainLayout.addWidget(self.iconGroupBox)
+        mainLayout.addWidget(self.runTimeGroupBox)
         mainLayout.addWidget(self.botControls)
         # mainLayout.addWidget(self.messageGroupBox)
         self.setLayout(mainLayout)
 
-        self.iconComboBox.setCurrentIndex(0)
         self.setIcon(0)
         self.trayIcon.show()
         self.setWindowTitle(app_name)
         self.setFixedSize(400, 300)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint |
-                            QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Tool)
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Popup)
         self.location_on_the_screen()
+        self.update_values(True)
 
     def location_on_the_screen(self):
         ag = QDesktopWidget().availableGeometry()
@@ -140,7 +156,7 @@ class Window(QFrame):
         self.minimizeAction.setEnabled(visible)
         self.maximizeAction.setEnabled(not self.isMaximized())
         self.restoreAction.setEnabled(self.isMaximized() or not visible)
-        super(Window, self).setVisible(visible)
+        super(DuelLinksGui, self).setVisible(visible)
 
     def closeEvent(self, event):
         if self.trayIcon.isVisible():
@@ -159,11 +175,11 @@ class Window(QFrame):
         self._shouldShowSystrayBox()
 
     def setIcon(self, index):
-        icon = self.iconComboBox.itemIcon(index)
+        icon = QIcon('assets/yugioh.ico')
         self.trayIcon.setIcon(icon)
         self.setWindowIcon(icon)
 
-        self.trayIcon.setToolTip(self.iconComboBox.itemText(index))
+        self.trayIcon.setToolTip('Duel-Links Bot')
 
     def iconActivated(self, reason):
         if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick):
@@ -213,21 +229,21 @@ class Window(QFrame):
         self.botControls = QGroupBox("Controls")
         controlLayout = QGridLayout()
         runLabel = QLabel("Run the bot:")
-        self.showRunButton = QPushButton("Run")
+        self.runButton = QPushButton("Run")
         showLabel = QLabel("Pause the bot:")
-        self.showPauseButton = QPushButton("Pause")
+        self.pauseButton = QPushButton("Pause")
         self.exitButton = QPushButton("Exit")
         self.hideButton = QPushButton("Hide")
         controlLayout.addWidget(runLabel, 0, 0)
-        controlLayout.addWidget(self.showRunButton, 0, 2, 1, 2)
+        controlLayout.addWidget(self.runButton, 0, 2, 1, 2)
         controlLayout.addWidget(showLabel, 1, 0)
-        controlLayout.addWidget(self.showPauseButton, 1, 2, 1, 2)
+        controlLayout.addWidget(self.pauseButton, 1, 2, 1, 2)
         controlLayout.addWidget(self.hideButton, 2, 0, 1, 2)
         controlLayout.addWidget(self.exitButton, 2, 2, 1, 2)
         self.botControls.setLayout(controlLayout)
 
     def createMessageGroupBox(self):
-        #self.messageGroupBox = QGroupBox("Balloon Message")
+        # self.messageGroupBox = QGroupBox("Balloon Message")
 
         typeLabel = QLabel("Type:")
 
@@ -264,7 +280,7 @@ class Window(QFrame):
         self.bodyEdit.setPlainText("Don't believe me. Honestly, I don't have "
                                    "a clue.\nClick this balloon for details.")
 
-        #self.showMessageButton = QPushButton("Show Message")
+        # self.showMessageButton = QPushButton("Show Message")
         # self.showMessageButton.setDefault(True)
         """
         messageLayout = QGridLayout()
@@ -282,6 +298,55 @@ class Window(QFrame):
         messageLayout.setRowStretch(4, 1)
         self.messageGroupBox.setLayout(messageLayout)"""
 
+    def createRunTimeFields(self):
+        self.runTimeGroupBox = QGroupBox("RunTime Fields")
+        self.current_time = QLabel("Current Time: ")
+        self.current_time_value = QLabel("")
+        self.nox_status_label = QLabel("Nox status: ")
+        self.nox_status_value = QLabel("")
+        self.next_run_at_label = QLabel("Next Run At:")
+        self.next_run_at_value = QLabel("")
+        self.in_timer = QtCore.QTimer(self)
+        self.in_timer.setInterval(1000)
+        self.in_timer.timeout.connect(self.update_values)
+        self.in_timer.start()
+        layout = QVBoxLayout()
+        top = QHBoxLayout()
+        top.addWidget(self.current_time)
+        top.addWidget(self.current_time_value)
+        top.addStretch()
+        runTimeLayout = QHBoxLayout()
+        runTimeLayout.addWidget(self.nox_status_label)
+        runTimeLayout.addWidget(self.nox_status_value)
+        runTimeLayout.addStretch()
+        runTimeLayout.addWidget(self.next_run_at_label)
+        runTimeLayout.addWidget(self.next_run_at_value)
+        layout.addLayout(top)
+        layout.addLayout(runTimeLayout)
+        self.runTimeGroupBox.setLayout(layout)
+
+    _counter = 0
+
+    def update_values(self, force=False):
+        self._counter += 1
+        if self._counter % update_intervals.get('current_time', 1) == 0 and not force:
+            self.current_time_value.setText(QtCore.QDateTime.currentDateTime().toString())
+        if self._counter % update_intervals.get('nox_status', 1) == 0 and not force:
+            self.nox_status_value.setText(
+                (lambda: "Running" if self.dlRunTime.get_provider().is_process_running() else "Off")())
+        if self._counter % update_intervals.get('next_run_at', 1) == 0 and not force:
+            self.next_run_at_value.setText(self.dlRunTime.next_run_at.strftime("%Y-%m-%dT%H:%M:%S"))
+        if self.dlRunTime.get_provider().current_thread is not None:
+            self.runButton.setDisabled(False)
+            self.runButton.setEnabled(False)
+            self.pauseButton.setDisabled(True)
+            self.pauseButton.setEnabled(True)
+        else:
+            self.runButton.setDisabled(True)
+            self.runButton.setEnabled(True)
+            self.pauseButton.setDisabled(False)
+            self.pauseButton.setEnabled(False)
+
     def createActions(self):
         self.minimizeAction = QAction("Mi&nimize", self, triggered=self.hide)
         self.maximizeAction = QAction("Ma&ximize", self,
@@ -289,7 +354,31 @@ class Window(QFrame):
         self.restoreAction = QAction("&Restore", self,
                                      triggered=self.showNormal)
         self.quitAction = QAction("&Quit", self,
-                                  triggered=QApplication.instance().quit)
+                                  triggered=self.__quit__)
+
+    def __quit__(self):
+        self.hide()
+        self.dlRunTime.shutdown()
+        QApplication.instance().quit()
+
+    def createBotActions(self):
+        self.startAction = QAction('Start', self, triggered=self.start_bot)
+        self.pauseAction = QAction('Pause', self, triggered=self.pause_bot)
+
+    def start_bot(self):
+        self.dlRunTime.stop = False
+        self.dlRunTime.run_now = True
+        self.runButton.setDisabled(False)
+        self.runButton.setEnabled(False)
+        self.pauseButton.setDisabled(True)
+        self.pauseButton.setEnabled(True)
+
+    def pause_bot(self):
+        self.dlRunTime.stop = True
+        self.runButton.setDisabled(True)
+        self.runButton.setEnabled(True)
+        self.pauseButton.setDisabled(False)
+        self.pauseButton.setEnabled(False)
 
     def createTrayIcon(self):
         self.trayIconMenu = QMenu(self)

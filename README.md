@@ -60,6 +60,17 @@ The following values can be changed during runtime that will control the bot unt
 run_now: if the bot is currently stopped it will schedule a run immediately  
 stop: if the bot is currently running it will halt execution  
 next_run_at: will schedule a run at the specified time, if currently running it will remove the current job in place of the new one
+
+GUI
+````bash
+$ pythonw main.py gui -s
+````
+This will start the bot with gui controls.  
+So far the following signals have been implemented: 
+* Stop
+* Run Now
+![Image of Gui](https://image.ibb.co/ccQ79b/yugioh_duel_bots_gui.png)
+
 ## Wakatime
 
 Check out what files I'm working on through [WakaTime](https://wakatime.com/@will2700/projects/fofjloaywu)  

@@ -17,6 +17,8 @@ from bot.providers.shared import *
 
 
 class Nox(Provider):
+    NotPath = None
+
     def setUp(self):
         super(Nox, self).setUp()
         self.predefined = NoxPredefined(self._config, nox_current_version)
@@ -25,7 +27,7 @@ class Nox(Provider):
     def swipe_time(self, x1, y1, x2, y2, time_amount):
         command = "bin\\adb.exe shell input swipe %d %d %d %d %d" % (
             x1, y1, x2, y2, time_amount)
-        os.system(command)
+        self.do_system_call(command)
 
     def swipe_right(self, time_sleep=0):
         self.swipe(0, 500, 100, 500)
@@ -33,7 +35,7 @@ class Nox(Provider):
 
     def swipe(self, x1, y1, x2, y2):
         command = "bin\\adb.exe shell input swipe %d %d %d %d " % (x1, y1, x2, y2)
-        os.system(command)
+        self.do_system_call(command)
 
     def take_png_screenshot(self):
         while True:
@@ -51,11 +53,11 @@ class Nox(Provider):
     def tap(self, x, y):
         self.root.debug("Tapping at location ({},{})".format(x, y))
         command = "bin\\adb.exe shell input tap %d %d" % (x, y)
-        os.system(command)
+        self.do_system_call(command)
 
     def key_escape(self):
         command = "bin\\adb.exe shell input keyevent 4"
-        os.system(command)
+        self.do_system_call(command)
 
     root = logging.getLogger("bot.provider.Nox")
 
@@ -66,7 +68,7 @@ class Nox(Provider):
     def wait_for(self, word, try_scanning=False):
         self.root.info("WAITING FOR {} BUTTON TO APPEAR".format(word))
         ok = ''
-        while ok != word:
+        while ok != word and not self.run_time.stop:
             # root.debug("waiting for {}".format(word))
             img = self.get_img_from_screen_shot()
             img = img[745:770, 210:270]
@@ -92,6 +94,7 @@ class Nox(Provider):
         try_times = 3
         version = 0
         while True:
+            self.root.debug("Verifying battle")
             try_times -= 1
             img = self.get_img_from_screen_shot()
             if self.predefined.determine_duel_variant(img):
@@ -99,11 +102,11 @@ class Nox(Provider):
                 img = img[680:710, 300:420]
                 version = 2
                 break
-            else:
-                if try_times == 0:
-                    pointer = duel_variant_v['v1']
-                    img = img[680:710, 210:265]
-                    version = 1
+            elif try_times == 0:
+                pointer = duel_variant_v['v1']
+                img = img[680:710, 210:265]
+                version = 1
+                break
 
         # img = img[680:710, 90:150] new version duel
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -132,7 +135,7 @@ class Nox(Provider):
         try:
             self.root.info("Starting Nox...")
             process = subprocess.Popen([self.NoxPath], stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
+                                       stderr=subprocess.PIPE)
         except FileNotFoundError as e:
             self.root.fatal("Nox executable not found")
             raise e

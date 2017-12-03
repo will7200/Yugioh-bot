@@ -7,7 +7,7 @@ import apscheduler
 import os
 
 import cv2
-
+from bot.duel_links_runtime import DuelLinkRunTime
 from bot.providers import trainer_matches as tm
 from bot.providers.duellinks import DuelLinks, LOW_CORR
 from bot.providers.misc import Misc
@@ -33,7 +33,7 @@ class Provider(DuelLinks, Misc, Actions):
         self._config = config
         self.assets = config.get('locations', 'assets')
         self.lock = threading.Lock()
-        self.run_time = run_time
+        self.run_time = run_time  # type: DuelLinkRunTime
         self.setUp()
 
     def auto(self):
@@ -41,14 +41,18 @@ class Provider(DuelLinks, Misc, Actions):
         self.register_thread(t)
         self.root.info("starting auto run through")
         for x in range(0, 8):
-            if not getattr(t, "do_run", True):
+            if self.run_time.stop:
                 # Leaves a checkpoint when stopped
                 self.current_run = x
                 break
+            self.root.debug("Run through {}".format(x))
             self.compare_with_back_button()
             self.wait_for_ui(1)
             self.swipe_right()
-            self.scan()
+            try:
+                self.scan()
+            except Exception:
+                break
         self.register_thread(None)
 
     def debug_battle(self):
@@ -85,20 +89,24 @@ class Provider(DuelLinks, Misc, Actions):
         raise NotImplementedError("scan not implemented")
 
     def possible_battle_points(self):
+        if self.run_time.stop:
+            self.root.info("Received Stopping signal")
+            return
         img = self.get_img_from_screen_shot()
         t = tm.Trainer(img)
         t.whiteCircles()
         current_page = self.get_current_page(img)
         logging.debug("Current-Page {}".format(current_page))
         for x, y in t.circlePoints:
-            if not getattr(self.current_thread, "do_run", True):
+            if self.run_time.stop:
+                self.root.info("Received Stopping signal")
                 break
             yield x, y, current_page
 
     def wait_for_auto_duel(self):
         self.root.debug("WAITING FOR AUTO-DUEL TO APPEAR")
         word = ''
-        while 'Auto-Duel' not in word and 'AutoDuel' not in word:
+        while 'Auto-Duel' not in word and 'AutoDuel' not in word and not self.run_time.stop:
             img = self.get_img_from_screen_shot()
             area = img.crop(self.auto_duel_box)
             try:
@@ -113,7 +121,7 @@ class Provider(DuelLinks, Misc, Actions):
         self.root.debug("WAITING FOR WHITE BOTTOM TO APPEAR")
         img = self.get_img_from_screen_shot()
         b = self.check_if_battle(img)
-        while not b:
+        while not b and not self.run_time.stop:
             if tryScanning:
                 self.scan_for_word('ok', LOW_CORR)
             img = self.get_img_from_screen_shot()
@@ -121,6 +129,14 @@ class Provider(DuelLinks, Misc, Actions):
             if b:
                 break
             self.wait_for_ui(1)
+
+    def wait_for_ui(self, amount):
+        if not self.run_time.stop:
+            super(Provider, self).wait_for_ui(amount)
+
+    def do_system_call(self, command):
+        if not self.run_time.stop:
+            os.system(command)
 
     @staticmethod
     def img_to_string(img, char_set=None):
