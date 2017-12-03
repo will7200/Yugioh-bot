@@ -26,6 +26,8 @@ info.log
 dist/
 MANIFEST
 yugioh-bot*/
+build/
+yugioh_bot*/
 
 
 # ignore h5 cache
