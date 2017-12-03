@@ -12,9 +12,13 @@ from abc import abstractmethod
 from apscheduler.jobstores.base import JobLookupError
 
 from bot import logger
-from bot.debug_helpers.helpers_decorators import async_calling_function
 from bot.utils.data import read_json_file, write_data_file
 from bot.utils.watcher import SyncWithFile
+
+try:
+    from bot.debug_helpers.helpers_decorators import async_calling_function
+except ImportError:
+    from bot import fake_decorator as async_calling_function
 
 
 class DuelLinkRunTimeOptions(object):

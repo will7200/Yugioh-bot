@@ -1,5 +1,5 @@
 import logging
-from bot.debug_helpers.logger import LastRecordHandler
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter(
@@ -7,10 +7,28 @@ formatter = logging.Formatter(
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 ch.setFormatter(formatter)
-last_record = LastRecordHandler()
+try:
+    from bot.debug_helpers.logger import LastRecordHandler
+
+    last_record = LastRecordHandler()
+    logger.addHandler(last_record)
+except ImportError:
+    pass
+
 logger.addHandler(ch)
-logger.addHandler(last_record)
 logger.debug("Setup Complete")
 from ._version import get_versions
+
 __version__ = get_versions()['version']
 del get_versions
+
+
+def fake_decorator(arg1=0, arg2=0, arg3=0):
+    def calling_function(__function):
+        """
+        Fake Decorator
+        """
+        def wrapper(*args, **kwargs):
+            return __function(*args, **kwargs)
+        return wrapper
+    return calling_function
