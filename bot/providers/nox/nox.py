@@ -88,7 +88,7 @@ class Nox(Provider):
         self.root.info("Passing Through Start Screen")
         self.wait_for_ui(30)
         self.tapnsleep((25, 550), 10)
-        self.tapnsleep((240, 540), 45)
+        self.tapnsleep((240, 530), 45)
 
     def verify_battle(self):
         try_times = 3
