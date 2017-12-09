@@ -8,6 +8,7 @@ from sklearn.cluster import KMeans
 
 
 class Trainer(object):
+    _debug = False
     def __init__(self, query, x=0, y=0):
         self.query = query
         self.xThreshold = x
@@ -55,16 +56,20 @@ class Trainer(object):
             return False
         self.kmeans = KMeans(n_clusters=1, random_state=0).fit(cluster)
         # print(self.kmeans.cluster_centers_)
-        # plt.scatter(*zip(*cluster)),plt.axis([0,480,0,800]),plt.gca().invert_yaxis(),plt.show()
+        #plt.scatter(*zip(*cluster)),plt.axis([0,480,0,800]),plt.gca().invert_yaxis(),plt.show()
         img3 = cv2.drawMatchesKnn(
             img1, kp1, img2, kp2, goodMatches, None, flags=2)
         self.images.append(img3)
         # if train != 'assets/back__.png':
-        #plt.imshow(img3),plt.show()
+        self.debug_matcher(img3)
         return True
         # return goodMatches
         # cv2.drawMatchesKnn expects list of lists as matches.
 
+    def debug_matcher(self,img):
+        if self._debug:
+            plt.imshow(img);plt.show()
+    
     def readCircles(self):
         img = cv2.cvtColor(self.query, cv2.COLOR_BGR2GRAY)
         img = cv2.medianBlur(img, 7)

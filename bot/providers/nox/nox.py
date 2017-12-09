@@ -14,6 +14,7 @@ from bot.providers.duellinks import DuelLinksInfo
 from bot.providers.nox.predefined import NoxPredefined, duel_variant_v
 from bot.providers.provider import Provider
 from bot.providers.shared import *
+from bot.debug_helpers import calling_function
 
 
 class Nox(Provider):
@@ -124,7 +125,7 @@ class Nox(Provider):
         corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
         self.root.debug("LOOKING FOR CLOSE BUTTON, {} CORRERLATION".format(corrword))
         img = self.get_img_from_screen_shot()
-        t = tm.Trainer(img, 480, 500)
+        t = tm.Trainer(img, 400, 500)
         location = os.path.join(self.assets, "close.png")
         return self.__wrapper_kmeans_result(t, location, corr, info)
 
