@@ -32,3 +32,5 @@ def fake_decorator(arg1=0, arg2=0, arg3=0):
             return __function(*args, **kwargs)
         return wrapper
     return calling_function
+
+default_timestamp = 86400

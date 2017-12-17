@@ -34,12 +34,6 @@ def setup_logging(
         logging.basicConfig(level=default_level)
 
 
-setup_logging()
-
-from bot.utils.common import make_config_file, default_config
-from bot.duel_links_runtime import DuelLinkRunTime
-
-
 @click.group()
 def cli():
     pass
@@ -49,6 +43,7 @@ def cli():
 @click.option("--generate-config", default=False, help="Generate Config file", is_flag=True)
 @click.option("--file-path", default="configtest.ini", help="File Location")
 def config(generate_config, file_path):
+    from bot.utils.common import make_config_file, default_config
     if generate_config:
         make_config_file(file_path)
 
@@ -58,7 +53,8 @@ def config(generate_config, file_path):
 @click.option("-c", "--config-file", default="config.ini")
 def bot(start, config_file):
     if start:
-
+        from bot.utils.common import make_config_file, default_config
+        from bot.duel_links_runtime import DuelLinkRunTime
         def handler(signum, frame):
             if signum == signal.SIGINT:
                 dlRuntime.shutdown()
@@ -68,6 +64,8 @@ def bot(start, config_file):
         signal.signal(signal.SIGINT, handler)
         uconfig = default_config()
         uconfig.read(config_file)
+        os.makedirs(uconfig.get('locations', 'log'), exist_ok=True)
+        setup_logging()
         scheduler = BackgroundScheduler()
         dlRuntime = DuelLinkRunTime(uconfig, scheduler)
         scheduler.start()
@@ -97,6 +95,8 @@ def gui(start, config_file):
         from PyQt5.QtWidgets import QSystemTrayIcon
         from PyQt5.QtWidgets import QMessageBox
         from PyQt5.QtWidgets import QApplication
+        from bot.utils.common import make_config_file, default_config
+        from bot.duel_links_runtime import DuelLinkRunTime
         from bot.dl_gui import DuelLinksGui
         app = QApplication(sys.argv)
 
@@ -109,6 +109,8 @@ def gui(start, config_file):
 
         uconfig = default_config()
         uconfig.read(config_file)
+        os.makedirs(uconfig.get('locations', 'log'), exist_ok=True)
+        setup_logging()
         scheduler = BackgroundScheduler()
         dlRuntime = DuelLinkRunTime(uconfig, scheduler)
         scheduler.start()
@@ -122,8 +124,6 @@ def gui(start, config_file):
         window = DuelLinksGui(dlRuntime)
         window.show()
         sys.exit(app.exec_())
-
-
 
 
 cli.add_command(bot)

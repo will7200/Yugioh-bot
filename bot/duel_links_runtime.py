@@ -11,7 +11,7 @@ from abc import abstractmethod
 
 from apscheduler.jobstores.base import JobLookupError
 
-from bot import logger
+from bot import logger, default_timestamp
 from bot.utils.data import read_json_file, write_data_file
 from bot.utils.watcher import SyncWithFile
 import time
@@ -23,8 +23,7 @@ except ImportError:
 
 
 class DuelLinkRunTimeOptions(object):
-    # TODO HP all setters persist to file
-    _last_run_at = datetime.datetime.fromtimestamp(0)
+    _last_run_at = datetime.datetime.fromtimestamp(default_timestamp)
 
     @property
     def last_run_at(self):
@@ -42,7 +41,7 @@ class DuelLinkRunTimeOptions(object):
         logger.info("Value {} modified to {}".format(inspect.getframeinfo(frame).function, value))
         self.timeout_dump()
 
-    _next_run_at = datetime.datetime.fromtimestamp(0)
+    _next_run_at = datetime.datetime.fromtimestamp(default_timestamp)
 
     @property
     def next_run_at(self):
@@ -164,7 +163,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         logger.debug("Watching {} for runTime Options".format(self._file))
         self._watcher = SyncWithFile(self._file)
         self._watcher.settings_modified = self.settings_modified
-        # scheduler.add_job(self.dump, 'interval', minutes=1)
 
     def setUp(self):
         self._loop = asyncio.get_event_loop()
@@ -223,7 +221,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             pass
 
     def settings_modified(self, events):
-        # logger.debug(events)
         self.update()
 
     def update(self):
@@ -259,7 +256,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     @async_calling_function(2)
     def dump(self):
         if not self._disable_dump:
-            # TODO signal observer to turn off and then turn on again
             self._watcher.stop_observer()
             tmpdict = self.dump_options()
             logger.debug("Dump Getting Called {}".format(tmpdict))
@@ -287,7 +283,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     def schedule_next_run(self):
         if self._watcher.observer:
             self._watcher.stop_observer()
-        if self.next_run_at == datetime.datetime.fromtimestamp(0):
+        if self.next_run_at == datetime.datetime.fromtimestamp(default_timestamp):
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
         elif datetime.datetime.now() > self.next_run_at:
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
@@ -305,7 +301,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             self.shutdown()
             schedule_shutdown()
 
-        def handle_expection(e):
+        def handle_exception(e):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             logger.error(e)
@@ -327,13 +323,13 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                 logger.info("main event")
                 provider.auto()
             except NotImplementedError as ee:
-                handle_expection(ee)
+                handle_exception(ee)
                 return
             except AttributeError as ee:
-                handle_expection(ee)
+                handle_exception(ee)
                 return
             except TypeError as ee:
-                handle_expection(ee)
+                handle_exception(ee)
                 return
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -375,10 +371,9 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
 
     def shutdown(self):
         """ Waits for the current thread execution to become None or else will not shutdown properly"""
-        self._disable_dump = True # will not write to run time options
-        self.stop = True    # signals all long_running operations to not execute, os calls will not occur either
+        self._disable_dump = True  # will not write to run time options
+        self.stop = True  # signals all long_running operations to not execute, os calls will not occur either
         while self._provider.current_thread is not None:
-            #print(self._provider.current_thread)
             time.sleep(5)
         self._task.cancel()
         self._scheduler.shutdown()

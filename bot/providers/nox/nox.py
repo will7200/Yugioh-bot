@@ -146,7 +146,7 @@ class Nox(Provider):
 
     def is_process_running(self):
         try:
-            if win32gui.FindWindow(None, "Nox"):
+            if win32gui.FindWindow(None, "Nox") or win32gui.FindWindow(None, "NoxPlayer"):
                 return True
         except:
             return False

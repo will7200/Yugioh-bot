@@ -6,6 +6,7 @@ from datetime import datetime
 import cv2
 import numpy as np
 
+from bot import default_timestamp
 from bot.utils.data import load_dict_from_hdf5, save_dict_to_hdf5
 from .shared import *
 
@@ -109,7 +110,7 @@ class Predefined(object):
         self.check_cache()
 
     _cache = None
-    _last_read = datetime.fromtimestamp(0)
+    _last_read = datetime.fromtimestamp(default_timestamp)
 
     @property
     def cache(self):
