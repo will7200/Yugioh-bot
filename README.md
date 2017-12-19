@@ -1,6 +1,7 @@
 ## Yugioh Bot
 
 [![Join the chat at https://gitter.im/Yugioh-bot/Lobby](https://badges.gitter.im/Yugioh-bot/Lobby.svg)](https://gitter.im/Yugioh-bot/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Discord](https://img.shields.io/discord/392538066633359360.svg?colorB=0082ff&style=flat)](https://discordapp.com/api/guilds/392538066633359360/widget.json)
 [![Software License][ico-license]](LICENSE)
 [![Build Status][ico-travis]][link-travis]
 [![Coverage Status][ico-scrutinizer]][link-scrutinizer]
