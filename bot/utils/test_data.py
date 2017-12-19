@@ -1,6 +1,6 @@
 import os
 import unittest
-import bot.utilss.data as data
+import bot.utils.data as data
 
 class Data_Test(unittest.TestCase):
     """Tests for `data.py`."""

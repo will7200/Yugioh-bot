@@ -35,3 +35,6 @@ yugioh_bot*/
 
 #ignore runtime files
 runTimeOptions.json
+
+#ignore new tesseract distributions
+tess_*

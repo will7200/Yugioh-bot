@@ -17,8 +17,11 @@ Bot to help with those npc in Yugioh Duel Links.
 ## Prerequisites
 
 Have Nox installed (https://www.bignox.com)  
-Python 3.5.3 (https://www.python.org/downloads/)  
+Python 3.5 or 3.6 (https://www.python.org/downloads/)  
 Install tesseract (http://3.onj.me/tesseract/)  
+If the above link is giving issues or is slow:
+Tesseract at UB Mannheim (https://github.com/UB-Mannheim/tesseract/wiki)  
+ -- Note: Testings occured on the 3.05.01 version  
 Install cv2+contrib 3.2.0 (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv)  
  -- opencv_python‑3.3.1+contrib works too
 

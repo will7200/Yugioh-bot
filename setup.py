@@ -15,6 +15,7 @@ CLASSIFIERS = [
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
     'License :: OSI Approved :: MIT License']
 setup(
     name=DISTNAME,
@@ -30,6 +31,7 @@ setup(
     classifiers=CLASSIFIERS,
     platforms='win32',
     maintainer_email=EMAIL,
+    python_requires='>=3.5',
     url=URL,
     description="Botting Yugioh-DuelLinks",
     long_description=open('README.md', 'rt').read(),
