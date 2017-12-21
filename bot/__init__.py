@@ -20,6 +20,10 @@ logger.debug("Setup Complete")
 from ._version import get_versions
 
 __version__ = get_versions()['version']
+if '+' in __version__:
+    clean_verison = __version__[:__version__.index('+')]
+else:
+    clean_verison = __version__
 del get_versions
 
 
