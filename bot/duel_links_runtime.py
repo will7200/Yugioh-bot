@@ -6,15 +6,16 @@ import os
 import pathlib
 import sys
 import threading
+import time
 import traceback
 from abc import abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 
 from apscheduler.jobstores.base import JobLookupError
 
 from bot import logger, default_timestamp
 from bot.utils.data import read_json_file, write_data_file
 from bot.utils.watcher import SyncWithFile
-import time
 
 try:
     from bot.debug_helpers.helpers_decorators import async_calling_function
@@ -154,11 +155,14 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _allow_event_change = True
     _disable_dump = False
 
-    def __init__(self, config, scheduler):
+    def __init__(self, config, scheduler, auto_start=True):
         self._config = config
         self._file = config.get('bot', 'runTimePersistence')
         self._scheduler = scheduler
+        if auto_start:
+            self.start()
 
+    def start(self):
         self.setUp()
         logger.debug("Watching {} for runTime Options".format(self._file))
         self._watcher = SyncWithFile(self._file)
@@ -166,6 +170,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
 
     def setUp(self):
         self._loop = asyncio.get_event_loop()
+        self._loop.set_default_executor(ThreadPoolExecutor())
         self._task = asyncio.Task(self.periodic())
         if os.path.dirname(self._file) == "":
             self._file = os.path.join(os.getcwd(), self._file)
@@ -318,7 +323,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                 if not provider.is_process_running():
                     provider.start_process()
                     provider.wait_for_ui(30)
-                    provider.pass_through_initial_screen()
+                provider.pass_through_initial_screen()
                 provider.compare_with_back_button()
                 logger.info("main event")
                 provider.auto()

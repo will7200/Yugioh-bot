@@ -26,16 +26,16 @@ class Provider(DuelLinks, Misc, Actions):
     assets = None
     predefined = None
 
-    def setUp(self):
-        pass
-
     def __init__(self, scheduler, config, run_time):
         self.scheduler = scheduler
         self._config = config
         self.assets = config.get('locations', 'assets')
-        self.lock = threading.Lock()
+        self.lock = None
         self.run_time = run_time  # type: DuelLinkRunTime
         self.setUp()
+
+    def setUp(self):
+        pass
 
     def auto(self):
         t = threading.currentThread()

@@ -5,6 +5,7 @@ from datetime import datetime
 
 import cv2
 import numpy as np
+import asyncio
 
 from bot import default_timestamp
 from bot.utils.data import load_dict_from_hdf5, save_dict_to_hdf5
@@ -230,10 +231,13 @@ class DuelLinks(object):
 
     @sleep_factor.setter
     def sleep_factor(self, value):
-        self.sleep_factor = value
+        self._sleep_factor = value
 
     def wait_for_ui(self, amount):
         time.sleep(amount * self.sleep_factor)
+
+    async def async_wait_for_ui(self, amount):
+        await asyncio.sleep(amount * self.sleep_factor)
 
     @abstractmethod
     def auto(self):

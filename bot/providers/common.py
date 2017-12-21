@@ -14,13 +14,20 @@ def loop_scan(fn, **kwargs):
         time.sleep(1)
 
 
-def mask_image(lower_mask, upper_mask, img):
+def mask_image(lower_mask, upper_mask, img, apply_mask=False):
     """" Masks an image"""
-    assert (len(lower_mask) == 3)
-    assert (len(upper_mask) == 3)
+    shape = np.array(img.shape).flatten()
+    if len(np.array(img.shape).flatten()) == 3:
+        shape_size = shape[-1]
+    else:
+        shape_size = 1
+    assert (len(lower_mask) == shape_size)
+    assert (len(upper_mask) == shape_size)
     color_min = np.array(lower_mask, np.uint8)
     color_max = np.array(upper_mask, np.uint8)
     new_img = cv2.inRange(img, color_min, color_max)
+    if apply_mask:
+        return cv2.bitwise_and(img, img, mask=new_img)
     return new_img
 
 

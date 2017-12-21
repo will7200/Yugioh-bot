@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import logging
 import os
@@ -7,6 +8,7 @@ import win32gui
 
 import cv2
 import numpy as np
+from skimage.measure import compare_ssim
 
 from bot.providers import trainer_matches as tm
 from bot.providers.common import loop_scan, crop_image, mask_image
@@ -14,7 +16,6 @@ from bot.providers.duellinks import DuelLinksInfo
 from bot.providers.nox.predefined import NoxPredefined, duel_variant_v
 from bot.providers.provider import Provider
 from bot.providers.shared import *
-from bot.debug_helpers import calling_function
 
 
 class Nox(Provider):
@@ -42,8 +43,10 @@ class Nox(Provider):
         while True:
             try:
                 command = "bin\\adb.exe shell \"screencap -p | busybox base64\""
-                png_screenshot_data = os.popen(command).read()
+                pcommand = os.popen(command)
+                png_screenshot_data = pcommand.read()
                 png_screenshot_data = base64.b64decode(png_screenshot_data)
+                pcommand.close()
                 break
             except KeyboardInterrupt:
                 sys.exit(0)
@@ -85,11 +88,77 @@ class Nox(Provider):
                 break
             self.wait_for_ui(2)
 
+    def __is_initial_screen__(self, *args, **kwargs):
+        original = cv2.imread(os.path.join(self.assets, "start_screen.png"))
+        against = self.get_img_from_screen_shot()
+        # convert the images to grayscale
+        original = mask_image([127], [255], cv2.cvtColor(original, cv2.COLOR_BGR2GRAY), True)
+        against = mask_image([127], [255], cv2.cvtColor(against, cv2.COLOR_BGR2GRAY), True)
+        (score, diff) = compare_ssim(original, against, full=True)
+        if score > .9:
+            return True
+        return False
+
+    def __generic_wait_for__(self, message, condition_check, fn, *args, **kwargs):
+        self.root.info("Waiting for {}".format(message))
+        timeout = kwargs.get('timeout', 10)
+
+        async def wait_for(self):
+            exceptions_occurred = 0
+            while not self.run_time.stop:
+                try:
+                    condition = fn(*args, **kwargs)
+                except Exception as e:
+                    print(e)
+                    if exceptions_occurred > 5:
+                        raise Exception("Maximum exception count occurred")
+                    exceptions_occurred += 1
+                    await self.async_wait_for_ui(1)
+                    continue
+                if condition_check(condition):
+                    break
+                await self.async_wait_for_ui(2)
+
+        async def main(self):
+            await wait_for(self)
+
+        loop = asyncio.new_event_loop()
+        task = loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
+        # loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
+
+    def __start_app__(self):
+        command = "bin\\adb.exe shell monkey -p jp.konami.duellinks -c android.intent.category.LAUNCHER 1"
+        self.do_system_call(command)
+
     def pass_through_initial_screen(self):
         self.root.info("Passing Through Start Screen")
-        self.wait_for_ui(30)
-        self.tapnsleep((25, 550), 10)
-        self.tapnsleep((240, 530), 45)
+        # TODO Check if at home screen
+        self.__start_app__()
+        self.__generic_wait_for__('DuelLinks Landing Page', lambda x: x is True,
+                                  self.__is_initial_screen__, timeout=20)
+        self.tapnsleep(self.predefined.yugioh_initiate_link, 2)
+        # TODO Check for prompt
+        timeout = 45
+        if self.scan_for_download():
+            timeout = 480
+        self.__generic_wait_for__('Notifications Page', lambda x: x is True, self.wait_for_notifications,
+                                  timeout=timeout)
+        self.wait_for_notifications()
+
+    def wait_for_notifications(self, *args, **kwargs):
+        self.scan_for_close()
+        self.scan_for_word(word='ok')
+        self.wait_for_ui(3)
+        t = self.compare_with_back_button(corr=5)
+        return t
+
+    def scan_for_download(self, corr=HIGH_CORR, info=None):
+        corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
+        self.root.debug("Looking for Download Button, {} CORRERLATION".format(corrword))
+        img = self.get_img_from_screen_shot()
+        t = tm.Trainer(img, 480, 0)
+        location = os.path.join(self.assets, "download_button.png")
+        return self.__wrapper_kmeans_result(t, location, corr, info)
 
     def verify_battle(self):
         try_times = 3

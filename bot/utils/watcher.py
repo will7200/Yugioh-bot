@@ -44,6 +44,13 @@ class WatchFile(PatternMatchingEventHandler):
 class SyncWithFile(WatchFile):
     _observer = None
 
+    def __init__(self, file, auto_start=False):
+        self.watcher = WatchFile(patterns=[file])
+        self.watcher.event_notification = self.event_notification
+        self.file_observing = file
+        if auto_start:
+            self.start_observer()
+
     @property
     def observer(self):
         return self._observer
@@ -77,20 +84,14 @@ class SyncWithFile(WatchFile):
     def settings_modified(self, events):
         raise NotImplementedError("settings_modified not implemented")
 
-    def __init__(self, file, auto_start=False):
-        self.watcher = WatchFile(patterns=[file])
-        self.watcher.event_notification = self.event_notification
-        self.file_observing = file
-        if auto_start:
-            self.start_observer()
-
     def start_observer(self):
         self.observer = Observer()
         self.observer.schedule(self.watcher, os.path.dirname(self.file_observing), recursive=False)
         self.observer.start()
 
     def stop_observer(self):
-        self.observer.stop()
+        if 'stop' in dir(self.observer):
+            self.observer.stop()
 
 
 if __name__ == "__main__":

@@ -1,8 +1,10 @@
 import os as os
 
 import cv2
+import deprecation
 import numpy as _np
 
+from bot import __version__
 from bot.providers.duellinks import Predefined
 from bot.providers.shared import nox_current_version
 
@@ -25,6 +27,9 @@ class NoxPredefined(Predefined):
         "auto_duel_off.png",
         "new_duel_variant.png"
     ]
+    files_needed_for_comparision= [
+        "download_button.png"
+    ]
 
     def run_prechecks(self):
         for file in self.files_need:
@@ -40,6 +45,18 @@ class NoxPredefined(Predefined):
         save = {**save, **temp_dict}
         save['version'] = nox_current_version
         self.write_hdf5(save, self.dataset)
+
+    @deprecation.deprecated(deprecated_in="0.3.1",removed_in="0.5.0",current_version=__version__,
+                            details="App is not opened through ADB Call instead of ui touch event")
+    @property
+    def yugioh_app_location(self):
+        """ Note that if you don't place the app icon on the bottom left corner of a 800x480 nox emulator,
+            you will need to change this """
+        return 25, 550
+
+    @property
+    def yugioh_initiate_link(self):
+        return 240, 530
 
     @property
     def autoduel(self):

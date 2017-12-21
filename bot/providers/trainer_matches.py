@@ -9,6 +9,7 @@ from sklearn.cluster import KMeans
 
 class Trainer(object):
     _debug = False
+
     def __init__(self, query, x=0, y=0):
         self.query = query
         self.xThreshold = x
@@ -48,7 +49,7 @@ class Trainer(object):
             img1_idx = m.queryIdx
             (x1, y1) = kp1[img1_idx].pt
             (x2, y2) = kp2[img2_idx].pt
-            #print("Comare %d to %d and %d to %d" % (x1,x2,y1,y2))
+            # print("Comare %d to %d and %d to %d" % (x1,x2,y1,y2))
             if m.distance < 0.8 * n.distance and y2 > self.yThreshold and x2 < self.xThreshold:
                 goodMatches.append([m])
                 cluster.append([int(x2), int(y2)])
@@ -56,7 +57,7 @@ class Trainer(object):
             return False
         self.kmeans = KMeans(n_clusters=1, random_state=0).fit(cluster)
         # print(self.kmeans.cluster_centers_)
-        #plt.scatter(*zip(*cluster)),plt.axis([0,480,0,800]),plt.gca().invert_yaxis(),plt.show()
+        # plt.scatter(*zip(*cluster)),plt.axis([0,480,0,800]),plt.gca().invert_yaxis(),plt.show()
         img3 = cv2.drawMatchesKnn(
             img1, kp1, img2, kp2, goodMatches, None, flags=2)
         self.images.append(img3)
@@ -66,10 +67,11 @@ class Trainer(object):
         # return goodMatches
         # cv2.drawMatchesKnn expects list of lists as matches.
 
-    def debug_matcher(self,img):
+    def debug_matcher(self, img):
         if self._debug:
-            plt.imshow(img);plt.show()
-    
+            plt.imshow(img)
+            plt.show()
+
     def readCircles(self):
         img = cv2.cvtColor(self.query, cv2.COLOR_BGR2GRAY)
         img = cv2.medianBlur(img, 7)
@@ -106,8 +108,8 @@ class Trainer(object):
             cv2.circle(cimg, (i[0], i[1]), i[2], (0, 255, 0), 2)
             # draw the center of the circle
             cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
-        #cv2.imshow("images", np.hstack([cimg]))
-        # cv2.waitKey(0)
+            # cv2.imshow("images", np.hstack([cimg]))
+            # cv2.waitKey(0)
 
     def prepForWhiteCircles(self):
         lower, upper = ([215, 215, 215], [255, 255, 255])

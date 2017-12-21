@@ -43,7 +43,8 @@ $ pip install (wheel_file) (cv2+contrib)
 - Set Nox as 480x800 phone
 - Download Yugioh app
 - Setup Yugioh app, link, etc... (first time only)
-- Set Yugioh app to the most left of app and bottom on the first page(not the bottom app drawer though, checkout app_placement.png for example)
+- No longer needed, App is opened through adb shell command  
+    - Set Yugioh app to the most left of app and bottom on the first page(not the bottom app drawer though, checkout app_placement.png for example)
 
 ## Usage
 
