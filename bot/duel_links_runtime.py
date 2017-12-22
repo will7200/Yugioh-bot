@@ -323,7 +323,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                 if not provider.is_process_running():
                     provider.start_process()
                     provider.wait_for_ui(30)
-                provider.pass_through_initial_screen()
+                    provider.pass_through_initial_screen()
                 provider.compare_with_back_button()
                 logger.info("main event")
                 provider.auto()
