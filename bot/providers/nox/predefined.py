@@ -27,7 +27,7 @@ class NoxPredefined(Predefined):
         "auto_duel_off.png",
         "new_duel_variant.png"
     ]
-    files_needed_for_comparision= [
+    files_needed_for_comparision = [
         "download_button.png"
     ]
 
@@ -46,7 +46,7 @@ class NoxPredefined(Predefined):
         save['version'] = nox_current_version
         self.write_hdf5(save, self.dataset)
 
-    @deprecation.deprecated(deprecated_in="0.3.1",removed_in="0.5.0",current_version=clean_verison,
+    @deprecation.deprecated(deprecated_in="0.3.1", removed_in="0.5.0", current_version=clean_verison,
                             details="App is not opened through ADB Call instead of ui touch event")
     @property
     def yugioh_app_location(self):
@@ -74,6 +74,28 @@ class NoxPredefined(Predefined):
             'top': 680,
             'width': 265 - 210,
             'height': 710 - 680
+        }
+
+    @property
+    def street_replay(self):
+        return {
+            'left': 181,
+            'top': 286,
+            'width': 311 - 181,
+            'height': 307 - 286
+        }
+
+    @property
+    def street_replay_location(self):
+        return 2
+
+    @property
+    def page_area(self):
+        return {
+            'left': 0,
+            'top': 775,
+            'width': 480,
+            'height': 25,
         }
 
     def generate_autoduel_stats(self):

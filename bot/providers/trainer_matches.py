@@ -3,8 +3,10 @@ import cv2
 from matplotlib import pyplot as plt
 import PIL as Pillow
 import os
+
 os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = 'T'
 from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import euclidean_distances
 
 
 class Trainer(object):
@@ -27,14 +29,14 @@ class Trainer(object):
         self.whitequery = None
 
     def getMatches(self, train, corr):
-        img1 = cv2.imread(train, 0)  # trainImage
-        img2 = self.query  # queryImage
+        train_img = cv2.imread(train, 0)
+        query_img = self.query
         # Initiate SIFT detector
         sift = cv2.xfeatures2d.SIFT_create()
 
         # find the keypoints and descriptors with SIFT
-        kp1, des1 = sift.detectAndCompute(img1, None)
-        kp2, des2 = sift.detectAndCompute(img2, None)
+        kp1, des1 = sift.detectAndCompute(train_img, None)
+        kp2, des2 = sift.detectAndCompute(query_img, None)
 
         # create BFMatcher object
         bf = cv2.BFMatcher()
@@ -56,21 +58,30 @@ class Trainer(object):
         if len(cluster) <= corr:
             return False
         self.kmeans = KMeans(n_clusters=1, random_state=0).fit(cluster)
-        # print(self.kmeans.cluster_centers_)
-        # plt.scatter(*zip(*cluster)),plt.axis([0,480,0,800]),plt.gca().invert_yaxis(),plt.show()
+        # sometimes the sift algorithm matches random points on screen so therefore
+        # it is necessary to determine the euclidean distances between these points
+        distances = euclidean_distances([self.kmeans.cluster_centers_[0]], cluster)
+        height, width = train_img.shape
+        new_cluster = []
+        for index, distance in enumerate(distances[0]):
+            if distance < width:
+                new_cluster.append(cluster[index])
+        # All the points are greater than the height of the training image
+        # Which then we can assume that they are not correct
+        if len(new_cluster) == 0 or len(new_cluster)/len(cluster) < .3:
+            return False
         img3 = cv2.drawMatchesKnn(
-            img1, kp1, img2, kp2, goodMatches, None, flags=2)
+            train_img, kp1, query_img, kp2, goodMatches, None, flags=2)
         self.images.append(img3)
-        # if train != 'assets/back__.png':
         self.debug_matcher(img3)
         return True
-        # return goodMatches
-        # cv2.drawMatchesKnn expects list of lists as matches.
 
     def debug_matcher(self, img):
         if self._debug:
-            plt.imshow(img)
-            plt.show()
+            # plt.scatter(*zip(*cluster)),plt.axis([0,480,0,800]),plt.gca().invert_yaxis(),plt.show()
+            # plt.imshow(img)
+            # plt.show()
+            cv2.imwrite('debug_pic.png', img)
 
     def readCircles(self):
         img = cv2.cvtColor(self.query, cv2.COLOR_BGR2GRAY)

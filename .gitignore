@@ -2,6 +2,7 @@
 bin/tess/*
 bin/*.exe
 bin/*.dll
+
 ### log directory
 log/
 
@@ -11,30 +12,34 @@ tmp/
 ### compiled files
 *.pyc
 *.lnk
-temp.py
-run_at.json
-*.p
-test.py
+
+### ignore ide folders
 .vscode/
 .idea/
-*test.json
-*test.ini
-info.log
-*old*.py
 
-#distribution files
+
+### distribution files
 dist/
 MANIFEST
 yugioh-bot*/
 build/
 yugioh_bot*/
 
+### ignore test and debug files
+*test.json
+*test.ini
+*debug*.png
+test.py
+temp.py
 
-# ignore h5 cache
+### ignore log files
+*.log
+
+### ignore h5 cache
 *.h5
 
-#ignore runtime files
+### ignore runtime files
 runTimeOptions.json
 
-#ignore new tesseract distributions
+### ignore new tesseract distributions
 tess_*

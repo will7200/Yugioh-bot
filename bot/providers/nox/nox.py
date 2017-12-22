@@ -220,6 +220,23 @@ class Nox(Provider):
         except:
             return False
 
+    def is_street_replay(self):
+        img = self.get_img_from_screen_shot()
+        street_replay = self.predefined.street_replay
+        img = crop_image(img, **street_replay)
+        word = self.img_to_string(img, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+        if 'street' in word or 'replay' in word.lower():
+            return True
+        return False
+
+    def compare_with_cancel_button(self, corr=HIGH_CORR, info=None):
+        corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
+        self.root.debug("LOOKING FOR CANCEL BUTTON, {} CORRERLATION".format(corrword))
+        img = self.get_img_from_screen_shot()
+        t = tm.Trainer(img, 240, 0)
+        location = os.path.join(self.assets, "cancel_button.png")
+        return self.__wrapper_kmeans_result(t, location, corr, info)
+
     def compare_with_back_button(self, corr=HIGH_CORR, info=None):
         corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
         self.root.debug("LOOKING FOR BACK BUTTON, {} CORRERLATION".format(corrword))
@@ -240,19 +257,16 @@ class Nox(Provider):
         return False
 
     def get_current_page(self, img):
-        left = 0
-        top = 775
-        width = 480
-        height = 25
-        area = crop_image(img, left, top, width, height)
-        area = mask_image([254, 254, 254], [255, 255, 255], area)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        area = crop_image(img, **self.predefined.page_area)
+        area = mask_image([254], [255], area)
         height, width = area.shape
         current_page = 0
         for x in range(4):
             box = crop_image(area, (x * width / 4), 0, ((x + 1) * width / 4), height)
-            height1, width1 = box.shape
-            if (height1 * width1 - cv2.countNonZero(box)) > 0:
+            if cv2.countNonZero(box) > 0:
                 current_page = x
+                break
         return current_page + 1
 
     def click_auto_duel(self):
@@ -347,6 +361,10 @@ class Nox(Provider):
                 self.battle(dl_info)
             else:
                 self.wait_for_ui(2)
+                if self.predefined.street_replay_location == current_page \
+                    and self.is_street_replay():
+                    dl_info.status = "street replay cancelling"
+                    self.compare_with_cancel_button(info=dl_info)
                 loop_scan(self.compare_with_back_button, **{'info': dl_info})
                 dl_info.status = "failure/closeButton"
                 loop_scan(self.scan_for_close, **{'info': dl_info})
