@@ -15,23 +15,23 @@ from duel_links_runtime import DuelLinkRunTime
 from providers.common import mask_image
 
 
-def mse(imageA, imageB):
+def mse(image_a, image_b):
     # the 'Mean Squared Error' between the two images is the
     # sum of the squared difference between the two images;
     # NOTE: the two images must have the same dimension
-    err = np.sum((imageA.astype("float") - imageB.astype("float")) ** 2)
-    err /= float(imageA.shape[0] * imageA.shape[1])
+    err = np.sum((image_a.astype("float") - image_b.astype("float")) ** 2)
+    err /= float(image_a.shape[0] * image_a.shape[1])
 
     # return the MSE, the lower the error, the more "similar"
     # the two images are
     return err
 
 
-def compare_images(imageA, imageB, title):
+def compare_images(image_a, image_b, title):
     # compute the mean squared error and structural similarity
     # index for the images
-    m = mse(imageA, imageB)
-    s = compare_ssim(imageA, imageB, multichannel=True)
+    m = mse(image_a, image_b)
+    s = compare_ssim(image_a, image_b, multichannel=True)
 
     # setup the figure
     fig = plt.figure(title)
@@ -39,12 +39,12 @@ def compare_images(imageA, imageB, title):
 
     # show first image
     ax = fig.add_subplot(1, 2, 1)
-    plt.imshow(imageA, cmap=plt.cm.gray)
+    plt.imshow(image_a, cmap=plt.cm.gray)
     plt.axis("off")
 
     # show the second image
     ax = fig.add_subplot(1, 2, 2)
-    plt.imshow(imageB, cmap=plt.cm.gray)
+    plt.imshow(image_b, cmap=plt.cm.gray)
     plt.axis("off")
 
     # show the images
@@ -54,6 +54,10 @@ def compare_images(imageA, imageB, title):
 class TestNox(TestCase):
     provider = None
     __debug_pictures__ = False
+
+    images_needed_debug = [
+        "street_replay.png"
+    ]
 
     def setUp(self):
         os.environ['LOG_CFG'] = r'D:\Sync\OneDrive\Yu-gi-oh_bot\config.ini'
@@ -83,7 +87,7 @@ class TestNox(TestCase):
         self.provider.sleep_factor = 0.5
         with self.assertRaises(concurrent.futures._base.TimeoutError) as context:
             self.provider.__generic_wait_for__('DuelLinks Landing Page', test_function,
-                                                 self.provider.__is_initial_screen__, timeout=5)
+                                               self.provider.__is_initial_screen__, timeout=5)
 
     def test_initial_pass_through_compare(self):
         original = cv2.imread(os.path.join(self.provider.assets, "start_screen.png"))
@@ -127,6 +131,14 @@ class TestNox(TestCase):
 
     def test_kill_process(self):
         self.fail()
+
+    def test_ok_box_comparsion(self):
+        test_image_name = "street_replay.png"
+        self.provider._debug = False
+        self.provider.run_time.stop = False
+        test_image = os.path.join(self.provider.assets, test_image_name)
+        ok_present = self.provider.scan_for_word('OK', img=cv2.imread(test_image))
+        self.assertTrue(ok_present)
 
     def setup_compare_images(self, images, compare_against_first=False):
         i = np.asarray([isinstance(x, tuple) for x in list(images)])

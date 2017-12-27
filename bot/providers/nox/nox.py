@@ -20,6 +20,7 @@ from bot.providers.shared import *
 
 class Nox(Provider):
     NotPath = None
+    _debug = False
 
     def setUp(self):
         super(Nox, self).setUp()
@@ -57,6 +58,9 @@ class Nox(Provider):
     def tap(self, x, y):
         self.root.debug("Tapping at location ({},{})".format(x, y))
         command = "bin\\adb.exe shell input tap %d %d" % (x, y)
+        if self._debug:
+            # Helper to debug taps
+            input("waiting for confirmation press enter")
         self.do_system_call(command)
 
     def key_escape(self):
@@ -147,6 +151,7 @@ class Nox(Provider):
 
     def wait_for_notifications(self, *args, **kwargs):
         self.scan_for_close()
+        self.wait_for_ui(1)
         self.scan_for_word(word='ok')
         self.wait_for_ui(3)
         t = self.compare_with_back_button(corr=5)
@@ -190,10 +195,11 @@ class Nox(Provider):
                 return (pointer, version)
         return None
 
-    def scan_for_close(self, corr=HIGH_CORR, info=None):
+    def scan_for_close(self, corr=HIGH_CORR, info=None, img=None):
         corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
         self.root.debug("LOOKING FOR CLOSE BUTTON, {} CORRERLATION".format(corrword))
-        img = self.get_img_from_screen_shot()
+        if img is None:
+            img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 400, 500)
         location = os.path.join(self.assets, "close.png")
         return self.__wrapper_kmeans_result(t, location, corr, info)
@@ -237,16 +243,17 @@ class Nox(Provider):
         location = os.path.join(self.assets, "cancel_button.png")
         return self.__wrapper_kmeans_result(t, location, corr, info)
 
-    def compare_with_back_button(self, corr=HIGH_CORR, info=None):
+    def compare_with_back_button(self, corr=HIGH_CORR, info=None, img=None):
         corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
         self.root.debug("LOOKING FOR BACK BUTTON, {} CORRERLATION".format(corrword))
-        img = self.get_img_from_screen_shot()
+        if img is None:
+            img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 150, 720)
         location = os.path.join(self.assets, "back__.png")
         return self.__wrapper_kmeans_result(t, location, corr, info)
 
     def __wrapper_kmeans_result(self, trainer, location, corr, info=None):
-        if trainer.getMatches(location, corr):
+        if trainer.get_matches(location, corr):
             x, y = trainer.kmeans.cluster_centers_[0]
             if info:
                 self.root.info("NPC Battle Mode,Points: ({},{}) at location: ({}), message: {}".format(
@@ -274,7 +281,7 @@ class Nox(Provider):
         self.wait_for_ui(.1)
         self.tap(356, 85)
 
-    def battle(self, info=None):
+    def battle(self, info=None, check_battle=None):
         "The main battle mode"
         self.wait_for('OK')
         if info:
@@ -332,10 +339,11 @@ class Nox(Provider):
         except:
             self.root.error("The program could not be killed")
 
-    def scan_for_word(self, word, corr=HIGH_CORR, info=None):
+    def scan_for_word(self, word, corr=HIGH_CORR, info=None, img=None):
         corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
         self.root.debug("LOOK FOR WORD '{}', {} CORRERLATION".format(word, corrword))
-        img = self.get_img_from_screen_shot()
+        if img is None:
+            img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 480, 50)
         location = os.path.join(self.assets, "ok_box.png")
         return self.__wrapper_kmeans_result(t, location, corr, info)
@@ -362,11 +370,12 @@ class Nox(Provider):
             else:
                 self.wait_for_ui(2)
                 if self.predefined.street_replay_location == current_page \
-                    and self.is_street_replay():
+                        and self.is_street_replay():
                     dl_info.status = "street replay cancelling"
                     self.compare_with_cancel_button(info=dl_info)
+                dl_info.status = "failure/Back-Button"
                 loop_scan(self.compare_with_back_button, **{'info': dl_info})
-                dl_info.status = "failure/closeButton"
+                dl_info.status = "failure/Close-Button"
                 loop_scan(self.scan_for_close, **{'info': dl_info})
                 dl_info.status = "success/Gift"
                 loop_scan(self.scan_for_word, **{'word': 'ok', 'info': dl_info})
