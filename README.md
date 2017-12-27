@@ -93,7 +93,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) and [CONDUCT](CONDUCT.md) for details
 
 ## Security
 
-If you discover any security related issues, please open a issue with "Security -" as the prefix.
+If you discover any security related issues, please open a issue with "[Security]" as the prefix.
 
 ## Credits
 
