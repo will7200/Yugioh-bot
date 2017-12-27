@@ -312,7 +312,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             logger.error(e)
             logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
             logger.debug(traceback.format_exc())
-            logger.fatal("Provider does not have method correctly implemented cannot continue")
+            logger.critical("Provider does not have method correctly implemented cannot continue")
             tt = threading.Thread(target=thread_shutdown, args=())
             tt.start()  # (schedule_shutdown, args=(), id='shutdown')
 
@@ -325,8 +325,9 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                     provider.wait_for_ui(30)
                     provider.pass_through_initial_screen()
                 provider.compare_with_back_button()
-                logger.info("main event")
+                logger.info("starting auto play through")
                 provider.auto()
+                logger.info("completed auto play through")
             except NotImplementedError as ee:
                 handle_exception(ee)
                 return

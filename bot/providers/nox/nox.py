@@ -168,8 +168,8 @@ class Nox(Provider):
     def verify_battle(self):
         try_times = 3
         version = 0
+        self.root.info("Verifying battle")
         while True:
-            self.root.debug("Verifying battle")
             try_times -= 1
             img = self.get_img_from_screen_shot()
             if self.predefined.determine_duel_variant(img):
@@ -183,7 +183,6 @@ class Nox(Provider):
                 version = 1
                 break
 
-        # img = img[680:710, 90:150] new version duel
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ok = self.img_to_string(img,
                                 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").lower()
@@ -213,7 +212,7 @@ class Nox(Provider):
             process = subprocess.Popen([self.NoxPath], stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
         except FileNotFoundError as e:
-            self.root.fatal("Nox executable not found")
+            self.root.critical("Nox executable not found")
             raise e
         except:
             self.root.error("The program can't run Nox")

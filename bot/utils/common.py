@@ -33,7 +33,8 @@ def default_config(home="."):
         'noxLocation': r'C:\Program Files (x86)\Nox\bin',  # nox location
         'startBotOnStartUp': False,  # start bot irregardless of next run time
         'runTimePersistence': 'runTimeOptions.json',  # store runtime options to this file
-        'provider': 'Choose'
+        'provider': 'Choose',
+        'sleep_factor': 1
     }
     return config
 

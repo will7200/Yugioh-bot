@@ -10,8 +10,6 @@ import sys
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import yaml
-from bot import logger
-from bot.providers import get_provider
 
 
 def setup_logging(
@@ -34,6 +32,30 @@ def setup_logging(
         logging.basicConfig(level=default_level)
 
 
+def setup_runtime(uconfig):
+    from bot.duel_links_runtime import DuelLinkRunTime
+    from bot import logger
+    from bot.providers import get_provider
+    os.makedirs(uconfig.get('locations', 'log'), exist_ok=True)
+    setup_logging()
+    scheduler = BackgroundScheduler()
+    dlRuntime = DuelLinkRunTime(uconfig, scheduler)
+    scheduler.start()
+    try:
+        dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig, dlRuntime))
+    except Exception as e:
+        logger.critical("Could not get a provider, take a look at your config file")
+        logger.critical(e)
+        sys.exit(1)
+    try:
+        dlRuntime.get_provider().sleep_factor = uconfig.getint('bot', 'sleep_factor')
+    except Exception as e:
+        logger.critical("Could not set sleep factor, take a look at your config file")
+        logger.critical(e)
+        sys.exit(1)
+    return dlRuntime
+
+
 @click.group()
 def cli():
     pass
@@ -53,28 +75,18 @@ def config(generate_config, file_path):
 @click.option("-c", "--config-file", default="config.ini")
 def bot(start, config_file):
     if start:
-        from bot.utils.common import make_config_file, default_config
-        from bot.duel_links_runtime import DuelLinkRunTime
+        from bot import logger
         def handler(signum, frame):
             if signum == signal.SIGINT:
                 dlRuntime.shutdown()
-                logger.info("Exiting")
+                logger.info("Exiting Yugioh-DuelLinks Bots")
                 sys.exit(0)
 
+        from bot.utils.common import make_config_file, default_config
         signal.signal(signal.SIGINT, handler)
         uconfig = default_config()
         uconfig.read(config_file)
-        os.makedirs(uconfig.get('locations', 'log'), exist_ok=True)
-        setup_logging()
-        scheduler = BackgroundScheduler()
-        dlRuntime = DuelLinkRunTime(uconfig, scheduler)
-        scheduler.start()
-        try:
-            dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig, dlRuntime))
-        except Exception as e:
-            logger.fatal("Could not get a provider, take a look at your config file")
-            logger.fatal(e)
-            sys.exit(0)
+        dlRuntime = setup_runtime(uconfig)
         dlRuntime.main()
 
         while True:
@@ -109,17 +121,7 @@ def gui(start, config_file):
 
         uconfig = default_config()
         uconfig.read(config_file)
-        os.makedirs(uconfig.get('locations', 'log'), exist_ok=True)
-        setup_logging()
-        scheduler = BackgroundScheduler()
-        dlRuntime = DuelLinkRunTime(uconfig, scheduler)
-        scheduler.start()
-        try:
-            dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig, dlRuntime))
-        except Exception as e:
-            logger.fatal("Could not get a provider, take a look at your config file")
-            logger.fatal(e)
-            sys.exit(0)
+        dlRuntime = setup_runtime(uconfig)
         dlRuntime.main()
         window = DuelLinksGui(dlRuntime)
         window.show()

@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import PIL as Pillow
 import os
 
-from providers.common import mask_image
+from bot.providers.common import mask_image
 
 os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = 'T'
 from sklearn.cluster import KMeans
