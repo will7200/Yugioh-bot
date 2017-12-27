@@ -15,7 +15,18 @@ def loop_scan(fn, **kwargs):
 
 
 def mask_image(lower_mask, upper_mask, img, apply_mask=False):
-    """" Masks an image"""
+    """" Masks an image according to the upper and lower bounds
+    Parameters
+    ----------
+    lower_mask : ndarray
+        lower mask to apply to image, length must match image channels
+    upper_mask : ndarray
+        upper mask to apply to image, length must match image channels
+    img :  ndarray
+        image to apply mask to
+    apply_mask : bool
+        returns the masked image instead of the mask itself
+    """
     shape = np.array(img.shape).flatten()
     if len(np.array(img.shape).flatten()) == 3:
         shape_size = shape[-1]

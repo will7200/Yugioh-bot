@@ -265,15 +265,15 @@ class DuelLinks(object):
         raise NotImplementedError("method_name not implemented")
 
     @abstractmethod
-    def compare_with_back_button(self, corr=HIGH_CORR, info=None):
+    def compare_with_back_button(self, corr=HIGH_CORR, info=None, img=None):
         raise NotImplementedError("compare_with_back_button not implemented")
 
     @abstractmethod
-    def scan_for_word(self, word, corr=HIGH_CORR, log=None):
+    def scan_for_word(self, word, corr=HIGH_CORR, log=None, img=None):
         raise NotImplementedError("scan_for_work not implemented")
 
     @abstractmethod
-    def scan_for_close(self, corr=HIGH_CORR, log=None):
+    def scan_for_close(self, corr=HIGH_CORR, log=None, img=None):
         raise NotImplementedError("scan_for_close not implemented")
 
     @abstractmethod
@@ -289,7 +289,7 @@ class DuelLinks(object):
         raise NotImplementedError("determine_autoduel_status not implemented")
 
     @abstractmethod
-    def battle(self, check_battle=None, info=None):
+    def battle(self, info=None, check_battle=None):
         raise NotImplementedError("battle not implemented")
 
     @abstractmethod

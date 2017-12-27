@@ -95,7 +95,7 @@ class Provider(DuelLinks, Misc, Actions):
             return
         img = self.get_img_from_screen_shot()
         t = tm.Trainer(img)
-        t.whiteCircles()
+        t.capture_white_circles()
         current_page = self.get_current_page(img)
         logging.debug("Current-Page {}".format(current_page))
         for x, y in t.circlePoints:
