@@ -43,3 +43,6 @@ runTimeOptions.json
 
 ### ignore new tesseract distributions
 tess_*
+
+### ignore spec files
+*.spec

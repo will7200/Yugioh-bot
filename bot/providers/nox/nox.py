@@ -186,12 +186,14 @@ class Nox(Provider):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ok = self.img_to_string(img,
                                 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").lower()
+        self.root.debug("Duel-Buttons Version {}".format(version))
         if version == 1:
             if ok.startswith("due") or ok == "duel":
                 return (pointer, version)
         if version == 2:
             if ok.startswith("auto") or 'auto' in ok:
                 return (pointer, version)
+        self.root.debug("No Auto-Duel button or Button Found")
         return None
 
     def scan_for_close(self, corr=HIGH_CORR, info=None, img=None):
@@ -280,8 +282,11 @@ class Nox(Provider):
         self.wait_for_ui(.1)
         self.tap(356, 85)
 
-    def battle(self, info=None, check_battle=None):
+    def battle(self, info=None, check_battle=False):
         "The main battle mode"
+        if check_battle:
+            self.wait_for_auto_duel()
+            self.click_auto_duel()
         self.wait_for('OK')
         if info:
             info.status = "Battle Ended"
@@ -356,16 +361,21 @@ class Nox(Provider):
             battle = self.check_if_battle(img1)
             self.wait_for_ui(2.5)
             dl_info = DuelLinksInfo(x, y, current_page, "Starting Battle")
+            version = 0
             if battle:
                 self.tapnsleep((150, 400), 2.5)
-                battle = self.verify_battle()
+                battle, version = self.verify_battle()
             if battle:
                 self.current_battle = True
                 self.root.info(battlemode % (x, y, current_page, "Starting Battle"))
                 self.scan_for_word('ok', LOW_CORR)
                 p, v = battle
                 self.tapnsleep(p, 0)
-                self.battle(dl_info)
+                if version == 2:
+                    self.battle(dl_info)
+                else:
+                    self.battle(dl_info, check_battle=True)
+                self.current_battle = False
             else:
                 self.wait_for_ui(2)
                 if self.predefined.street_replay_location == current_page \
