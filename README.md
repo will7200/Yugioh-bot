@@ -18,6 +18,7 @@ Bot to help with those npc in Yugioh Duel Links.
 ## Prerequisites
 
 Have Nox installed (https://www.bignox.com)  
+ -- Note: Windows 10 Users make sure to disable Hyper-V in window services otherwise BSoD errors will occur.  
 Python 3.5 or 3.6 (https://www.python.org/downloads/)  
 Install tesseract (http://3.onj.me/tesseract/)  
 If the above link is giving issues or is slow:
