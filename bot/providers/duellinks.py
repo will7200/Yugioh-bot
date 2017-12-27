@@ -285,7 +285,7 @@ class DuelLinks(object):
         raise NotImplementedError("click_auto_duel not implemented")
 
     @abstractmethod
-    def determine_autoduel_status(self):
+    def determine_autoduel_status(self, img):
         raise NotImplementedError("determine_autoduel_status not implemented")
 
     @abstractmethod

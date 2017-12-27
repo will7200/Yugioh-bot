@@ -189,10 +189,10 @@ class Nox(Provider):
         self.root.debug("Duel-Buttons Version {}".format(version))
         if version == 1:
             if ok.startswith("due") or ok == "duel":
-                return (pointer, version)
+                return pointer, version
         if version == 2:
             if ok.startswith("auto") or 'auto' in ok:
-                return (pointer, version)
+                return pointer, version
         self.root.debug("No Auto-Duel button or Button Found")
         return None
 
@@ -369,8 +369,7 @@ class Nox(Provider):
                 self.current_battle = True
                 self.root.info(battlemode % (x, y, current_page, "Starting Battle"))
                 self.scan_for_word('ok', LOW_CORR)
-                p, v = battle
-                self.tapnsleep(p, 0)
+                self.tapnsleep(battle, 0)
                 if version == 2:
                     self.battle(dl_info)
                 else:

@@ -52,12 +52,12 @@ class Provider(DuelLinks, Misc, Actions):
             self.swipe_right()
             try:
                 self.scan()
-            except Exception:
-                break
+            except Exception as e:
+                raise e
         self.register_thread(None)
 
     def debug_battle(self):
-        self.battle(CheckBattle=self.check_battle)
+        self.battle(check_battle=self.check_battle)
         # self.CheckBattle()
 
     def __check_battle_is_running__(self):

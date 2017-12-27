@@ -40,6 +40,7 @@ def setup_runtime(uconfig):
     setup_logging()
     scheduler = BackgroundScheduler()
     dlRuntime = DuelLinkRunTime(uconfig, scheduler)
+    dlRuntime.stop = False # Need to Ensure that it runs
     scheduler.start()
     try:
         dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig, dlRuntime))
