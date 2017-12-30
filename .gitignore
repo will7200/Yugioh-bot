@@ -2,7 +2,8 @@
 bin/tess/*
 bin/*.exe
 bin/*.dll
-
+# exception to the bin rule
+!bin/tess/.gitkeep 
 ### log directory
 log/
 

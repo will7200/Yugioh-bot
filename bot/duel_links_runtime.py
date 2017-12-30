@@ -380,6 +380,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self._disable_dump = True  # will not write to run time options
         self.stop = True  # signals all long_running operations to not execute, os calls will not occur either
         while self._provider.current_thread is not None:
+            logger.warning('waiting for thread to stop')
             time.sleep(5)
         self._task.cancel()
         self._scheduler.shutdown()
