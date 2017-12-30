@@ -24,8 +24,8 @@ Install tesseract (http://3.onj.me/tesseract/)
 If the above link is giving issues or is slow:
 Tesseract at UB Mannheim (https://github.com/UB-Mannheim/tesseract/wiki)  
  -- Note: Testings occured on the 3.05.01 version  
-Install cv2+contrib 3.2.0 (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv)  
- -- opencv_python‑3.3.1+contrib works too
+Note: pypi package will now install cv2+contrib  from requirements.txt
+ -- opencv_python‑3.3.1+contrib and cv2+contrib 3.2.0 tested (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv) 
 
 ## Install
 
@@ -51,7 +51,7 @@ $ pip install (wheel_file) (cv2+contrib)
 
 To Start The Bot
 ``` bash
-$ python main.py -s
+$ python main.py bot -s
 ```
 
 Generate Config File --  Only Needed if you did not git clone master
@@ -86,18 +86,13 @@ Check out what files I'm working on through [WakaTime](https://wakatime.com/@wil
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) and [CONDUCT](CONDUCT.md) for details.
-
 ## Security
 
 If you discover any security related issues, please open a issue with "[Security]" as the prefix.
 
 ## Credits
 
-- [William Flores][link-author]
+- [will7200][link-author]
 
 - [All Contributors][link-contributors]
 
