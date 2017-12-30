@@ -46,3 +46,7 @@ tess_*
 
 ### ignore spec files
 *.spec
+
+### ignore c# project bin
+bot/providers/steam/bin/
+bot/providers/steam/obj/

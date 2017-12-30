@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>library</OutputType>
+    <AssemblyName>lsteam</AssemblyName>
+    <TargetFrameworks>net471</TargetFrameworks>
+    <RuntimeIdentifiers>win7-x64;win-7x86;win10-x64;win10-x86</RuntimeIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+  <!-- This entry will only be used for the .NET Framework 4.5.1 output -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net471'">
+    <RuntimeIdentifiers>win7-x64;win-7x86;win10-x64;win10-x86;</RuntimeIdentifiers>
+  </PropertyGroup>
+</Project>
