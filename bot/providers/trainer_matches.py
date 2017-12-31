@@ -107,7 +107,7 @@ class Trainer(object):
         if self._debug:
             self.draw_circles(circles, cimg)
 
-    def capture_white_circles(self):
+    def capture_white_circles(self, x_limit=480, y_limit=670):
         self.prep_for_white_circles()
         img = cv2.cvtColor(self.white_query, cv2.COLOR_BGR2GRAY)
         cimg = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -117,7 +117,8 @@ class Trainer(object):
             return
         circles = np.uint16(np.around(circles))
         for i in circles[0, :]:
-            self.circlePoints.append((i[0], i[1]))
+            if i[0] <= x_limit and i[1] <= y_limit:
+                self.circlePoints.append((i[0], i[1]))
         if self._debug:
             self.draw_circles(circles, cimg)
 

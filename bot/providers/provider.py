@@ -13,6 +13,7 @@ from bot.providers import trainer_matches as tm
 from bot.providers.duellinks import DuelLinks, LOW_CORR
 from bot.providers.misc import Misc
 from bot.providers.actions import Actions
+from bot.providers.common import crop_image, mask_image
 
 
 class Provider(DuelLinks, Misc, Actions):
@@ -32,10 +33,6 @@ class Provider(DuelLinks, Misc, Actions):
         self.assets = config.get('locations', 'assets')
         self.lock = None
         self.run_time = run_time  # type: DuelLinkRunTime
-        self.setUp()
-
-    def setUp(self):
-        pass
 
     def auto(self):
         t = threading.currentThread()
@@ -86,8 +83,27 @@ class Provider(DuelLinks, Misc, Actions):
         self.lock.release()
         self.root.debug(job_id)
 
-    def scan(self):
-        raise NotImplementedError("scan not implemented")
+    def is_street_replay(self):
+        img = self.get_img_from_screen_shot()
+        street_replay = self.predefined.street_replay
+        img = crop_image(img, **street_replay)
+        word = self.img_to_string(img, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+        if 'street' in word or 'replay' in word.lower():
+            return True
+        return False
+
+    def get_current_page(self, img):
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        area = crop_image(img, **self.predefined.page_area)
+        area = mask_image([254], [255], area)
+        height, width = area.shape
+        current_page = 0
+        for x in range(4):
+            box = crop_image(area, (x * width / 4), 0, ((x + 1) * width / 4), height)
+            if cv2.countNonZero(box) > 0:
+                current_page = x
+                break
+        return current_page + 1
 
     def possible_battle_points(self):
         if self.run_time.stop:
@@ -103,6 +119,9 @@ class Provider(DuelLinks, Misc, Actions):
                 self.root.info("Received Stopping signal")
                 break
             yield x, y, current_page
+
+    def scan(self):
+        raise NotImplementedError("scan not implemented")
 
     def wait_for_auto_duel(self):
         self.root.debug("WAITING FOR AUTO-DUEL TO APPEAR")
@@ -135,7 +154,6 @@ class Provider(DuelLinks, Misc, Actions):
         if not self.run_time.stop:
             super(Provider, self).wait_for_ui(amount)
 
-
     def do_system_call(self, command):
         if not self.run_time.stop:
             CREATE_NO_WINDOW = 0x08000000
@@ -160,3 +178,37 @@ class Provider(DuelLinks, Misc, Actions):
             if len(line) > len(output_line):
                 output_line = line
         return output_line
+
+    def __generic_wait_for__(self, message, condition_check, fn, *args, **kwargs):
+        self.root.info("Waiting for {}".format(message))
+        timeout = kwargs.get('timeout', 10)
+
+        async def wait_for(self):
+            exceptions_occurred = 0
+            while not self.run_time.stop:
+                try:
+                    condition = fn(*args, **kwargs)
+                except Exception as e:
+                    print(e)
+                    if exceptions_occurred > 5:
+                        raise Exception("Maximum exception count occurred")
+                    exceptions_occurred += 1
+                    await self.async_wait_for_ui(1)
+                    continue
+                if condition_check(condition):
+                    break
+                await self.async_wait_for_ui(2)
+
+        async def main(self):
+            await wait_for(self)
+
+    def __wrapper_kmeans_result(self, trainer, location, corr, info=None):
+        if trainer.get_matches(location, corr):
+            x, y = trainer.kmeans.cluster_centers_[0]
+            if info:
+                self.root.info("NPC Battle Mode,Points: ({},{}) at location: ({}), message: {}".format(
+                    info.x, info.y, info.page, info.status
+                ))
+            self.tap(x, y)
+            return True
+        return False

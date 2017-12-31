@@ -22,10 +22,10 @@ class Nox(Provider):
     NotPath = None
     _debug = False
 
-    def setUp(self):
-        super(Nox, self).setUp()
+    def __init__(self, scheduler, config, run_time):
+        super(Nox, self).__init__(scheduler, config, run_time)
         self.predefined = NoxPredefined(self._config, nox_current_version)
-        self.NoxPath = os.path.join(self._config.get('bot', 'noxlocation'), 'Nox.exe')
+        self.NoxPath = os.path.join(self._config.get('nox', 'location'), 'Nox.exe')
 
     def swipe_time(self, x1, y1, x2, y2, time_amount):
         command = "bin\\adb.exe shell input swipe %d %d %d %d %d" % (
@@ -102,29 +102,6 @@ class Nox(Provider):
         if score > .9:
             return True
         return False
-
-    def __generic_wait_for__(self, message, condition_check, fn, *args, **kwargs):
-        self.root.info("Waiting for {}".format(message))
-        timeout = kwargs.get('timeout', 10)
-
-        async def wait_for(self):
-            exceptions_occurred = 0
-            while not self.run_time.stop:
-                try:
-                    condition = fn(*args, **kwargs)
-                except Exception as e:
-                    print(e)
-                    if exceptions_occurred > 5:
-                        raise Exception("Maximum exception count occurred")
-                    exceptions_occurred += 1
-                    await self.async_wait_for_ui(1)
-                    continue
-                if condition_check(condition):
-                    break
-                await self.async_wait_for_ui(2)
-
-        async def main(self):
-            await wait_for(self)
 
         loop = asyncio.new_event_loop()
         task = loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
@@ -227,15 +204,6 @@ class Nox(Provider):
         except:
             return False
 
-    def is_street_replay(self):
-        img = self.get_img_from_screen_shot()
-        street_replay = self.predefined.street_replay
-        img = crop_image(img, **street_replay)
-        word = self.img_to_string(img, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
-        if 'street' in word or 'replay' in word.lower():
-            return True
-        return False
-
     def compare_with_cancel_button(self, corr=HIGH_CORR, info=None):
         corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
         self.root.debug("LOOKING FOR CANCEL BUTTON, {} CORRERLATION".format(corrword))
@@ -253,29 +221,6 @@ class Nox(Provider):
         location = os.path.join(self.assets, "back__.png")
         return self.__wrapper_kmeans_result(t, location, corr, info)
 
-    def __wrapper_kmeans_result(self, trainer, location, corr, info=None):
-        if trainer.get_matches(location, corr):
-            x, y = trainer.kmeans.cluster_centers_[0]
-            if info:
-                self.root.info("NPC Battle Mode,Points: ({},{}) at location: ({}), message: {}".format(
-                    info.x, info.y, info.page, info.status
-                ))
-            self.tap(x, y)
-            return True
-        return False
-
-    def get_current_page(self, img):
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        area = crop_image(img, **self.predefined.page_area)
-        area = mask_image([254], [255], area)
-        height, width = area.shape
-        current_page = 0
-        for x in range(4):
-            box = crop_image(area, (x * width / 4), 0, ((x + 1) * width / 4), height)
-            if cv2.countNonZero(box) > 0:
-                current_page = x
-                break
-        return current_page + 1
 
     def click_auto_duel(self):
         self.root.debug("AUTO-DUEL FOUND CLICKING")

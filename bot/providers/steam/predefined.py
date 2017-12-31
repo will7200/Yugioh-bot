@@ -9,11 +9,10 @@ from bot import clean_verison
 from bot.providers.duellinks import Predefined
 from bot.providers.shared import nox_current_version
 
-
-
 duel_variant_v = {
 
 }
+
 
 # TODO HP Implement Steam Predifined
 class SteamPredefined(Predefined):
@@ -37,6 +36,17 @@ class SteamPredefined(Predefined):
         save['version'] = nox_current_version
         self.write_hdf5(save, self.dataset)
 
+    @property
+    def window_name(self):
+        return "Yu-Gi-Oh! DUEL LINKS"
+
+    @property
+    def window_exe_name(self):
+        return "dlpc.exe"
+
+    @property
+    def steam_url_start(self):
+        return "steam://rungameid/601510"
 
     @property
     def yugioh_initiate_link(self):
