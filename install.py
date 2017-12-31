@@ -142,11 +142,22 @@ def check_required_packages():
     for package in installed_packages:
         packages[package.project_name] = package.version
     with open('requirements.txt') as f:
-        required = list(map(lambda x: x.split('=')[0], f.read().splitlines()))
+        required = list(map(lambda x: x.split('=')[0].replace('>',''), f.read().splitlines()))
+    required = filter(lambda x: not '#' in x, required)
     all_installed = True
     for x in required:
+        if x in ['scikit_image','scikit_learn','opencv_contrib_python']:
+            continue
         if x not in packages:
+            print(Back.YELLOW + "Not in pip {}".format(x))
             all_installed = False
+    try:
+        import sklearn
+        import skimage
+        import cv2
+    except ImportError as e:
+        print(Back.RED + "Import error for package")
+        print(Back.Red + e)
     if not all_installed:
         print(Back.RED + Style.BRIGHT + "Not all packages required were found\ntry running `pip -r requirements.txt` again" + Back.CYAN)
     else:
