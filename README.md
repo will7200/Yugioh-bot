@@ -19,13 +19,7 @@ Bot to help with those npc in Yugioh Duel Links.
 
 Have Nox installed (https://www.bignox.com)  
  -- Note: Windows 10 Users make sure to disable Hyper-V in window services otherwise BSoD errors will occur.  
-Python 3.5 or 3.6 (https://www.python.org/downloads/)  
-Install tesseract (http://3.onj.me/tesseract/)  
-If the above link is giving issues or is slow:
-Tesseract at UB Mannheim (https://github.com/UB-Mannheim/tesseract/wiki)  
- -- Note: Testings occured on the 3.05.01 version  
-Note: pypi package will now install cv2+contrib  from requirements.txt
- -- opencv_python‑3.3.1+contrib and cv2+contrib 3.2.0 tested (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv) 
+Python 3.5 or 3.6 (https://www.python.org/downloads/, https://www.anaconda.com/download/)
 
 ## Install
 
@@ -35,17 +29,31 @@ Via git
 $ git clone https://github.com/will7200/Yugioh-bot
 $ cd Yugioh-bot
 $ pip install -r requirements.txt (or use conda if using)
-$ pip install (wheel_file) (cv2+contrib)
+$ pip install -r install_requirements.txt
+$ python install.py
 ```
 
-- Copy downloaded tesseract folder into bin\tess\
-- Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\nox_adb.exe as adb.exe into bin directory
-- Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\AdbWinApi.dll into bin directory
-- Set Nox as 480x800 phone
-- Download Yugioh app
-- Setup Yugioh app, link, etc... (first time only)
-- No longer needed, App is opened through adb shell command  
-    - Set Yugioh app to the most left of app and bottom on the first page(not the bottom app drawer though, checkout app_placement.png for example)
+Via zip file -- Unzip Contents
+``` bash
+$ cd Yugioh-bot
+$ pip install -r requirements.txt (or use conda if using)
+$ pip install -r install_requirements.txt
+$ python install.py
+```
+## Afterwards
+# Skip to 6 on this list if you used python install.py
+ 1. Install tesseract (http://3.onj.me/tesseract/)  
+    If the above link is giving issues or is slow:
+    Tesseract at UB Mannheim (https://github.com/UB-Mannheim/tesseract/wiki)  
+    -- Note: Testings occured on the 3.05.01 version  
+ 2. opencv_python‑3.3.1+contrib and cv2+contrib 3.2.0 tested (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv) 
+    -- Note: pypi package will now install cv2+contrib  from requirements.txt
+ 3. Copy downloaded tesseract folder into bin\tess\
+ 4. Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\nox_adb.exe as adb.exe into bin directory
+ 5. Copy C:\Users\USER_NAME\AppData\Roaming\Nox\bin\AdbWinApi.dll into bin directory
+ 6. Set Nox as 480x800 phone
+ 7. Download Yugioh app
+ 8. Setup Yugioh app, link, etc... (first time only)
 
 ## Usage
 
