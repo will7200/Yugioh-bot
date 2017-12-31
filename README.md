@@ -41,7 +41,7 @@ $ pip install -r install_requirements.txt
 $ python install.py
 ```
 ## Afterwards
-# Skip to 6 on this list if you used python install.py
+### Skip to 6 on this list if you used python install.py
  1. Install tesseract (http://3.onj.me/tesseract/)  
     If the above link is giving issues or is slow:
     Tesseract at UB Mannheim (https://github.com/UB-Mannheim/tesseract/wiki)  
