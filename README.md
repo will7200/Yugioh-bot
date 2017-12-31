@@ -12,8 +12,8 @@ Bot to help with those npc in Yugioh Duel Links.
 
 ## Features
 - Auto-duel npc
-- Collect worlds rewards
-
+- Collect worlds rewards  
+![Example Install](https://media.giphy.com/media/3oFzm8CBfGBdhKRms8/giphy.gif)
 
 ## Prerequisites
 
