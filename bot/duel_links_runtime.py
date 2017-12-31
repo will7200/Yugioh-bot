@@ -104,9 +104,9 @@ class DuelLinkRunTimeOptions(object):
 
     _battle_calls = {
         "beforeStart": [],
-        "afterStart": [],
-        "beforeEnd": [],
-        "afterEnd": []
+        "afterStart" : [],
+        "beforeEnd"  : [],
+        "afterEnd"   : []
     }
 
     @property
@@ -219,12 +219,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     def set_provider(self, provider):
         self._provider = provider
 
-    def looper(self):
-        try:
-            self._loop.run_until_complete(self._task)
-        except asyncio.CancelledError:
-            pass
-
     def settings_modified(self, events):
         self.update()
 
@@ -251,9 +245,9 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     def dump_options(self):
         tmpdict = {}
         for attribute in [a for a in dir(self) if not a.startswith('__') \
-                and not a.startswith('_') \
-                and not inspect.ismethod(getattr(self, a))
-        and not inspect.isfunction(getattr(self, a))]:
+                                                  and not a.startswith('_') \
+                                                  and not inspect.ismethod(getattr(self, a))
+                                                  and not inspect.isfunction(getattr(self, a))]:
             # print(attribute, type(getattr(self,attribute)))
             tmpdict[attribute] = getattr(self, attribute)
         return tmpdict
@@ -354,7 +348,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
 
         self._allow_event_change = False
         self._run_main = in_main
-        self._scheduler.add_job(self.looper, args=(), id="looper")
         if self._config.getboolean("bot", "startBotOnStartUp"):
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=1)
         else:
