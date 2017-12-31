@@ -1,25 +1,22 @@
 import logging
+import os
+import subprocess
+import time
+import win32gui
+import win32ui
 from ctypes import windll
 from inspect import getframeinfo, currentframe
 
-import os
-import subprocess
-
 import cv2
 import numpy as np
-import win32gui
-
-import time
-
-import win32ui
 from skimage.measure import compare_ssim
 
 from bot.providers import trainer_matches as tm
-from bot.providers.steam.predefined import SteamPredefined, duel_variant_v
+from bot.providers.common import loop_scan, mask_image
+from bot.providers.duellinks import DuelLinksInfo
 from bot.providers.provider import Provider
 from bot.providers.shared import *
-from providers.common import loop_scan, mask_image, crop_image
-from providers.duellinks import DuelLinksInfo
+from bot.providers.steam.predefined import SteamPredefined, duel_variant_v
 
 
 class Steam(Provider):
