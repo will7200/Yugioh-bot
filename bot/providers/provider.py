@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 import threading
@@ -201,6 +202,10 @@ class Provider(DuelLinks, Misc, Actions):
 
         async def main(self):
             await wait_for(self)
+
+        loop = self.run_time.looper()
+        task = loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
+        # loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
 
     def __wrapper_kmeans_result(self, trainer, location, corr, info=None):
         if trainer.get_matches(location, corr):

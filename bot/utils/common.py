@@ -20,21 +20,28 @@ def default_config(home="."):
 
     # Directories to read from
     config['locations'] = {
-        'home': join(home),
-        'assets': join(home, "assets"),
-        'bin': join(home, "bin"),
-        'log': join(home, "log"),
+        'home'      : join(home),
+        'assets'    : join(home, "assets"),
+        'bin'       : join(home, "bin"),
+        'log'       : join(home, "log"),
         'cache_file': join(home, "assets", "predefined.h5")
     }
 
     # Bot config values
     config['bot'] = {
-        'killNoxOnDone': True,  # kill nox when a run through is done
-        'noxLocation': r'C:\Program Files (x86)\Nox\bin',  # nox location
-        'startBotOnStartUp': False,  # start bot irregardless of next run time
+        'startBotOnStartUp' : False,  # start bot irregardless of next run time
         'runTimePersistence': 'runTimeOptions.json',  # store runtime options to this file
-        'provider': 'Choose',
-        'sleep_factor': 1
+        'provider'          : 'Choose',
+        'sleep_factor'      : 1
+    }
+
+    config['steam'] = {
+        'location': r'C:\Program Files (x86)\Steam'
+    }
+
+    config['nox'] = {
+        'location': r'C:\Program Files (x86)\Nox\bin',
+        'killNoxOnDone': True,  # kill nox when a run through is done
     }
     return config
 

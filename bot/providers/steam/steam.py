@@ -36,7 +36,7 @@ class Steam(Provider):
 
     def __is_initial_screen__(self, *args, **kwargs):
         ### TODO Change Picture
-        original = cv2.imread(os.path.join(self.assets, "start_screen.png"))
+        original = cv2.imread(os.path.join(self.assets, "home_page_steam.png"))
         against = self.get_img_from_screen_shot()
         # convert the images to grayscale
         original = mask_image([127], [255], cv2.cvtColor(original, cv2.COLOR_BGR2GRAY), True)
