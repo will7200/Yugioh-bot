@@ -35,7 +35,6 @@ class Steam(Provider):
         self.SteamPath = os.path.join(self._config.get('steam', 'location'), 'Steam.exe')
 
     def __is_initial_screen__(self, *args, **kwargs):
-        ### TODO Change Picture
         original = cv2.imread(os.path.join(self.assets, "home_page_steam.png"))
         against = self.get_img_from_screen_shot()
         # convert the images to grayscale
@@ -261,7 +260,8 @@ class Steam(Provider):
         save_dc.DeleteDC()
         mfc_dc.DeleteDC()
         win32gui.ReleaseDC(self.win_handle, hwnd_dc)
-        return img
+        img_str = cv2.imencode('.jpg', img)[1].tostring()
+        return img_str
 
 
     def tap(self, x, y):

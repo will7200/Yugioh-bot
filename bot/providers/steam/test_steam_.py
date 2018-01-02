@@ -24,8 +24,9 @@ class TestSteam(TestCase):
         dlRuntime = DuelLinkRunTime(default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), None, False)
         self.provider = Steam(None, default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), dlRuntime)
         self.provider.sleep_factor = 0.0
-        loop = asyncio.get_event_loop()
-        loop.set_default_executor(ThreadPoolExecutor(2))
+        self.loop = asyncio.get_event_loop()
+        self.loop.set_default_executor(ThreadPoolExecutor(2))
+        dlRuntime._loop = self.loop
 
     def test_battle(self):
         self.fail()
@@ -58,12 +59,14 @@ class TestSteam(TestCase):
         self.fail()
 
     def test_pass_through_initial_screen(self):
+        self.provider.is_process_running()
         test_function = lambda x: x is False
         with self.assertRaises(Exception) as context:
             self.provider.__generic_wait_for__('DuelLinks Landing Page', test_function,
                                                None)
         self.assertTrue('Maximum exception count' in str(context.exception))
         self.provider.sleep_factor = 0.5
+        self.assertTrue(callable(self.provider.__is_initial_screen__))
         with self.assertRaises(concurrent.futures._base.TimeoutError) as context:
             self.provider.__generic_wait_for__('DuelLinks Landing Page', test_function,
                                                self.provider.__is_initial_screen__, timeout=5)
@@ -90,9 +93,6 @@ class TestSteam(TestCase):
         self.fail()
 
     def test_swipe(self):
-        self.fail()
-
-    def test_take_png_screenshot(self):
         self.fail()
 
     def test_tap(self):

@@ -203,7 +203,7 @@ class Provider(DuelLinks, Misc, Actions):
         async def main(self):
             await wait_for(self)
 
-        loop = self.run_time.looper()
+        loop = self.run_time._loop
         task = loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
         # loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
 
