@@ -20,9 +20,12 @@ from ._version import get_versions
 
 __version__ = get_versions()['version']
 if '+' in __version__:
-    clean_verison = __version__[:__version__.index('+')]
+    clean_version = __version__[:__version__.index('+')]
 else:
-    clean_verison = __version__
+    clean_version = __version__
+if clean_version == 0 or clean_version == '0':
+    logger.fatal("Clean version is wrong (0) cannot be zero something happened")
+    logger.fatal("Try running git reset --hard origin/master")
 del get_versions
 
 
