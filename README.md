@@ -40,6 +40,13 @@ $ pip install -r requirements.txt (or use conda if using)
 $ pip install -r install_requirements.txt
 $ python install.py
 ```
+
+If you are using conda, here is a powershell script that will help
+``` powershell
+$ Get-Content requirements.txt | ForEach-Object {
+conda install --yes $_
+}
+```
 ## Afterwards
 ### Skip to 6 on this list if you used python install.py
  1. Install tesseract (http://3.onj.me/tesseract/)  
