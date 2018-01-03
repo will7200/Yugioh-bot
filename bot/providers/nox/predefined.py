@@ -4,7 +4,7 @@ import cv2
 import deprecation
 import numpy as _np
 
-from bot import clean_verison
+from bot import clean_version
 from bot.providers.duellinks import Predefined
 from bot.providers.shared import nox_current_version
 
@@ -46,7 +46,7 @@ class NoxPredefined(Predefined):
         save['version'] = nox_current_version
         self.write_hdf5(save, self.dataset)
 
-    @deprecation.deprecated(deprecated_in="0.3.1", removed_in="0.5.0", current_version=clean_verison,
+    @deprecation.deprecated(deprecated_in="0.3.1", removed_in="0.5.0", current_version=clean_version,
                             details="App is not opened through ADB Call instead of ui touch event")
     @property
     def yugioh_app_location(self):
