@@ -103,7 +103,7 @@ class DuelLinksGui(QFrame):
         self.hideButton.clicked.connect(self.close)
         self.exitButton.clicked.connect(self.__quit__)
         # self.showIconCheckBox.toggled.connect(self.trayIcon.setVisible)
-        self.iconComboBox.currentIndexChanged.connect(self.setIcon)
+        # self.iconComboBox.currentIndexChanged.connect(self.setIcon)
         self.trayIcon.messageClicked.connect(self.messageClicked)
         self.trayIcon.activated.connect(self.iconActivated)
 
