@@ -41,6 +41,7 @@
 ##
 #############################################################################
 import time
+
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
@@ -49,6 +50,7 @@ from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
                              QTextEdit, QVBoxLayout, QDesktopWidget, QWidget, QFrame)
 from enum import Enum
 from bot.duel_links_runtime import DuelLinkRunTime
+from bot import images_qr
 
 
 class WINDOWS_TASKBAR_LOCATION(Enum):
@@ -76,12 +78,13 @@ class DuelLinksGui(QFrame):
     _shouldShowSystrayBox = mock_data
     dlRunTime = None
 
-    def __init__(self, duelLinksRunTime=None):
+    def __init__(self, duelLinksRunTime=None, assets=None):
         super(DuelLinksGui, self).__init__()
+        self.assets = assets
         # if duelLinksRunTime is None:
         #    raise Exception("Duel Links Run Time Invalid")
         self.dlRunTime = duelLinksRunTime  # type: DuelLinkRunTime
-        # self.createIconGroupBox()
+        #self.createIconGroupBox()
         self.createRunTimeFields()
         self.createMessageGroupBox()
         self.createBotControls()
@@ -100,7 +103,7 @@ class DuelLinksGui(QFrame):
         self.hideButton.clicked.connect(self.close)
         self.exitButton.clicked.connect(self.__quit__)
         # self.showIconCheckBox.toggled.connect(self.trayIcon.setVisible)
-        # self.iconComboBox.currentIndexChanged.connect(self.setIcon)
+        self.iconComboBox.currentIndexChanged.connect(self.setIcon)
         self.trayIcon.messageClicked.connect(self.messageClicked)
         self.trayIcon.activated.connect(self.iconActivated)
 
@@ -112,6 +115,7 @@ class DuelLinksGui(QFrame):
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.runTimeGroupBox)
         mainLayout.addWidget(self.botControls)
+        # mainLayout.addWidget(self.iconGroupBox)
         # mainLayout.addWidget(self.messageGroupBox)
         self.setLayout(mainLayout)
 
@@ -175,7 +179,7 @@ class DuelLinksGui(QFrame):
         self._shouldShowSystrayBox()
 
     def setIcon(self, index):
-        icon = QIcon('assets/yugioh.ico')
+        icon = QIcon(QIcon(':/assets/yugioh.ico'))
         self.trayIcon.setIcon(icon)
         self.setWindowIcon(icon)
 

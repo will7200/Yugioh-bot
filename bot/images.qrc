@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/" >
+    <file>assets/yugioh.ico</file>
+  </qresource>
+</RCC>

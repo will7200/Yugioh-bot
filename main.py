@@ -124,7 +124,7 @@ def gui(start, config_file):
         uconfig.read(config_file)
         dlRuntime = setup_runtime(uconfig)
         dlRuntime.main()
-        window = DuelLinksGui(dlRuntime)
+        window = DuelLinksGui(dlRuntime, uconfig.get('locations','assets'))
         window.show()
         sys.exit(app.exec_())
 
