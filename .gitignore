@@ -47,7 +47,13 @@ tess_*
 
 ### ignore spec files
 *.spec
+fix_build.py
 
 ### ignore c# project bin
 bot/providers/steam/bin/
 bot/providers/steam/obj/
+
+
+### ignore coveralls
+.coverage
+.coveralls.yml
