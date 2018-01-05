@@ -1,6 +1,11 @@
 from setuptools import setup
 
 import versioneer
+import unittest
+def bot_test():
+    test_loader = unittest.TestLoader()
+    test_suite = test_loader.discover('bot', pattern='test_*.py')
+    return test_suite
 
 DISTNAME = 'yugioh-bot'
 AUTHOR = 'will7200'
@@ -35,5 +40,6 @@ setup(
     url=URL,
     description="Botting Yugioh-DuelLinks",
     long_description=open('README.md', 'rt').read(),
-    keywords='yugioh bot yugioh-bot duellinks duel links yugioh-duellinks'
+    keywords='yugioh bot yugioh-bot duellinks duel links yugioh-duellinks',
+    test_suite='setup.bot_test'
 )

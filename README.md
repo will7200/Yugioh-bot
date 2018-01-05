@@ -4,7 +4,7 @@
 [![Discord](https://img.shields.io/discord/392538066633359360.svg?colorB=0082ff&style=flat)](https://discord.gg/PGWedhf)
 [![Software License][ico-license]](LICENSE)
 [![Build Status][ico-travis]][link-travis]
-[![Coverage Status][ico-scrutinizer]][link-scrutinizer]
+[![Coverage Status](https://coveralls.io/repos/github/will7200/Yugioh-bot/badge.svg?branch=master)](https://coveralls.io/github/will7200/Yugioh-bot?branch=master)
 [![Quality Score][ico-code-quality]][link-code-quality]
 
 
