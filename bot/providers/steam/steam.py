@@ -108,7 +108,7 @@ class Steam(Provider):
             img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 150, 720)  ## TODO Change Cuttoff parameters
         location = os.path.join(self.assets, "back__.png")
-        return self.__wrapper_kmeans_result(t, location, corr, info)
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
     def determine_autoduel_status(self, img):
         super(Steam, self).determine_autoduel_status()
@@ -207,7 +207,7 @@ class Steam(Provider):
             img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 480, 50)  ## TODO Change Cuttoff parameters
         location = os.path.join(self.assets, "ok_box.png")
-        return self.__wrapper_kmeans_result(t, location, corr, log)
+        return self.__wrapper_kmeans_result__(t, location, corr, log)
 
     def scan_for_close(self, corr=HIGH_CORR, log=None, img=None):
         corrword = look_up_translation_correlation(corr)
@@ -216,7 +216,7 @@ class Steam(Provider):
             img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 400, 500)  ## TODO Change Cuttoff parameters
         location = os.path.join(self.assets, "close.png")
-        return self.__wrapper_kmeans_result(t, location, corr, info)
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
     def scan_for_download(self, corr=HIGH_CORR, info=None):
         corrword = look_up_translation_correlation(corr)
@@ -224,7 +224,7 @@ class Steam(Provider):
         img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 480, 0)  ## TODO Change Cuttoff parameters
         location = os.path.join(self.assets, "download_button.png")
-        return self.__wrapper_kmeans_result(t, location, corr, info)
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
     def swipe_right(self, time_sleep=0):
         pass

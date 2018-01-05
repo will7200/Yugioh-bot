@@ -140,7 +140,7 @@ class Nox(Provider):
         img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 480, 0)
         location = os.path.join(self.assets, "download_button.png")
-        return self.__wrapper_kmeans_result(t, location, corr, info)
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
     def verify_battle(self):
         try_times = 3
@@ -180,7 +180,7 @@ class Nox(Provider):
             img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 400, 500)
         location = os.path.join(self.assets, "close.png")
-        return self.__wrapper_kmeans_result(t, location, corr, info)
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
     def method_name(self):
         super(Nox, self).method_name()
@@ -210,7 +210,7 @@ class Nox(Provider):
         img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 240, 0)
         location = os.path.join(self.assets, "cancel_button.png")
-        return self.__wrapper_kmeans_result(t, location, corr, info)
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
     def compare_with_back_button(self, corr=HIGH_CORR, info=None, img=None):
         corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
@@ -219,7 +219,7 @@ class Nox(Provider):
             img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 150, 720)
         location = os.path.join(self.assets, "back__.png")
-        return self.__wrapper_kmeans_result(t, location, corr, info)
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
 
     def click_auto_duel(self):
@@ -295,7 +295,7 @@ class Nox(Provider):
             img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 480, 50)
         location = os.path.join(self.assets, "ok_box.png")
-        return self.__wrapper_kmeans_result(t, location, corr, info)
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
     def scan(self):
         for x, y, current_page in self.possible_battle_points():

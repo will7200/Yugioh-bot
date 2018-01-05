@@ -5,7 +5,7 @@ import cv2
 import deprecation
 import numpy as _np
 
-from bot import clean_verison
+from bot import clean_version
 from bot.providers.duellinks import Predefined
 from bot.providers.shared import nox_current_version
 

@@ -207,7 +207,7 @@ class Provider(DuelLinks, Misc, Actions):
         task = loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
         # loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
 
-    def __wrapper_kmeans_result(self, trainer, location, corr, info=None):
+    def __wrapper_kmeans_result__(self, trainer, location, corr, info=None):
         if trainer.get_matches(location, corr):
             x, y = trainer.kmeans.cluster_centers_[0]
             if info:
