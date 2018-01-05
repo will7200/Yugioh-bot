@@ -46,8 +46,8 @@ runTimeOptions.json
 tess_*
 
 ### ignore spec files
-*.spec
-fix_build.py
+###*.spec
+###fix_build.py
 
 ### ignore c# project bin
 bot/providers/steam/bin/
