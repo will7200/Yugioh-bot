@@ -27,6 +27,7 @@ class TestSteam(TestCase):
         self.loop = asyncio.get_event_loop()
         self.loop.set_default_executor(ThreadPoolExecutor(2))
         dlRuntime._loop = self.loop
+        self.provider.is_process_running()
 
     def test_battle(self):
         self.fail()
@@ -96,7 +97,8 @@ class TestSteam(TestCase):
         self.fail()
 
     def test_tap(self):
-        self.fail()
+        x, y= self.provider.predefined.yugioh_initiate_link
+        self.provider.tap(x, y)
 
     def test_verify_battle(self):
         self.fail()
