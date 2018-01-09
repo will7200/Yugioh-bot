@@ -243,7 +243,7 @@ class Nox(Provider):
         self.tap(230, 750)
         self.wait_for('NEXT', True)
         self.tapnsleep((230, 750), .5)
-        self.wait_for('NEXT')
+        self.wait_for('NEXT', True)
         self.wait_for_ui(.3)
         self.tap(230, 750)
         self.wait_for_white_bottom(True)
