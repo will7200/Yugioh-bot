@@ -14,11 +14,11 @@ import numpy as np
 from skimage.measure import compare_ssim
 
 from bot.providers import trainer_matches as tm
-from bot.providers.common import loop_scan, mask_image
+from bot.providers.common import loop_scan, mask_image, crop_image
 from bot.providers.duellinks import DuelLinksInfo
 from bot.providers.provider import Provider
 from bot.providers.shared import *
-from bot.providers.steam.predefined import SteamPredefined, duel_variant_v
+from bot.providers.steam.predefined import SteamPredefined, duel_variant_v, SteamAreas
 
 
 class Steam(Provider):
@@ -75,9 +75,9 @@ class Steam(Provider):
             if dialog:
                 self.tap(230, 750)
         self.wait_for_ui(.5)
-        self.scan_for_word('ok', LOW_CORR)
+        self.scan_for_ok('ok', LOW_CORR)
         self.wait_for_ui(.1)
-        self.scan_for_word('ok', LOW_CORR)
+        self.scan_for_ok('ok', LOW_CORR)
         battle_calls = self.run_time.battle_calls
         for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
             for value in battle_calls.get(section):
@@ -86,7 +86,7 @@ class Steam(Provider):
     def check_if_battle(self, img):
         ## TODO Change Image Coordinates
         img = np.array(img)
-        img = img[750:800, 0:400]
+        img = crop_image(img, **self.predefined.page_area)
         blue_min = np.array([250, 250, 250], np.uint8)
         blue_max = np.array([255, 255, 255], np.uint8)
         amount = cv2.inRange(img, blue_min, blue_max)
@@ -98,17 +98,24 @@ class Steam(Provider):
         super(Steam, self).check_battle_is_running()
 
     def click_auto_duel(self):
-        ## TODO Change Coordinates
         self.root.debug("AUTO-DUEL FOUND CLICKING")
         self.wait_for_ui(.1)
-        self.tap(356, 85)
+        self.tap(*self.predefined.auto_duel_button)
+
+    def compare_with_cancel_button(self, corr=HIGH_CORR, info=None, img=None):
+        corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
+        self.root.debug("LOOKING FOR CANCEL BUTTON, {} CORRERLATION".format(corrword))
+        img = self.get_img_from_screen_shot()
+        t = tm.BoundingTrainer(img, bounding_area=self.predefined.main_area)
+        location = os.path.join(self.assets, "cancel_button.png")
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
     def compare_with_back_button(self, corr=HIGH_CORR, info=None, img=None):
         corrword = look_up_translation_correlation(corr)
         self.root.debug("LOOKING FOR BACK BUTTON, {} CORRERLATION".format(corrword))
         if img is None:
             img = self.get_img_from_screen_shot()
-        t = tm.Trainer(img, 150, 720)  ## TODO Change Cuttoff parameters
+        t = tm.BoundingTrainer(img, bounding_area=self.predefined.main_area)
         location = os.path.join(self.assets, "back__.png")
         return self.__wrapper_kmeans_result__(t, location, corr, info)
 
@@ -138,11 +145,14 @@ class Steam(Provider):
     def method_name(self):
         super(Steam, self).method_name()
 
-    def pass_through_initial_screen(self):
+    def pass_through_initial_screen(self, already_started=False):
         self.root.info("Passing Through Start Screen")
-        self.__generic_wait_for__('DuelLinks Landing Page', lambda x: x is True,
-                                  self.__is_initial_screen__, timeout=20)
-        self.tapnsleep(self.predefined.yugioh_initiate_link, 2)
+        if not self.__is_initial_screen__():
+            return
+        if self.__is_initial_screen__():
+            self.__generic_wait_for__('DuelLinks Landing Page', lambda x: x is True,
+                                      self.__is_initial_screen__, timeout=20)
+        self.tapnsleep(self.predefined.yugioh_initiate_link, 3)
         # TODO Check for prompt
         timeout = 45
         if self.scan_for_download():
@@ -150,6 +160,23 @@ class Steam(Provider):
         self.__generic_wait_for__('Notifications Page', lambda x: x is True, self.wait_for_notifications,
                                   timeout=timeout)
         self.wait_for_notifications()
+
+    def possible_battle_points(self):
+        if self.run_time.stop:
+            self.root.info("Received Stopping signal")
+            return
+        img = self.get_img_from_screen_shot()
+        area = self.predefined.main_area
+        area['height'] = 800
+        t = tm.BoundingTrainer(img, bounding_area=area)
+        t.capture_white_circles()
+        current_page = self.get_current_page(img)
+        logging.debug("Current-Page {}".format(current_page))
+        for x, y in t.circlePoints:
+            if self.run_time.stop:
+                self.root.info("Received Stopping signal")
+                break
+            yield x, y, current_page
 
     def start_process(self):
         try:
@@ -162,7 +189,7 @@ class Steam(Provider):
             self.root.critical("Steam executable not found")
             raise e
         except:
-            self.root.error("The program can't run Nox")
+            self.root.error("The program can't run Steam")
             raise NotImplementedError
 
     def scan(self):
@@ -176,12 +203,12 @@ class Steam(Provider):
             dl_info = DuelLinksInfo(x, y, current_page, "Starting Battle")
             version = 0
             if battle:
-                self.tapnsleep((150, 400), 2.5)
+                self.tapnsleep((150, 800), 2.5, True)
                 battle, version = self.verify_battle()
             if battle:
                 self.current_battle = True
                 self.root.info(battlemode % (x, y, current_page, "Starting Battle"))
-                self.scan_for_word('ok', LOW_CORR)
+                self.scan_for_ok(LOW_CORR)
                 self.tapnsleep(battle, 0)
                 if version == 2:
                     self.battle(dl_info)
@@ -199,15 +226,17 @@ class Steam(Provider):
                 dl_info.status = "failure/Close-Button"
                 loop_scan(self.scan_for_close, **{'info': dl_info})
                 dl_info.status = "success/Gift"
-                loop_scan(self.scan_for_word, **{'word': 'ok', 'info': dl_info})
+                loop_scan(self.scan_for_ok, **{'info': dl_info})
             self.wait_for_ui(2)
 
-    def scan_for_word(self, word, corr=HIGH_CORR, info=None, img=None):
+    def scan_for_ok(self, corr=HIGH_CORR, info=None, img=None):
         corrword = look_up_translation_correlation(corr)
-        self.root.debug("LOOK FOR WORD '{}', {} CORRERLATION".format(word, corrword))
+        self.root.debug("LOOK FOR WORD '{}', {} CORRERLATION".format('OK', corrword))
         if img is None:
             img = self.get_img_from_screen_shot()
-        t = tm.Trainer(img, 480, 50)  ## TODO Change Cuttoff parameters
+        area = self.predefined.main_area
+        area['width'] = 400
+        t = tm.BoundingTrainer(img, bounding_area=area)
         location = os.path.join(self.assets, "ok_box.png")
         return self.__wrapper_kmeans_result__(t, location, corr, info)
 
@@ -216,7 +245,9 @@ class Steam(Provider):
         self.root.debug("LOOKING FOR CLOSE BUTTON, {} CORRERLATION".format(corrword))
         if img is None:
             img = self.get_img_from_screen_shot()
-        t = tm.Trainer(img, 400, 500)  ## TODO Change Cuttoff parameters
+        area = self.predefined.main_area
+        area['width'] = 400
+        t = tm.BoundingTrainer(img, bounding_area=area)
         location = os.path.join(self.assets, "close.png")
         return self.__wrapper_kmeans_result__(t, location, corr, info)
 
@@ -224,12 +255,17 @@ class Steam(Provider):
         corrword = look_up_translation_correlation(corr)
         self.root.debug("Looking for Download Button, {} CORRERLATION".format(corrword))
         img = self.get_img_from_screen_shot()
-        t = tm.Trainer(img, 480, 0)  ## TODO Change Cuttoff parameters
+        t = tm.BoundingTrainer(img, 500, 300, 600, 300)
         location = os.path.join(self.assets, "download_button.png")
         return self.__wrapper_kmeans_result__(t, location, corr, info)
 
-    def swipe_right(self, time_sleep=0):
-        pass
+    def swipe_right(self, time_sleep=1):
+        self.tap(*self.predefined.move_right_button)
+        self.wait_for_ui(time_sleep)
+
+    def swipe_left(self, time_sleep=1):
+        self.tap(*self.predefined.move_left_button)
+        self.wait_for_ui(time_sleep)
 
     def swipe_time(self, x1, y1, x2, y2, time_amount):
         raise NotImplementedError("Function {} has not been implemented".format(getframeinfo(currentframe())[2]))
@@ -271,6 +307,21 @@ class Steam(Provider):
         y = (y * 65536)
         return int(x / width), int(y / height)
 
+    def tap_relative(self, x, y, area=SteamAreas.MAINAREA, time_sleep=0):
+        area = self.predefined.get_area(area)
+        xrel, yrel = area.get('left'), area.get('top')
+        self.tap(x + xrel, y + yrel)
+        if time_sleep > 0:
+            self.wait_for_ui(time_sleep)
+
+    def tapnsleep(self, point, time_sleep, relative=False):
+        x, y = point
+        if relative:
+            self.tap_relative(x, y, SteamAreas.MAINAREA)
+        else:
+            self.tap(x, y)
+        self.wait_for_ui(time_sleep)
+
     def tap(self, x, y):
         self.root.debug("Tapping at location ({},{})".format(x, y))
         if self._debug:
@@ -279,27 +330,32 @@ class Steam(Provider):
         ox, oy = win32api.GetCursorPos()
         curr_window = win32gui.GetForegroundWindow()
         win32gui.ShowWindow(self.win_handle, win32con.SW_RESTORE)
+        x, y = int(x), int(y)
         cx, cy = win32gui.ClientToScreen(self.win_handle, (x, y))
         x, y = self.__calculate_absolute_coordinates__(cx, cy)
         win32api.mouse_event(win32con.MOUSEEVENTF_MOVE | win32con.MOUSEEVENTF_ABSOLUTE,
                              x, y, 0, 0)
         win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x, y, 0, 0)
         win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x, y, 0, 0)
-        time.sleep(15/1000)
+        time.sleep(20 / 1000)
         win32api.SetCursorPos((ox, oy))
         win32gui.SetActiveWindow(curr_window)
 
-    def verify_battle(self):
+    def verify_battle(self, img=None):
         try_times = 3
         version = 0
         self.root.info("Verifying battle")
         while True:
             try_times -= 1
-            img = self.get_img_from_screen_shot()
-            if self.predefined.determine_duel_variant(img):
+            if img is None:
+                img = self.get_img_from_screen_shot()
+            area = self.predefined.main_area
+            area['height'] = img.shape[0]
+            img2 = crop_image(img, **area)
+            if self.predefined.determine_duel_variant(img2):
                 pointer = duel_variant_v['v2-autoduel']
                 ## TODO Change Duel Coordinates
-                img = img[680:710, 300:420]
+                img = crop_image(img, **self.predefined.auto_duel_location_pre)
                 version = 2
                 break
             elif try_times == 0:
@@ -330,7 +386,7 @@ class Steam(Provider):
             img = img[745:770, 210:270]
             try:
                 if try_scanning:
-                    self.scan_for_word('ok', LOW_CORR)
+                    self.scan_for_ok('ok', LOW_CORR)
                 ok = self.img_to_string(img,
                                         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
             except:
@@ -343,7 +399,7 @@ class Steam(Provider):
     def wait_for_notifications(self, *args, **kwargs):
         self.scan_for_close()
         self.wait_for_ui(1)
-        self.scan_for_word(word='ok')
+        self.scan_for_ok(word='ok')
         self.wait_for_ui(3)
         t = self.compare_with_back_button(corr=5)
         return t

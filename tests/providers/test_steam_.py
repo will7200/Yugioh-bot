@@ -5,6 +5,9 @@ from unittest import TestCase
 
 import os
 
+import cv2
+
+from providers import trainer_matches as tm
 from duel_links_runtime import DuelLinkRunTime
 from providers import Steam
 from utils.common import default_config
@@ -33,16 +36,24 @@ class TestSteam(TestCase):
         self.fail()
 
     def test_check_if_battle(self):
-        self.fail()
+        location = os.path.join(self.provider.assets, "steam", "steam_pre_battle.png")
+        img = cv2.imread(location)
+        self.assertTrue(self.provider.check_if_battle(img), "Is Battle")
 
     def test_check_battle_is_running(self):
         self.fail()
 
     def test_click_auto_duel(self):
-        self.fail()
+        self.provider.click_auto_duel()
 
     def test_compare_with_back_button(self):
-        self.fail()
+        img = os.path.join(self.provider.assets, "steam", "steam_back.png")
+        t = tm.BoundingTrainer(img, bounding_area=self.provider.predefined.main_area)
+        location = os.path.join(self.provider.assets, "back__.png")
+        # t.show_area_bounded(self.provider.predefined.main_area, img)
+        # t._debug = True
+        self.assertTrue(t.get_matches(location, 3) is True, "Expecting a back button")
+        # t.compare()
 
     def test_determine_autoduel_status(self):
         self.fail()
@@ -79,16 +90,54 @@ class TestSteam(TestCase):
         self.fail()
 
     def test_scan_for_word(self):
-        self.fail()
+        img = os.path.join(self.provider.assets, "steam", "steam_back.png")
+        t = tm.BoundingTrainer(img, bounding_area=self.provider.predefined.main_area)
+        location = os.path.join(self.provider.assets, "back__.png")
+        # t.show_area_bounded(self.provider.predefined.main_area, img)
+        # t._debug = True
+        self.assertTrue(t.get_matches(location, 3) is True, "Expecting a back button")
+        # t.compare()
 
     def test_scan_for_close(self):
-        self.fail()
+        img = os.path.join(self.provider.assets, "steam", "steam_close.png")
+        area = self.provider.predefined.main_area
+        area['width'] = 400
+        t = tm.BoundingTrainer(img, bounding_area=area)
+        location = os.path.join(self.provider.assets, "close.png")
+        # t.show_area_bounded(self.provider.predefined.main_area, img)
+        # t._debug = True
+        self.assertTrue(t.get_matches(location, 3) is True, "Expecting a back button")
+        img = os.path.join(self.provider.assets, "steam", "steam_ok.png")
+        t = tm.BoundingTrainer(img, bounding_area=area)
+        location = os.path.join(self.provider.assets, "close.png")
+        t.get_matches(location, 3)
+        # t.show_area_bounded(self.provider.predefined.main_area, img)
+        # t._debug = True
+        self.assertTrue(t.get_matches(location, 3) is False, "Is Ok button not close")
+
+    def test_scan_for_ok(self):
+        img = os.path.join(self.provider.assets, "steam", "steam_ok.png")
+        t = tm.BoundingTrainer(img, bounding_area=self.provider.predefined.main_area)
+        location = os.path.join(self.provider.assets, "ok_box.png")
+        # t.show_area_bounded(self.provider.predefined.main_area, img)
+        # t._debug = True
+        self.assertTrue(t.get_matches(location, 3) is True, "Expecting a back button")
+        # t.compare()
 
     def test_scan_for_download(self):
-        self.fail()
+        img = os.path.join(self.provider.assets, "steam", "download_update.png")
+        t = tm.BoundingTrainer(img, 500, 300, 600, 300)
+        location = os.path.join(self.provider.assets, "download_button.png")
+        # t.show_area(500, 300, 600, 300, img)
+        self.assertTrue(t.get_matches(location, 3) is True, "Expecting a download button")
 
     def test_swipe_right(self):
         self.fail()
+        # self.provider.swipe_right(0)
+
+    def test_swipe_left(self):
+        self.fail()
+        # self.provider.swipe_left(0)
 
     def test_swipe_time(self):
         self.fail()
@@ -97,11 +146,13 @@ class TestSteam(TestCase):
         self.fail()
 
     def test_tap(self):
-        x, y= self.provider.predefined.yugioh_initiate_link
+        x, y = self.provider.predefined.yugioh_initiate_link
         self.provider.tap(x, y)
 
     def test_verify_battle(self):
-        self.fail()
+        location = os.path.join(self.provider.assets, "steam", "duel_variant_autoduel.png")
+        img = cv2.imread(location)
+        print(self.provider.verify_battle(img))
 
     def test_wait_for(self):
         self.fail()
@@ -109,3 +160,10 @@ class TestSteam(TestCase):
     def test_wait_for_notifications(self):
         self.fail()
 
+    def test_battle_icons(self):
+        self.provider.is_process_running()
+        img = self.provider.get_img_from_screen_shot()
+        area = self.provider.predefined.main_area
+        area['height'] = 700
+        t = tm.BoundingTrainer(img, bounding_area=area)
+        t.capture_white_circles()
