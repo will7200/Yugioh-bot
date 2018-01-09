@@ -306,7 +306,7 @@ class DuelLinksGui(QFrame):
         self.runTimeGroupBox = QGroupBox("RunTime Fields")
         self.current_time = QLabel("Current Time: ")
         self.current_time_value = QLabel("")
-        self.nox_status_label = QLabel("Nox status: ")
+        self.nox_status_label = QLabel("{} status: ".format(self.dlRunTime.get_provider().__str__()))
         self.nox_status_value = QLabel("")
         self.next_run_at_label = QLabel("Next Run At:")
         self.next_run_at_value = QLabel("")

@@ -44,13 +44,14 @@ class Provider(DuelLinks, Misc, Actions):
                 # Leaves a checkpoint when stopped
                 self.current_run = x
                 break
-            self.root.debug("Run through {}".format(x))
+            self.root.debug("Run through {}".format(x+1))
             self.compare_with_back_button()
             self.wait_for_ui(1)
             self.swipe_right()
             try:
                 self.scan()
             except Exception as e:
+                self.register_thread(None)
                 raise e
         self.register_thread(None)
 
