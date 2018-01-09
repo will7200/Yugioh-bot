@@ -4,6 +4,8 @@ import subprocess
 import time
 import win32gui
 import win32ui
+import win32api, win32con
+from win32con import SM_CXSCREEN, SM_CYSCREEN
 from ctypes import windll
 from inspect import getframeinfo, currentframe
 
@@ -200,16 +202,16 @@ class Steam(Provider):
                 loop_scan(self.scan_for_word, **{'word': 'ok', 'info': dl_info})
             self.wait_for_ui(2)
 
-    def scan_for_word(self, word, corr=HIGH_CORR, log=None, img=None):
+    def scan_for_word(self, word, corr=HIGH_CORR, info=None, img=None):
         corrword = look_up_translation_correlation(corr)
         self.root.debug("LOOK FOR WORD '{}', {} CORRERLATION".format(word, corrword))
         if img is None:
             img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 480, 50)  ## TODO Change Cuttoff parameters
         location = os.path.join(self.assets, "ok_box.png")
-        return self.__wrapper_kmeans_result__(t, location, corr, log)
+        return self.__wrapper_kmeans_result__(t, location, corr, info)
 
-    def scan_for_close(self, corr=HIGH_CORR, log=None, img=None):
+    def scan_for_close(self, corr=HIGH_CORR, info=None, img=None):
         corrword = look_up_translation_correlation(corr)
         self.root.debug("LOOKING FOR CLOSE BUTTON, {} CORRERLATION".format(corrword))
         if img is None:
@@ -263,14 +265,29 @@ class Steam(Provider):
         img_str = cv2.imencode('.jpg', img)[1].tostring()
         return img_str
 
+    def __calculate_absolute_coordinates__(self, x, y):
+        width, height = win32api.GetSystemMetrics(SM_CXSCREEN), win32api.GetSystemMetrics(SM_CYSCREEN)
+        x = (x * 65536)
+        y = (y * 65536)
+        return int(x / width), int(y / height)
 
     def tap(self, x, y):
         self.root.debug("Tapping at location ({},{})".format(x, y))
-        # command = "bin\\adb.exe shell input tap %d %d" % (x, y)
         if self._debug:
             # Helper to debug taps
             input("waiting for confirmation press enter")
-        self.do_system_call(command)
+        ox, oy = win32api.GetCursorPos()
+        curr_window = win32gui.GetForegroundWindow()
+        win32gui.ShowWindow(self.win_handle, win32con.SW_RESTORE)
+        cx, cy = win32gui.ClientToScreen(self.win_handle, (x, y))
+        x, y = self.__calculate_absolute_coordinates__(cx, cy)
+        win32api.mouse_event(win32con.MOUSEEVENTF_MOVE | win32con.MOUSEEVENTF_ABSOLUTE,
+                             x, y, 0, 0)
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x, y, 0, 0)
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x, y, 0, 0)
+        time.sleep(15/1000)
+        win32api.SetCursorPos((ox, oy))
+        win32gui.SetActiveWindow(curr_window)
 
     def verify_battle(self):
         try_times = 3
