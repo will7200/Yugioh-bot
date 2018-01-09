@@ -137,10 +137,11 @@ class Trainer(object):
         self.white_query = mask_image(lower, upper, self.query, apply_mask=True)
 
     def compare(self):
-        plot_image = self.images[0]
-        for x in range(1, len(self.images)):
-            plot_image = np.concatenate((plot_image, self.images[x]), axis=1)
-        plt.imshow(plot_image), plt.show()
+        if len(self.images) > 0:
+            plot_image = self.images[0]
+            for x in range(1, len(self.images)):
+                plot_image = np.concatenate((plot_image, self.images[x]), axis=1)
+            plt.imshow(plot_image), plt.show()
 
     @staticmethod
     def show_area(x, y, image):
@@ -155,18 +156,38 @@ class Trainer(object):
 
 class BoundingTrainer(Trainer):
 
-    def __init__(self, query, x, y, w, h):
+    def __init__(self, query, x=0, y=0, w=0, h=0, bounding_area=None, blacklist=None):
+        if bounding_area is not None:
+            x, y, w, h = bounding_area.get('left'), bounding_area.get('top'), \
+                         bounding_area.get('width'), bounding_area.get('height')
         super(BoundingTrainer, self).__init__(query, x, y)
         self.xThreshold_lower = self.xThreshold
         self.yThreshold_lower = self.xThreshold
-        self.xThreshold_upper = x + w
-        self.yThreshold_upper = y + h
+        self.blacklist = None
+        if w is None:
+            self.xThreshold_upper = self.query.shape[1]
+        else:
+            self.xThreshold_upper = x + w
+        if h is None:
+            self.yThreshold_upper = self.query.shape[0]
+        else:
+            self.yThreshold_upper = y + h
 
     def in_box(self, x, y):
         if self.xThreshold_lower <= x <= self.xThreshold_upper:
-            if self.yThreshold_lower <= y <= self.xThreshold_upper:
+            if self.yThreshold_lower <= y <= self.yThreshold_upper:
                 return True
         return False
+
+    def in_blacklist(self, x, y):
+        if self.blacklist:
+            for exclude in self.blacklist:
+                cx, cy, cw, ch = exclude.get('left'), exclude.get('top'), \
+                                 exclude.get('width'), exclude.get('height')
+                if cx <= x <= cx + cw:
+                    if cx <= y <= cy + ch:
+                        return True
+            return False
 
     def get_matches(self, train, corr):
         train_img = cv2.imread(train, 0)
@@ -208,20 +229,25 @@ class BoundingTrainer(Trainer):
             self.debug_matcher(img3)
         return True
 
-    def capture_white_circles(self, x_limit=480, y_limit=670):
+    def capture_white_circles(self):
         self.prep_for_white_circles()
         img = cv2.cvtColor(self.white_query, cv2.COLOR_BGR2GRAY)
-        cimg = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1, 40,
-                                   param1=50, param2=30, minRadius=5, maxRadius=60)
+        img = cv2.medianBlur(img, 1)
+        cimg = cv2.cvtColor(self.query, cv2.COLOR_BGR2RGB)
+        circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1, img.shape[0] / 15,
+                                   param1=50, param2=22, minRadius=5, maxRadius=60)
         if circles is None:
             return
         circles = np.uint16(np.around(circles))
+        new_circles = []
         for i in circles[0, :]:
-            if self.in_box(i[0], i[1]):
+            if self.in_box(i[0], i[1]) and not self.in_blacklist(i[0], i[1]):
                 self.circlePoints.append((i[0], i[1]))
+                new_circles.append(i)
         if self._debug:
-            self.draw_circles(circles, cimg)
+            # self.draw_circles(circles, cimg)
+            if len(new_circles) > 0:
+                self.draw_circles(np.array([new_circles]), cimg)
 
     @staticmethod
     def show_area(x, y, w, h, image):
@@ -229,5 +255,17 @@ class BoundingTrainer(Trainer):
             pass
         else:
             image = cv2.imread(image)
+        if h is None:
+            h = image.shape[0]
+        if w is None:
+            w = image.shape[1]
         image = image[y:y + h, x:x + w]
         plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)), plt.show()
+
+    @staticmethod
+    def show_area_bounded(bounding_area, image):
+        return BoundingTrainer.show_area(bounding_area.get('left'),
+                                         bounding_area.get('top'),
+                                         bounding_area.get('width'),
+                                         bounding_area.get('height'),
+                                         image)
