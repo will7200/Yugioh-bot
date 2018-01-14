@@ -57,3 +57,7 @@ bot/providers/steam/obj/
 ### ignore coveralls
 .coverage
 .coveralls.yml
+
+
+### ignore rst file
+*.rst

@@ -39,7 +39,7 @@ setup(
     python_requires='>=3.5',
     url=URL,
     description="Botting Yugioh-DuelLinks",
-    long_description=open('README.md', 'rt').read(),
+    long_description=open('README.rst', 'rt').read(),
     keywords='yugioh bot yugioh-bot duellinks duel links yugioh-duellinks',
     test_suite='setup.bot_test'
 )
