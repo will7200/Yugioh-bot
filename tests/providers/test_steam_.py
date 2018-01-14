@@ -10,6 +10,8 @@ import cv2
 from providers import trainer_matches as tm
 from duel_links_runtime import DuelLinkRunTime
 from providers import Steam
+from providers.common import crop_image
+from providers.shared import alpha_numeric, alphabet
 from utils.common import default_config
 
 
@@ -31,6 +33,7 @@ class TestSteam(TestCase):
         self.loop.set_default_executor(ThreadPoolExecutor(2))
         dlRuntime._loop = self.loop
         self.provider.is_process_running()
+        os.chdir(r'..\..')
 
     def test_battle(self):
         self.fail()
@@ -152,10 +155,15 @@ class TestSteam(TestCase):
     def test_verify_battle(self):
         location = os.path.join(self.provider.assets, "steam", "duel_variant_autoduel.png")
         img = cv2.imread(location)
-        print(self.provider.verify_battle(img))
+        points, version = self.provider.verify_battle(img)
+        self.assertTrue(version == 2)
 
     def test_wait_for(self):
-        self.fail()
+        location = os.path.join(self.provider.assets, "steam", "ok_button_duel.png")
+        img = cv2.imread(location)
+        img = crop_image(img, **self.provider.predefined.ok_button_duel)
+        word = self.provider.img_to_string(img, alphabet).lower()
+        self.assertTrue(word == 'ok')
 
     def test_wait_for_notifications(self):
         self.fail()
