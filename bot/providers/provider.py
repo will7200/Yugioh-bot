@@ -252,7 +252,6 @@ class Provider(DuelLinks, Misc, Actions):
 
         loop = self.run_time._loop
         task = loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
-        # loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
 
     def __wrapper_kmeans_result__(self, trainer, location, corr, info=None):
         if trainer.get_matches(location, corr):

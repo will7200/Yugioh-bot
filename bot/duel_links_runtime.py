@@ -11,6 +11,7 @@ import traceback
 from abc import abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 
+import apscheduler
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers import SchedulerNotRunningError
 
@@ -101,7 +102,7 @@ class DuelLinkRunTimeOptions(object):
         self.handle_option_change('stop')
 
     _playmode = "autoplay"
-
+    _available_modes = ['autoplay','guided']
     @property
     def playmode(self):
         return self._playmode
@@ -110,6 +111,8 @@ class DuelLinkRunTimeOptions(object):
     def playmode(self, playmode):
         if not isinstance(playmode, str):
             self.runtime_error_options("playmode", str, type(playmode))
+            return
+        if playmode not in self._available_modes:
             return
         if self._playmode == playmode:
             return
@@ -164,7 +167,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _watcher = None
     _timeout_dump = None
     _executor = None
-    _task = None
     _provider = None
     _loop = None
     _run_main = None
@@ -176,6 +178,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self._config = config
         self._file = config.get('bot', 'runTimePersistence')
         self._scheduler = scheduler
+        self.setUp()
         if auto_start:
             self.start()
 
@@ -188,7 +191,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     def setUp(self):
         self._loop = asyncio.get_event_loop()
         self._loop.set_default_executor(ThreadPoolExecutor())
-        self._task = asyncio.Task(self.periodic())
         if os.path.dirname(self._file) == "":
             self._file = os.path.join(os.getcwd(), self._file)
         pathlib.Path(os.path.dirname(self._file)).mkdir(parents=True, exist_ok=True)
@@ -269,7 +271,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             tmpdict[attribute] = getattr(self, attribute)
         return tmpdict
 
-    @async_calling_function(2)
     def dump(self):
         if not self._disable_dump:
             self._watcher.stop_observer()
@@ -277,11 +278,17 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             logger.debug("Dump Getting Called {}".format(tmpdict))
             write_data_file(tmpdict, self._file)
             self._watcher.start_observer()
+        #self._timeout_dump = None
 
     def timeout_dump(self):
-        if isinstance(self._timeout_dump, asyncio.TimerHandle):
-            self._timeout_dump.cancel()
-        self._timeout_dump = self._loop.call_later(5, self.dump)
+        if self._timeout_dump is not None:
+            try:
+                self._timeout_dump.remove()
+            except apscheduler.jobstores.base.JobLookupError:
+                pass
+        time = datetime.datetime.now() + datetime.timedelta(seconds=5)
+        self._timeout_dump = self._scheduler.add_job(self.dump, trigger='date',
+                                                     run_date=time)
         logger.debug("Timeout dump Scheduled")
 
     @staticmethod
@@ -397,11 +404,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         logger.info("Tracking %s" % (self._file))
         logger.info('Next run at %s' % (self.next_run_at.isoformat()))
 
-    @asyncio.coroutine
-    def periodic(self):
-        while True:
-            yield from asyncio.sleep(1)
-
     _shutdown = False
 
     def shutdown(self):
@@ -411,7 +413,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         while self._provider.current_thread is not None:
             logger.warning('waiting for thread to stop')
             time.sleep(5)
-        self._task.cancel()
         self._scheduler.shutdown()
         self._shutdown = True
 

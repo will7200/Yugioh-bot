@@ -8,6 +8,8 @@ import time
 import os
 
 import sys
+
+import sip
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import yaml
@@ -113,6 +115,7 @@ def gui(start, config_file):
         from bot.utils.common import make_config_file, default_config
         from bot.duel_links_runtime import DuelLinkRunTime
         from bot.dl_gui import DuelLinksGui
+        sip.setdestroyonexit(False)
         app = QApplication(sys.argv)
 
         if not QSystemTrayIcon.isSystemTrayAvailable():

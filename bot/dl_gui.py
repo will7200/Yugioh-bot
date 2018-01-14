@@ -51,6 +51,7 @@ from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
 from enum import Enum
 from bot.duel_links_runtime import DuelLinkRunTime
 from bot import images_qr
+import sys
 
 
 class WINDOWS_TASKBAR_LOCATION(Enum):
@@ -68,8 +69,8 @@ def mock_data(): return False
 
 
 update_intervals = {
-    'next_run_at': 10,
-    'nox_status': 10,
+    'next_run_at' : 10,
+    'nox_status'  : 10,
     'current_time': 1
 }
 
@@ -81,19 +82,15 @@ class DuelLinksGui(QFrame):
     def __init__(self, duelLinksRunTime=None, assets=None):
         super(DuelLinksGui, self).__init__()
         self.assets = assets
-        # if duelLinksRunTime is None:
-        #    raise Exception("Duel Links Run Time Invalid")
+        assert (type(duelLinksRunTime) is DuelLinkRunTime)
         self.dlRunTime = duelLinksRunTime  # type: DuelLinkRunTime
-        #self.createIconGroupBox()
+        # self.createIconGroupBox()
         self.createRunTimeFields()
         self.createMessageGroupBox()
         self.createBotControls()
 
-        # self.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-        # self.setLineWidth(2)
         self.setObjectName("BotFrame")
         self.setStyleSheet("#BotFrame {border: 2px solid #9e3939;}")
-        # self.iconLabel.setMinimumWidth(self.durationLabel.sizeHint().width())
 
         self.createActions()
         self.createBotActions()
@@ -108,7 +105,6 @@ class DuelLinksGui(QFrame):
         self.trayIcon.activated.connect(self.iconActivated)
 
         # bot actions connected
-
         self.pauseButton.clicked.connect(self.pause_bot)
         self.runButton.clicked.connect(self.start_bot)
 
@@ -119,7 +115,7 @@ class DuelLinksGui(QFrame):
         # mainLayout.addWidget(self.messageGroupBox)
         self.setLayout(mainLayout)
 
-        self.setIcon(0)
+        self.setIcon()
         self.trayIcon.show()
         self.setWindowTitle(app_name)
         self.setFixedSize(400, 300)
@@ -178,7 +174,7 @@ class DuelLinksGui(QFrame):
     def shouldShowSystrayBox(self):
         self._shouldShowSystrayBox()
 
-    def setIcon(self, index):
+    def setIcon(self):
         icon = QIcon(QIcon(':/assets/yugioh.ico'))
         self.trayIcon.setIcon(icon)
         self.setWindowIcon(icon)
@@ -211,6 +207,9 @@ class DuelLinksGui(QFrame):
                                 "Sorry, I already gave what help I could.\nMaybe you should "
                                 "try asking a human?")
 
+    def modeChange(self, index):
+        self.dlRunTime.playmode = self.available_modes.currentData()
+
     def createIconGroupBox(self):
         self.iconGroupBox = QGroupBox("Tray Icon")
 
@@ -232,18 +231,31 @@ class DuelLinksGui(QFrame):
     def createBotControls(self):
         self.botControls = QGroupBox("Controls")
         controlLayout = QGridLayout()
-        runLabel = QLabel("Run the bot:")
+        self.runLabel = QLabel("Run the bot:")
+        self.modeLabel = QLabel("Current Mode:")
+        self.available_modes = QComboBox()
+        for index, mode in enumerate(self.dlRunTime._available_modes):
+            self.available_modes.addItem(mode.title(), mode)
+        self.available_modes.setStyleSheet("QComboBox {text-align: center;}")
+        self.available_modes.setEditable(True)
+        self.available_modes.lineEdit().setReadOnly(True)
+        self.available_modes.lineEdit().setAlignment(QtCore.Qt.AlignCenter)
+        self.available_modes.setCurrentIndex(self.dlRunTime._available_modes.index(self.dlRunTime.playmode))
+        self.available_modes.currentIndexChanged.connect(self.modeChange)
+        # self.available_modes.lineEdit().setAlignment(QtCore.Qt.AlignCenter)
         self.runButton = QPushButton("Run")
-        showLabel = QLabel("Pause the bot:")
+        self.showLabel = QLabel("Pause the bot:")
         self.pauseButton = QPushButton("Pause")
         self.exitButton = QPushButton("Exit")
         self.hideButton = QPushButton("Hide")
-        controlLayout.addWidget(runLabel, 0, 0)
-        controlLayout.addWidget(self.runButton, 0, 2, 1, 2)
-        controlLayout.addWidget(showLabel, 1, 0)
-        controlLayout.addWidget(self.pauseButton, 1, 2, 1, 2)
-        controlLayout.addWidget(self.hideButton, 2, 0, 1, 2)
-        controlLayout.addWidget(self.exitButton, 2, 2, 1, 2)
+        controlLayout.addWidget(self.modeLabel, 0, 0, 1, 2)
+        controlLayout.addWidget(self.available_modes, 0, 2, 1, 2)
+        controlLayout.addWidget(self.runLabel, 1, 0)
+        controlLayout.addWidget(self.runButton, 1, 2, 1, 2)
+        controlLayout.addWidget(self.showLabel, 2, 0)
+        controlLayout.addWidget(self.pauseButton, 2, 2, 1, 2)
+        controlLayout.addWidget(self.hideButton, 3, 0, 1, 2)
+        controlLayout.addWidget(self.exitButton, 3, 2, 1, 2)
         self.botControls.setLayout(controlLayout)
 
     def createMessageGroupBox(self):
@@ -366,7 +378,7 @@ class DuelLinksGui(QFrame):
     def __quit__(self):
         self.hide()
         self.dlRunTime.shutdown()
-        QApplication.instance().quit()
+        self.close()
 
     def createBotActions(self):
         self.startAction = QAction('Start', self, triggered=self.start_bot)
