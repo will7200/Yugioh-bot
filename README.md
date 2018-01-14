@@ -18,7 +18,8 @@ Bot to help with those npc in Yugioh Duel Links.
 ## Prerequisites
 
 Have Nox installed (https://www.bignox.com)  
- -- Note: Windows 10 Users make sure to disable Hyper-V in window services otherwise BSoD errors will occur.  
+ -- Note: Windows 10 Users make sure to disable Hyper-V in window services otherwise BSoD errors will occur.   
+ Alternatively  have Yugioh for steam installed.  
 Python 3.5 or 3.6 (https://www.python.org/downloads/, https://www.anaconda.com/download/)
 
 ## Install
@@ -47,7 +48,7 @@ $ Get-Content requirements.txt | ForEach-Object {
 conda install --yes $_
 }
 ```
-## Afterwards
+## Afterwards Nox
 ### Skip to 6 on this list if you used python install.py
  1. Install tesseract (http://3.onj.me/tesseract/)  
     If the above link is giving issues or is slow:
@@ -62,6 +63,19 @@ conda install --yes $_
  7. Download Yugioh app
  8. Setup Yugioh app, link, etc... (first time only)
 
+## Afterwards Steam
+### Skip to 4 on this list if you used python install.py
+ 1. Install tesseract (http://3.onj.me/tesseract/)  
+    If the above link is giving issues or is slow:
+    Tesseract at UB Mannheim (https://github.com/UB-Mannheim/tesseract/wiki)  
+    -- Note: Testings occured on the 3.05.01 version  
+ 2. opencv_python‑3.3.1+contrib and cv2+contrib 3.2.0 tested (http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv) 
+    -- Note: pypi package will now install cv2+contrib  from requirements.txt
+ 3. Copy downloaded tesseract folder into bin\tess\
+ 4. Under the bot section in the config.ini file change the provider to Steam instead of Nox.
+ 5. Make sure to have the steam app installed.
+ 6. Note the detection system for the Steam app hasn't been optimized for it yet, so there will be a lot of false 
+ positives and true negatives.
 ## Usage
 
 To Start The Bot
