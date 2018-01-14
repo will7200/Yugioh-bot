@@ -25,7 +25,7 @@ class Actions(object):
 
     @abstractmethod
     def key_escape(self):
-        "Optional Key Escape"
+        """Optional Key Escape"""
         raise NotImplementedError("key_escape not defined")
 
     @abstractmethod

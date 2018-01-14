@@ -104,7 +104,7 @@ class Predefined(object):
     def __init__(self, config, version):
         self._config = config
         self.cache_file = config.get('locations', 'cache_file')
-        self.dataset = self.__class__.__name__
+        self.dataset = self.dataset or self.__class__.__name__
         self.assets = config.get('locations', 'assets')
         self.version = version
         self.get_cache()
@@ -133,15 +133,6 @@ class Predefined(object):
             if self.dataset in self.cache.keys():
                 return
             self.generate()
-            """
-            self.cache = h5py.File(self.cache_file)
-            if self.dataset in self.cache.keys():
-                df = self.cache.get(self.dataset)
-                version = df.get('version', 0)
-                if version == 0 or version != self.version:
-                    self.generate()
-                    self.cache = h5py.File(self.cache_file)
-                """
 
     _duel_varient = None
 
@@ -275,8 +266,8 @@ class DuelLinks(object):
         raise NotImplementedError("compare_with_back_button not implemented")
 
     @abstractmethod
-    def scan_for_word(self, word, corr=HIGH_CORR, info=None, img=None):
-        raise NotImplementedError("scan_for_work not implemented")
+    def scan_for_ok(self, corr=HIGH_CORR, info=None, img=None):
+        raise NotImplementedError("scan_for_word not implemented")
 
     @abstractmethod
     def scan_for_close(self, corr=HIGH_CORR, info=None, img=None):
@@ -303,7 +294,7 @@ class DuelLinks(object):
         raise NotImplementedError("check_if_battle not implemented")
 
     @abstractmethod
-    def verify_battle(self, img=None):
+    def verify_battle(self, img=None, log=True):
         raise NotImplementedError("verify_battle not implemented")
 
     @abstractmethod
@@ -321,3 +312,13 @@ class DuelLinks(object):
     @abstractmethod
     def wait_for_white_bottom(self):
         raise NotImplementedError("wait for white bottom not implemented")
+
+
+class DuelError(Exception):
+    """Exception raised for errors in the in duel Links"""
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return self.value
