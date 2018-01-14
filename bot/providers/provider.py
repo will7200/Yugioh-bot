@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 import threading
@@ -10,9 +11,10 @@ import os
 import cv2
 from bot.duel_links_runtime import DuelLinkRunTime
 from bot.providers import trainer_matches as tm
-from bot.providers.duellinks import DuelLinks, LOW_CORR
+from bot.providers.duellinks import DuelLinks, LOW_CORR, DuelError, alpha_numeric
 from bot.providers.misc import Misc
 from bot.providers.actions import Actions
+from bot.providers.common import crop_image, mask_image
 
 
 class Provider(DuelLinks, Misc, Actions):
@@ -32,10 +34,6 @@ class Provider(DuelLinks, Misc, Actions):
         self.assets = config.get('locations', 'assets')
         self.lock = None
         self.run_time = run_time  # type: DuelLinkRunTime
-        self.setUp()
-
-    def setUp(self):
-        pass
 
     def auto(self):
         t = threading.currentThread()
@@ -46,13 +44,14 @@ class Provider(DuelLinks, Misc, Actions):
                 # Leaves a checkpoint when stopped
                 self.current_run = x
                 break
-            self.root.debug("Run through {}".format(x))
+            self.root.debug("Run through {}".format(x + 1))
             self.compare_with_back_button()
             self.wait_for_ui(1)
             self.swipe_right()
             try:
                 self.scan()
             except Exception as e:
+                self.register_thread(None)
                 raise e
         self.register_thread(None)
 
@@ -61,10 +60,10 @@ class Provider(DuelLinks, Misc, Actions):
         # self.CheckBattle()
 
     def __check_battle_is_running__(self):
-        self.root.debug("CHECKING AUTO DUEL STATUS")
+        self.root.info("CHECKING AUTO DUEL STATUS")
         img = self.get_img_from_screen_shot()
         status = self.determine_autoduel_status(img)
-        self.root.debug("AUTO_DUEL STATUS: {}".format(status))
+        self.root.info("AUTO_DUEL STATUS: {}".format(status))
         if not status and self.current_battle:
             self.click_auto_duel()
             self.check_battle()
@@ -86,8 +85,52 @@ class Provider(DuelLinks, Misc, Actions):
         self.lock.release()
         self.root.debug(job_id)
 
-    def scan(self):
-        raise NotImplementedError("scan not implemented")
+    def is_street_replay(self):
+        img = self.get_img_from_screen_shot()
+        street_replay = self.predefined.street_replay
+        img = crop_image(img, **street_replay)
+        word = self.img_to_string(img, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+        if 'street' in word or 'replay' in word.lower():
+            return True
+        return False
+
+    def get_current_page(self, img):
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        area = crop_image(img, **self.predefined.page_area)
+        area = mask_image([254], [255], area)
+        height, width = area.shape
+        current_page = 0
+        for x in range(4):
+            box = crop_image(area, (x * width / 4), 0, ((x + 1) * width / 4), height)
+            if cv2.countNonZero(box) > 0:
+                current_page = x
+                break
+        return current_page + 1
+
+    def guided_mode(self):
+        t = threading.currentThread()
+        self.register_thread(t)
+        while True:
+            if self.run_time.stop:
+                break
+            try:
+                battle, version = self.verify_battle(log=False)
+                if battle:
+                    self.current_battle = True
+                    self.root.info("Guided mode on")
+                    self.scan_for_ok(LOW_CORR)
+                    self.tapnsleep(battle, 0)
+                    if version == 2:
+                        self.battle()
+                    else:
+                        self.battle(check_battle=True)
+                    self.current_battle = False
+            except DuelError:
+                self.wait_for_ui(1)
+            except Exception as e:
+                self.register_thread(None)
+                raise e
+        self.register_thread(None)
 
     def possible_battle_points(self):
         if self.run_time.stop:
@@ -103,6 +146,30 @@ class Provider(DuelLinks, Misc, Actions):
                 self.root.info("Received Stopping signal")
                 break
             yield x, y, current_page
+
+    def scan(self):
+        raise NotImplementedError("scan not implemented")
+
+    def verify_battle(self, ori_img=None, log=True):
+        if log:
+            self.root.info("Verifying battle")
+        if ori_img is None:
+            ori_img = self.get_img_from_screen_shot()
+        img = crop_image(ori_img, **self.predefined.auto_duel_location_pre)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        word = self.img_to_string(img, alpha_numeric).lower()
+        if word.startswith("auto") or 'auto' in word:
+            pointer = self.predefined.duel_variant_version('v2-autoduel')
+            return pointer, 2
+        img = crop_image(ori_img, **self.predefined.duel_location_pre)
+        word = self.img_to_string(img, alpha_numeric).lower()
+        if word.startswith("due") or word == "duel":
+            pointer = self.predefined.duel_variant_version('v1')
+            return pointer, 1
+        if log:
+            self.root.debug("No Auto-Duel button or Button Found")
+            self.root.critical("Cannot find the auto-duel button")
+        raise DuelError("Auto Duel Button failed comparison test")
 
     def wait_for_auto_duel(self):
         self.root.debug("WAITING FOR AUTO-DUEL TO APPEAR")
@@ -124,7 +191,7 @@ class Provider(DuelLinks, Misc, Actions):
         b = self.check_if_battle(img)
         while not b and not self.run_time.stop:
             if tryScanning:
-                self.scan_for_word('ok', LOW_CORR)
+                self.scan_for_ok(LOW_CORR)
             img = self.get_img_from_screen_shot()
             b = self.check_if_battle(img)
             if b:
@@ -134,7 +201,6 @@ class Provider(DuelLinks, Misc, Actions):
     def wait_for_ui(self, amount):
         if not self.run_time.stop:
             super(Provider, self).wait_for_ui(amount)
-
 
     def do_system_call(self, command):
         if not self.run_time.stop:
@@ -160,3 +226,41 @@ class Provider(DuelLinks, Misc, Actions):
             if len(line) > len(output_line):
                 output_line = line
         return output_line
+
+    def __generic_wait_for__(self, message, condition_check, fn, *args, **kwargs):
+        self.root.info("Waiting for {}".format(message))
+        timeout = kwargs.get('timeout', 10)
+
+        async def wait_for(self):
+            exceptions_occurred = 0
+            while not self.run_time.stop:
+                try:
+                    condition = fn(*args, **kwargs)
+                except Exception as e:
+                    print(e)
+                    if exceptions_occurred > 5:
+                        raise Exception("Maximum exception count occurred")
+                    exceptions_occurred += 1
+                    await self.async_wait_for_ui(1)
+                    continue
+                if condition_check(condition):
+                    break
+                await self.async_wait_for_ui(2)
+
+        async def main(self):
+            await wait_for(self)
+
+        loop = self.run_time._loop
+        task = loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
+        # loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
+
+    def __wrapper_kmeans_result__(self, trainer, location, corr, info=None):
+        if trainer.get_matches(location, corr):
+            x, y = trainer.kmeans.cluster_centers_[0]
+            if info:
+                self.root.info("NPC Battle Mode,Points: ({},{}) at location: ({}), message: {}".format(
+                    info.x, info.y, info.page, info.status
+                ))
+            self.tap(x, y)
+            return True
+        return False

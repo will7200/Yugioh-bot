@@ -1,6 +1,6 @@
 import os
 import unittest
-from ..debug_helpers import calling_function, last_record
+from debug_helpers import calling_function, last_record
 
 
 class HelpersTest(unittest.TestCase):

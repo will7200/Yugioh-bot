@@ -16,7 +16,6 @@ except ImportError:
     pass
 
 logger.addHandler(ch)
-logger.debug("Setup Complete")
 from ._version import get_versions
 
 __version__ = get_versions()['version']

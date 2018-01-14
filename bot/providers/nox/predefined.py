@@ -6,7 +6,7 @@ import numpy as _np
 
 from bot import clean_version
 from bot.providers.duellinks import Predefined
-from bot.providers.shared import nox_current_version
+from bot.providers.shared import nox_current_version, tupletodict
 
 left = 319
 top = 79
@@ -15,8 +15,8 @@ height = 23
 auto_duel_box = (left, top, left + width, top + height)
 
 duel_variant_v = {
-    'v1': (230, 690),
-    'v2-duel': (120, 690),
+    'v1'         : (230, 690),
+    'v2-duel'    : (120, 690),
     'v2-autoduel': (290, 690)
 }
 
@@ -61,27 +61,51 @@ class NoxPredefined(Predefined):
     @property
     def autoduel(self):
         return {
-            'left': 319,
-            'top': 79,
-            'width': 80,
+            'left'  : 319,
+            'top'   : 79,
+            'width' : 80,
             'height': 23,
         }
 
     @property
+    def button_duel(self):
+        """Specifies the location of the button to click"""
+        return 230, 750
+
+    @property
     def duel_variant(self):
         return {
-            'left': 210,
-            'top': 680,
-            'width': 265 - 210,
+            'left'  : 210,
+            'top'   : 680,
+            'width' : 265 - 210,
             'height': 710 - 680
+        }
+
+    @property
+    def auto_duel_location_pre(self):
+        """This location points to the autoduel button before the battle starts"""
+        return tupletodict(680, 300, 30, 120)
+
+    @property
+    def duel_location_pre(self):
+        """This location points to the duel button before the battle starts"""
+        return tupletodict(680, 210, 30, 55)
+
+    @property
+    def page_area(self):
+        return {
+            'left'  : 0,
+            'top'   : 775,
+            'width' : 480,
+            'height': 25,
         }
 
     @property
     def street_replay(self):
         return {
-            'left': 181,
-            'top': 286,
-            'width': 311 - 181,
+            'left'  : 181,
+            'top'   : 286,
+            'width' : 311 - 181,
             'height': 307 - 286
         }
 
@@ -89,14 +113,9 @@ class NoxPredefined(Predefined):
     def street_replay_location(self):
         return 2
 
-    @property
-    def page_area(self):
-        return {
-            'left': 0,
-            'top': 775,
-            'width': 480,
-            'height': 25,
-        }
+    @staticmethod
+    def duel_variant_version(value):
+        return duel_variant_v.get(value, None)
 
     def generate_autoduel_stats(self):
         location = self.assets
@@ -106,7 +125,7 @@ class NoxPredefined(Predefined):
         b = self.get_image_stats(cv2.imread(autoduelon), **self.autoduel)
         save = {
             'auto_duel_off': a,
-            'auto_duel_on': b
+            'auto_duel_on' : b
         }
         return save
 

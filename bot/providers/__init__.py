@@ -9,7 +9,7 @@ available_providers = [Nox, Steam]
 def get_provider(name):
     if name.lower() == 'nox':
         return Nox
-    elif name.lower == 'steam':
+    elif name.lower() == 'steam':
         return Steam
     else:
         raise Exception("Provider {} does not exist, choose from [{}]".format(name, ','.join(

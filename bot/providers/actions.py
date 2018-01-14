@@ -25,7 +25,7 @@ class Actions(object):
 
     @abstractmethod
     def key_escape(self):
-        "Optional Key Escape"
+        """Optional Key Escape"""
         raise NotImplementedError("key_escape not defined")
 
     @abstractmethod
@@ -42,7 +42,7 @@ class Actions(object):
     def swipe_right(self, time_sleep=0):
         raise NotImplementedError("swipe right not defined")
 
-    def tapnsleep(self, point, time_sleep):
+    def tapnsleep(self, point, time_sleep, relative=False):
         x, y = point
         self.tap(x, y)
         self.wait_for_ui(time_sleep)

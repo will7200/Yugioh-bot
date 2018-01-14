@@ -41,6 +41,7 @@
 ##
 #############################################################################
 import time
+
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
@@ -49,6 +50,7 @@ from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
                              QTextEdit, QVBoxLayout, QDesktopWidget, QWidget, QFrame)
 from enum import Enum
 from bot.duel_links_runtime import DuelLinkRunTime
+from bot import images_qr
 
 
 class WINDOWS_TASKBAR_LOCATION(Enum):
@@ -76,12 +78,13 @@ class DuelLinksGui(QFrame):
     _shouldShowSystrayBox = mock_data
     dlRunTime = None
 
-    def __init__(self, duelLinksRunTime=None):
+    def __init__(self, duelLinksRunTime=None, assets=None):
         super(DuelLinksGui, self).__init__()
+        self.assets = assets
         # if duelLinksRunTime is None:
         #    raise Exception("Duel Links Run Time Invalid")
         self.dlRunTime = duelLinksRunTime  # type: DuelLinkRunTime
-        # self.createIconGroupBox()
+        #self.createIconGroupBox()
         self.createRunTimeFields()
         self.createMessageGroupBox()
         self.createBotControls()
@@ -112,6 +115,7 @@ class DuelLinksGui(QFrame):
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.runTimeGroupBox)
         mainLayout.addWidget(self.botControls)
+        # mainLayout.addWidget(self.iconGroupBox)
         # mainLayout.addWidget(self.messageGroupBox)
         self.setLayout(mainLayout)
 
@@ -175,7 +179,7 @@ class DuelLinksGui(QFrame):
         self._shouldShowSystrayBox()
 
     def setIcon(self, index):
-        icon = QIcon('assets/yugioh.ico')
+        icon = QIcon(QIcon(':/assets/yugioh.ico'))
         self.trayIcon.setIcon(icon)
         self.setWindowIcon(icon)
 
@@ -302,7 +306,7 @@ class DuelLinksGui(QFrame):
         self.runTimeGroupBox = QGroupBox("RunTime Fields")
         self.current_time = QLabel("Current Time: ")
         self.current_time_value = QLabel("")
-        self.nox_status_label = QLabel("Nox status: ")
+        self.nox_status_label = QLabel("{} status: ".format(self.dlRunTime.get_provider().__str__()))
         self.nox_status_value = QLabel("")
         self.next_run_at_label = QLabel("Next Run At:")
         self.next_run_at_value = QLabel("")
@@ -346,6 +350,9 @@ class DuelLinksGui(QFrame):
             self.runButton.setEnabled(True)
             self.pauseButton.setDisabled(False)
             self.pauseButton.setEnabled(False)
+        if self.dlRunTime._shutdown:
+            self.hide()
+            QApplication.instance().quit()
 
     def createActions(self):
         self.minimizeAction = QAction("Mi&nimize", self, triggered=self.hide)

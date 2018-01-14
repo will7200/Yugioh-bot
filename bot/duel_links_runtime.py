@@ -12,6 +12,7 @@ from abc import abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 
 from apscheduler.jobstores.base import JobLookupError
+from apscheduler.schedulers import SchedulerNotRunningError
 
 from bot import logger, default_timestamp
 from bot.utils.data import read_json_file, write_data_file
@@ -39,7 +40,7 @@ class DuelLinkRunTimeOptions(object):
             return
         self._last_run_at = value
         frame = inspect.currentframe()
-        logger.info("Value {} modified to {}".format(inspect.getframeinfo(frame).function, value))
+        logger.debug("Value {} modified to {}".format(inspect.getframeinfo(frame).function, value))
         self.timeout_dump()
 
     _next_run_at = datetime.datetime.fromtimestamp(default_timestamp)
@@ -56,9 +57,8 @@ class DuelLinkRunTimeOptions(object):
         if self._next_run_at == value:
             return
         self._next_run_at = value
-        # IMPLEMENTATION: Notify Scheduler of next run
         frame = inspect.currentframe()
-        logger.info("Value {} modified to {}".format(inspect.getframeinfo(frame).function, value))
+        logger.debug("Value {} modified to {}".format(inspect.getframeinfo(frame).function, value))
         self.timeout_dump()
         self.handle_option_change('next_run_at')
 
@@ -76,9 +76,8 @@ class DuelLinkRunTimeOptions(object):
         if self._run_now == value:
             return
         self._run_now = value
-        # IMPLEMENTATION: Notify Scheduler to Run Now
         frame = inspect.currentframe()
-        logger.info("Value {} modified".format(inspect.getframeinfo(frame).function))
+        logger.debug("Value {} modified".format(inspect.getframeinfo(frame).function))
         self.timeout_dump()
         self.handle_option_change('run_now')
 
@@ -97,16 +96,34 @@ class DuelLinkRunTimeOptions(object):
             return
         self._stop = stop
         frame = inspect.currentframe()
-        logger.info("Value {} modified".format(inspect.getframeinfo(frame).function))
+        logger.debug("Value {} modified".format(inspect.getframeinfo(frame).function))
         self.timeout_dump()
         self.handle_option_change('stop')
-        # IMPLEMENTATION: Notify Scheduler to Stop Now
+
+    _playmode = None
+
+    @property
+    def playmode(self):
+        return self._playmode
+
+    @playmode.setter
+    def playmode(self, playmode):
+        if not isinstance(playmode, str):
+            self.runtime_error_options("playmode", str, type(playmode))
+            return
+        if self._playmode == playmode:
+            return
+        self._playmode = playmode
+        frame = inspect.currentframe()
+        logger.debug("Value {} modified".format(inspect.getframeinfo(frame).function))
+        self.timeout_dump()
+        self.handle_option_change('playmode')
 
     _battle_calls = {
         "beforeStart": [],
-        "afterStart": [],
-        "beforeEnd": [],
-        "afterEnd": []
+        "afterStart" : [],
+        "beforeEnd"  : [],
+        "afterEnd"   : []
     }
 
     @property
@@ -122,7 +139,7 @@ class DuelLinkRunTimeOptions(object):
             return
         self._battle_calls = value
         frame = inspect.currentframe()
-        logger.info("Value {} modified".format(inspect.getframeinfo(frame).function))
+        logger.debug("Value {} modified".format(inspect.getframeinfo(frame).function))
         self.timeout_dump()
         self.handle_option_change('battle_calls')
 
@@ -219,12 +236,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     def set_provider(self, provider):
         self._provider = provider
 
-    def looper(self):
-        try:
-            self._loop.run_until_complete(self._task)
-        except asyncio.CancelledError:
-            pass
-
     def settings_modified(self, events):
         self.update()
 
@@ -251,9 +262,9 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     def dump_options(self):
         tmpdict = {}
         for attribute in [a for a in dir(self) if not a.startswith('__') \
-                and not a.startswith('_') \
-                and not inspect.ismethod(getattr(self, a))
-        and not inspect.isfunction(getattr(self, a))]:
+                                                  and not a.startswith('_') \
+                                                  and not inspect.ismethod(getattr(self, a))
+                                                  and not inspect.isfunction(getattr(self, a))]:
             # print(attribute, type(getattr(self,attribute)))
             tmpdict[attribute] = getattr(self, attribute)
         return tmpdict
@@ -298,9 +309,29 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             ) + datetime.timedelta(seconds=next_at.total_seconds())
         self._watcher.start_observer()
 
+    def determine_playthrough(self, provider):
+        """
+        Determines the mode to run
+        :param provider: Provider
+        :return:
+        """
+        if self.playmode == 'autoplay':
+            logger.info("starting auto play through")
+            provider.auto()
+            logger.info("completed auto play through")
+        elif self.playmode == 'guided':
+            logger.info("starting guided play through")
+            provider.guided_mode()
+            logger.info("guided play through interrupted")
+        else:
+            logger.critical("Unknown play through mode")
+
     def main(self):
         def schedule_shutdown():
-            self._scheduler.shutdown()
+            try:
+                self._scheduler.shutdown()
+            except SchedulerNotRunningError:
+                pass
 
         def thread_shutdown():
             self.shutdown()
@@ -323,11 +354,10 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                 if not provider.is_process_running():
                     provider.start_process()
                     provider.wait_for_ui(30)
-                    provider.pass_through_initial_screen()
+                else:
+                    provider.pass_through_initial_screen(True)
                 provider.compare_with_back_button()
-                logger.info("starting auto play through")
-                provider.auto()
-                logger.info("completed auto play through")
+                self.determine_playthrough(provider)
             except NotImplementedError as ee:
                 handle_exception(ee)
                 return
@@ -354,7 +384,6 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
 
         self._allow_event_change = False
         self._run_main = in_main
-        self._scheduler.add_job(self.looper, args=(), id="looper")
         if self._config.getboolean("bot", "startBotOnStartUp"):
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=1)
         else:
