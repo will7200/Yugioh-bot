@@ -350,6 +350,9 @@ class DuelLinksGui(QFrame):
             self.runButton.setEnabled(True)
             self.pauseButton.setDisabled(False)
             self.pauseButton.setEnabled(False)
+        if self.dlRunTime._shutdown:
+            self.hide()
+            QApplication.instance().quit()
 
     def createActions(self):
         self.minimizeAction = QAction("Mi&nimize", self, triggered=self.hide)
