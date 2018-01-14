@@ -1,6 +1,7 @@
 import signal
 import logging
 import logging.config
+import traceback
 
 import click
 import time
@@ -47,6 +48,7 @@ def setup_runtime(uconfig):
     except Exception as e:
         logger.critical("Could not get a provider, take a look at your config file")
         logger.critical(e)
+        logger.debug(traceback.format_exc())
         sys.exit(1)
     try:
         dlRuntime.get_provider().sleep_factor = uconfig.getint('bot', 'sleep_factor')
