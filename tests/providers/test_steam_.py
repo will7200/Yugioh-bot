@@ -6,13 +6,14 @@ from unittest import TestCase
 import os
 
 import cv2
+from apscheduler.schedulers.background import BackgroundScheduler
 
-from providers import trainer_matches as tm
-from duel_links_runtime import DuelLinkRunTime
-from providers import Steam
-from providers.common import crop_image
-from providers.shared import alpha_numeric, alphabet
-from utils.common import default_config
+from bot.providers import trainer_matches as tm
+from bot.duel_links_runtime import DuelLinkRunTime
+from bot.providers import Steam
+from bot.providers.common import crop_image
+from bot.providers.shared import alpha_numeric, alphabet
+from bot.utils.common import default_config
 
 
 class TestSteam(TestCase):
@@ -26,14 +27,14 @@ class TestSteam(TestCase):
 
     def setUp(self):
         os.environ['LOG_CFG'] = r'D:\Sync\OneDrive\Yu-gi-oh_bot\config.ini'
-        dlRuntime = DuelLinkRunTime(default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), None, False)
-        self.provider = Steam(None, default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), dlRuntime)
+        scheduler = BackgroundScheduler()
+        dlRuntime = DuelLinkRunTime(default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), scheduler, False)
+        self.provider = Steam(scheduler, default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), dlRuntime)
         self.provider.sleep_factor = 0.0
         self.loop = asyncio.get_event_loop()
         self.loop.set_default_executor(ThreadPoolExecutor(2))
         dlRuntime._loop = self.loop
         self.provider.is_process_running()
-        os.chdir(r'..\..')
 
     def test_battle(self):
         self.fail()
