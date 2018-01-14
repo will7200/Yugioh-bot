@@ -1,4 +1,3 @@
-import asyncio
 import base64
 import logging
 import os
@@ -11,9 +10,9 @@ import numpy as np
 from skimage.measure import compare_ssim
 
 from bot.providers import trainer_matches as tm
-from bot.providers.common import loop_scan, crop_image, mask_image
+from bot.providers.common import loop_scan, mask_image
 from bot.providers.duellinks import DuelLinksInfo
-from bot.providers.nox.predefined import NoxPredefined, duel_variant_v
+from bot.providers.nox.predefined import NoxPredefined
 from bot.providers.provider import Provider
 from bot.providers.shared import *
 
@@ -82,9 +81,8 @@ class Nox(Provider):
             img = img[745:770, 210:270]
             try:
                 if try_scanning:
-                    self.scan_for_word('ok', LOW_CORR)
-                ok = self.img_to_string(img,
-                                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+                    self.scan_for_ok(LOW_CORR)
+                ok = self.img_to_string(img, alphabet)
             except:
                 self.wait_for_ui(1)
                 continue
@@ -103,17 +101,14 @@ class Nox(Provider):
             return True
         return False
 
-        loop = asyncio.new_event_loop()
-        task = loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
-        # loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
-
     def __start_app__(self):
         command = "bin\\adb.exe shell monkey -p jp.konami.duellinks -c android.intent.category.LAUNCHER 1"
         self.do_system_call(command)
 
-    def pass_through_initial_screen(self):
+    def pass_through_initial_screen(self, already_started=False):
         self.root.info("Passing Through Start Screen")
-        # TODO Check if at home screen
+        if not self.__is_initial_screen__():
+            return
         self.__start_app__()
         self.__generic_wait_for__('DuelLinks Landing Page', lambda x: x is True,
                                   self.__is_initial_screen__, timeout=20)
@@ -141,37 +136,6 @@ class Nox(Provider):
         t = tm.Trainer(img, 480, 0)
         location = os.path.join(self.assets, "download_button.png")
         return self.__wrapper_kmeans_result__(t, location, corr, info)
-
-    def verify_battle(self):
-        try_times = 3
-        version = 0
-        self.root.info("Verifying battle")
-        while True:
-            try_times -= 1
-            img = self.get_img_from_screen_shot()
-            if self.predefined.determine_duel_variant(img):
-                pointer = duel_variant_v['v2-autoduel']
-                img = img[680:710, 300:420]
-                version = 2
-                break
-            elif try_times == 0:
-                pointer = duel_variant_v['v1']
-                img = img[680:710, 210:265]
-                version = 1
-                break
-
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        ok = self.img_to_string(img,
-                                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").lower()
-        self.root.debug("Duel-Buttons Version {}".format(version))
-        if version == 1:
-            if ok.startswith("due") or ok == "duel":
-                return pointer, version
-        if version == 2:
-            if ok.startswith("auto") or 'auto' in ok:
-                return pointer, version
-        self.root.debug("No Auto-Duel button or Button Found")
-        return None
 
     def scan_for_close(self, corr=HIGH_CORR, info=None, img=None):
         corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
@@ -221,7 +185,6 @@ class Nox(Provider):
         location = os.path.join(self.assets, "back__.png")
         return self.__wrapper_kmeans_result__(t, location, corr, info)
 
-
     def click_auto_duel(self):
         self.root.debug("AUTO-DUEL FOUND CLICKING")
         self.wait_for_ui(.1)
@@ -240,28 +203,29 @@ class Nox(Provider):
             ))
 
         self.wait_for_ui(.5)
-        self.tap(230, 750)
+        self.tap(*self.predefined.button_duel)
         self.wait_for('NEXT', True)
-        self.tapnsleep((230, 750), .5)
-        self.wait_for('NEXT', True)
+        self.tapnsleep(self.predefined.button_duel, .5)
+        self.wait_for('NEXT')
         self.wait_for_ui(.3)
-        self.tap(230, 750)
+        self.tap(*self.predefined.button_duel)
         self.wait_for_white_bottom(True)
         self.wait_for_ui(.5)
-        self.tapnsleep((230, 750), .1)
+        self.tapnsleep(self.predefined.button_duel, .1)
         dialog = True
         while dialog:
             dialog = self.check_if_battle(self.get_img_from_screen_shot())
             if dialog:
-                self.tap(230, 750)
+                self.tap(*self.predefined.button_duel)
         self.wait_for_ui(.5)
-        self.scan_for_word('ok', LOW_CORR)
+        self.scan_for_ok(LOW_CORR)
         self.wait_for_ui(.1)
-        self.scan_for_word('ok', LOW_CORR)
+        self.scan_for_ok(LOW_CORR)
         battle_calls = self.run_time.battle_calls
         for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
             for value in battle_calls.get(section):
-                self.root.debug(value)
+                pass
+                # self.root.debug(value)
 
     def check_if_battle(self, img):
         img = np.array(img)
@@ -288,9 +252,9 @@ class Nox(Provider):
         except:
             self.root.error("The program could not be killed")
 
-    def scan_for_word(self, word, corr=HIGH_CORR, info=None, img=None):
-        corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
-        self.root.debug("LOOK FOR WORD '{}', {} CORRERLATION".format(word, corrword))
+    def scan_for_ok(self, corr=HIGH_CORR, info=None, img=None):
+        corrword = look_up_translation_correlation(corr)
+        self.root.debug("LOOK FOR WORD '{}', {} CORRERLATION".format('OK', corrword))
         if img is None:
             img = self.get_img_from_screen_shot()
         t = tm.Trainer(img, 480, 50)

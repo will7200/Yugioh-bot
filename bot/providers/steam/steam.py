@@ -2,23 +2,24 @@ import logging
 import os
 import subprocess
 import time
+import win32api
+import win32con
 import win32gui
 import win32ui
-import win32api, win32con
-from win32con import SM_CXSCREEN, SM_CYSCREEN
 from ctypes import windll
 from inspect import getframeinfo, currentframe
 
 import cv2
 import numpy as np
 from skimage.measure import compare_ssim
+from win32con import SM_CXSCREEN, SM_CYSCREEN
 
 from bot.providers import trainer_matches as tm
 from bot.providers.common import loop_scan, mask_image, crop_image
 from bot.providers.duellinks import DuelLinksInfo
 from bot.providers.provider import Provider
 from bot.providers.shared import *
-from bot.providers.steam.predefined import SteamPredefined, duel_variant_v, SteamAreas
+from bot.providers.steam.predefined import SteamPredefined, SteamAreas
 
 
 class Steam(Provider):
@@ -60,28 +61,29 @@ class Steam(Provider):
             ))
 
         self.wait_for_ui(.5)
-        self.tap(230, 750)
+        self.tap(*self.predefined.button_duel)
         self.wait_for('NEXT', True)
-        self.tapnsleep((230, 750), .5)
+        self.tapnsleep(self.predefined.button_duel, .5)
         self.wait_for('NEXT')
         self.wait_for_ui(.3)
-        self.tap(230, 750)
+        self.tap(*self.predefined.button_duel)
         self.wait_for_white_bottom(True)
         self.wait_for_ui(.5)
-        self.tapnsleep((230, 750), .1)
+        self.tapnsleep(self.predefined.button_duel, .1)
         dialog = True
         while dialog:
             dialog = self.check_if_battle(self.get_img_from_screen_shot())
             if dialog:
-                self.tap(230, 750)
+                self.tap(*self.predefined.button_duel)
         self.wait_for_ui(.5)
-        self.scan_for_ok('ok', LOW_CORR)
+        self.scan_for_ok(LOW_CORR)
         self.wait_for_ui(.1)
-        self.scan_for_ok('ok', LOW_CORR)
+        self.scan_for_ok(LOW_CORR)
         battle_calls = self.run_time.battle_calls
         for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
             for value in battle_calls.get(section):
-                self.root.debug(value)
+                pass
+                # self.root.debug(value)
 
     def check_if_battle(self, img):
         ## TODO Change Image Coordinates
@@ -115,7 +117,10 @@ class Steam(Provider):
         self.root.debug("LOOKING FOR BACK BUTTON, {} CORRERLATION".format(corrword))
         if img is None:
             img = self.get_img_from_screen_shot()
-        t = tm.BoundingTrainer(img, bounding_area=self.predefined.main_area)
+        area = self.predefined.main_area
+        area['width'] = 200
+        area['top'] = 300
+        t = tm.BoundingTrainer(img, bounding_area=area)
         location = os.path.join(self.assets, "back__.png")
         return self.__wrapper_kmeans_result__(t, location, corr, info)
 
@@ -199,7 +204,7 @@ class Steam(Provider):
             self.tapnsleep((x, y), .5)
             img1 = self.get_img_from_screen_shot()
             battle = self.check_if_battle(img1)
-            self.wait_for_ui(2.5)
+            self.wait_for_ui(2)
             dl_info = DuelLinksInfo(x, y, current_page, "Starting Battle")
             version = 0
             if battle:
@@ -323,6 +328,7 @@ class Steam(Provider):
         self.wait_for_ui(time_sleep)
 
     def tap(self, x, y):
+        x, y = int(x), int(y)
         self.root.debug("Tapping at location ({},{})".format(x, y))
         if self._debug:
             # Helper to debug taps
@@ -338,57 +344,20 @@ class Steam(Provider):
         win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x, y, 0, 0)
         win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x, y, 0, 0)
         time.sleep(20 / 1000)
-        win32api.SetCursorPos((ox, oy))
-        win32gui.SetActiveWindow(curr_window)
-
-    def verify_battle(self, img=None):
-        try_times = 3
-        version = 0
-        self.root.info("Verifying battle")
-        while True:
-            try_times -= 1
-            if img is None:
-                img = self.get_img_from_screen_shot()
-            area = self.predefined.main_area
-            area['height'] = img.shape[0]
-            img2 = crop_image(img, **area)
-            if self.predefined.determine_duel_variant(img2):
-                pointer = duel_variant_v['v2-autoduel']
-                ## TODO Change Duel Coordinates
-                img = crop_image(img, **self.predefined.auto_duel_location_pre)
-                version = 2
-                break
-            elif try_times == 0:
-                pointer = duel_variant_v['v1']
-                img = img[680:710, 210:265]
-                version = 1
-                break
-
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        ok = self.img_to_string(img,
-                                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz").lower()
-        self.root.debug("Duel-Buttons Version {}".format(version))
-        if version == 1:
-            if ok.startswith("due") or ok == "duel":
-                return pointer, version
-        if version == 2:
-            if ok.startswith("auto") or 'auto' in ok:
-                return pointer, version
-        self.root.debug("No Auto-Duel button or Button Found")
-        return None
+        # win32api.SetCursorPos((ox, oy))
+        # win32gui.SetActiveWindow(curr_window)
 
     def wait_for(self, word, try_scanning=False):
         self.root.info("WAITING FOR {} BUTTON TO APPEAR".format(word))
         ok = ''
+        word = word.lower()
         while ok != word and not self.run_time.stop:
-            # root.debug("waiting for {}".format(word))
             img = self.get_img_from_screen_shot()
-            img = img[745:770, 210:270]
+            img = crop_image(img, **self.predefined.ok_button_duel)
             try:
                 if try_scanning:
-                    self.scan_for_ok('ok', LOW_CORR)
-                ok = self.img_to_string(img,
-                                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+                    self.scan_for_ok(LOW_CORR)
+                ok = self.img_to_string(img, alphabet).lower()
             except:
                 self.wait_for_ui(1)
                 continue
@@ -399,7 +368,7 @@ class Steam(Provider):
     def wait_for_notifications(self, *args, **kwargs):
         self.scan_for_close()
         self.wait_for_ui(1)
-        self.scan_for_ok(word='ok')
+        self.scan_for_ok()
         self.wait_for_ui(3)
         t = self.compare_with_back_button(corr=5)
         return t

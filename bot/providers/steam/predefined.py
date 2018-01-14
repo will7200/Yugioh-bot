@@ -1,14 +1,12 @@
 import os as os
+from enum import Enum
 from inspect import getframeinfo, currentframe
 
 import cv2
-from enum import Enum
-import deprecation
 import numpy as _np
 
-from bot import clean_version
 from bot.providers.duellinks import Predefined
-from bot.providers.shared import nox_current_version
+from bot.providers.shared import nox_current_version, tupletodict
 
 duel_variant_v = {
     'v1'         : (800, 800),
@@ -23,15 +21,6 @@ class SteamAreas(Enum):
     LOG = 3
 
 
-def tupletodict(top, left, height, width):
-    return {
-        'top'   : top,
-        'left'  : left,
-        'width' : width,
-        'height': height
-    }
-
-
 # TODO HP Implement Steam Predifined
 class SteamPredefined(Predefined):
     files_need = [
@@ -39,7 +28,7 @@ class SteamPredefined(Predefined):
     files_needed_for_comparision = [
     ]
 
-    dataset = 'Steam'
+    dataset = 'steam'
 
     def run_prechecks(self):
         for file in self.files_need:
@@ -54,7 +43,7 @@ class SteamPredefined(Predefined):
         temp_dict = self.generate_duel_button_stats()
         save = {**save, **temp_dict}
         save['version'] = nox_current_version
-        self.write_hdf5(save, 'steam')
+        self.write_hdf5(save, self.dataset)
 
     def generate_autoduel_stats(self):
         location = self.assets
@@ -91,6 +80,10 @@ class SteamPredefined(Predefined):
         xrel, yrel = area.get('left'), area.get('top')
         return x + xrel, y + yrel
 
+    @staticmethod
+    def duel_variant_version(value):
+        return duel_variant_v.get(value, None)
+
     @property
     def window_name(self):
         return "Yu-Gi-Oh! DUEL LINKS"
@@ -109,15 +102,31 @@ class SteamPredefined(Predefined):
 
     @property
     def autoduel(self):
-        raise NotImplementedError("Function {} has not been implemented".format(getframeinfo(currentframe())[2]))
+        return tupletodict(107, 945, 115, 40)
 
     @property
     def duel_variant(self):
-        return {}
+        return tupletodict(780, 460, 60, 680)
 
     @property
     def auto_duel_location_pre(self):
+        """This location points to the autoduel button before the battle starts"""
         return tupletodict(790, 840, 40, 260)
+
+    @property
+    def duel_location_pre(self):
+        """This location points to the duel button before the battle starts"""
+        return tupletodict(790, 480, 40, 260)
+
+    @property
+    def ok_button_duel(self):
+        """This specifies the location of the ok button for duels"""
+        return tupletodict(855, 720, 50, 180)
+
+    @property
+    def button_duel(self):
+        """Specifies the location of the button to click"""
+        return 800, 870
 
     @property
     def street_replay(self):
@@ -125,10 +134,12 @@ class SteamPredefined(Predefined):
 
     @property
     def street_replay_location(self):
+        """Indicates what page the street replay icon is located"""
         return 2
 
     @property
     def auto_duel_button(self):
+        """Autoduel button during battle"""
         return self.relative(600, 100, area=SteamAreas.MAINAREA)
 
     @property
@@ -175,6 +186,7 @@ class SteamPredefined(Predefined):
 
     @property
     def backlist(self):
+        """Backlisted areas"""
         return [
             {'left'  : 450,
              'top'   : 415,
@@ -188,8 +200,10 @@ class SteamPredefined(Predefined):
 
     @property
     def move_right_button(self):
+        """Steam has button to move to right page"""
         return self.relative(655, 430, SteamAreas.MAINAREA)
 
     @property
     def move_left_button(self):
+        """Steam has button to move to left page"""
         return self.relative(0, 430, SteamAreas.MAINAREA)
