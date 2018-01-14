@@ -344,8 +344,8 @@ class Steam(Provider):
         win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x, y, 0, 0)
         win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x, y, 0, 0)
         time.sleep(20 / 1000)
-        # win32api.SetCursorPos((ox, oy))
-        # win32gui.SetActiveWindow(curr_window)
+        win32api.SetCursorPos((ox, oy))
+        win32gui.SetActiveWindow(curr_window)
 
     def wait_for(self, word, try_scanning=False):
         self.root.info("WAITING FOR {} BUTTON TO APPEAR".format(word))

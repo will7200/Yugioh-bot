@@ -100,7 +100,7 @@ class DuelLinkRunTimeOptions(object):
         self.timeout_dump()
         self.handle_option_change('stop')
 
-    _playmode = None
+    _playmode = "autoplay"
 
     @property
     def playmode(self):
