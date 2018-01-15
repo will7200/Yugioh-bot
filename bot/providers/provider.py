@@ -237,7 +237,6 @@ class Provider(DuelLinks, Misc, Actions):
                 try:
                     condition = fn(*args, **kwargs)
                 except Exception as e:
-                    print(e)
                     if exceptions_occurred > 5:
                         raise Exception("Maximum exception count occurred")
                     exceptions_occurred += 1
@@ -251,7 +250,7 @@ class Provider(DuelLinks, Misc, Actions):
             await wait_for(self)
 
         loop = self.run_time._loop
-        task = loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
+        loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
 
     def __wrapper_kmeans_result__(self, trainer, location, corr, info=None):
         if trainer.get_matches(location, corr):
