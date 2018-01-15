@@ -22,6 +22,11 @@ class TestWatchFile(TestCase):
         self.data = read_data_file()
         self.data['test'] = 'yes'
 
+        def nothing_important(_):
+            pass
+
+        self.watcher.event_notification = nothing_important
+
     def test_notify_event(self):
         write_data_file(self.data)
         records = [str(last_record.get_record(x)) for x in range(0, 5)]
