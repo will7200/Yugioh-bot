@@ -361,6 +361,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                 if not provider.is_process_running():
                     provider.start_process()
                     provider.wait_for_ui(30)
+                    provider.pass_through_initial_screen(False)
                 else:
                     provider.pass_through_initial_screen(True)
                 provider.compare_with_back_button()
