@@ -125,7 +125,7 @@ class TestNox(TestCase):
         self.provider._debug = False
         self.provider.run_time.stop = False
         test_image = os.path.join(self.provider.assets, test_image_name)
-        ok_present = self.provider.scan_for_word('OK', img=cv2.imread(test_image))
+        ok_present = self.provider.scan_for_ok(img=cv2.imread(test_image))
         self.assertTrue(ok_present)
 
     def setup_compare_images(self, images, compare_against_first=False):

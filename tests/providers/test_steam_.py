@@ -93,7 +93,7 @@ class TestSteam(TestCase):
     def test_scan(self):
         self.fail()
 
-    def test_scan_for_word(self):
+    def test_scan_for_ok(self):
         img = os.path.join(self.provider.assets, "steam", "steam_back.png")
         t = tm.BoundingTrainer(img, bounding_area=self.provider.predefined.main_area)
         location = os.path.join(self.provider.assets, "back__.png")

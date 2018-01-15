@@ -106,14 +106,14 @@ class Nox(Provider):
         self.do_system_call(command)
 
     def pass_through_initial_screen(self, already_started=False):
-        self.root.info("Passing Through Start Screen")
-        if not self.__is_initial_screen__():
+        if already_started:
+            self.__start_app__()
             return
+        self.root.info("Passing Through Start Screen")
         self.__start_app__()
         self.__generic_wait_for__('DuelLinks Landing Page', lambda x: x is True,
                                   self.__is_initial_screen__, timeout=20)
         self.tapnsleep(self.predefined.yugioh_initiate_link, 2)
-        # TODO Check for prompt
         timeout = 45
         if self.scan_for_download():
             timeout = 480
@@ -124,7 +124,7 @@ class Nox(Provider):
     def wait_for_notifications(self, *args, **kwargs):
         self.scan_for_close()
         self.wait_for_ui(1)
-        self.scan_for_word(word='ok')
+        self.scan_for_ok()
         self.wait_for_ui(3)
         t = self.compare_with_back_button(corr=5)
         return t
@@ -277,7 +277,7 @@ class Nox(Provider):
             if battle:
                 self.current_battle = True
                 self.root.info(battlemode % (x, y, current_page, "Starting Battle"))
-                self.scan_for_word('ok', LOW_CORR)
+                self.scan_for_ok(LOW_CORR)
                 self.tapnsleep(battle, 0)
                 if version == 2:
                     self.battle(dl_info)
@@ -295,5 +295,5 @@ class Nox(Provider):
                 dl_info.status = "failure/Close-Button"
                 loop_scan(self.scan_for_close, **{'info': dl_info})
                 dl_info.status = "success/Gift"
-                loop_scan(self.scan_for_word, **{'word': 'ok', 'info': dl_info})
+                loop_scan(self.scan_for_ok, **{'info': dl_info})
             self.wait_for_ui(2)

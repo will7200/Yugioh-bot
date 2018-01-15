@@ -267,7 +267,7 @@ class DuelLinks(object):
 
     @abstractmethod
     def scan_for_ok(self, corr=HIGH_CORR, info=None, img=None):
-        raise NotImplementedError("scan_for_word not implemented")
+        raise NotImplementedError("scan_for_ok not implemented")
 
     @abstractmethod
     def scan_for_close(self, corr=HIGH_CORR, info=None, img=None):
