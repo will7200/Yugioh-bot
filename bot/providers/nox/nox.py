@@ -206,7 +206,7 @@ class Nox(Provider):
         self.tap(*self.predefined.button_duel)
         self.wait_for('NEXT', True)
         self.tapnsleep(self.predefined.button_duel, .5)
-        self.wait_for('NEXT')
+        self.wait_for('NEXT', True)
         self.wait_for_ui(.3)
         self.tap(*self.predefined.button_duel)
         self.wait_for_white_bottom(True)
