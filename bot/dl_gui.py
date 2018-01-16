@@ -126,7 +126,7 @@ class DuelLinksGui(QFrame):
     def location_on_the_screen(self):
         ag = QDesktopWidget().availableGeometry()
         sg = QDesktopWidget().screenGeometry()
-
+        print(ag, sg)
         widget = self.geometry()
         position = self.get_task_bar_position()
         if position == WINDOWS_TASKBAR_LOCATION.BOTTOM:
@@ -134,6 +134,12 @@ class DuelLinksGui(QFrame):
             y = 2 * ag.height() - sg.height() - widget.height()
         elif position == WINDOWS_TASKBAR_LOCATION.LEFT:
             x = sg.width() - ag.width() + default_open_offset
+            y = 2 * ag.height() - sg.height() - widget.height() - default_open_offset
+        elif position == WINDOWS_TASKBAR_LOCATION.TOP:
+            x = ag.width() - widget.width() - default_open_offset
+            y = sg.height() - ag.height() + default_open_offset
+        elif position == WINDOWS_TASKBAR_LOCATION.RIGHT:
+            x = ag.width() - widget.width() - default_open_offset
             y = 2 * ag.height() - sg.height() - widget.height() - default_open_offset
         self.move(x, y)
 
