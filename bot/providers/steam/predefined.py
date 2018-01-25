@@ -21,9 +21,11 @@ class SteamAreas(Enum):
     LOG = 3
 
 
-# TODO HP Implement Steam Predifined
 class SteamPredefined(Predefined):
     files_need = [
+        os.path.join("steam", "auto_duel_on.png"),
+        os.path.join("steam", "auto_duel_off.png"),
+        os.path.join("steam", "new_duel_variant.png")
     ]
     files_needed_for_comparision = [
     ]
@@ -128,6 +130,10 @@ class SteamPredefined(Predefined):
         """Specifies the location of the button to click"""
         return 800, 870
 
+    @property
+    def resolution(self):
+        return 1606, 929
+    
     @property
     def street_replay(self):
         raise NotImplementedError("Function {} has not been implemented".format(getframeinfo(currentframe())[2]))

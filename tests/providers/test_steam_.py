@@ -8,6 +8,7 @@ import os
 import cv2
 from apscheduler.schedulers.background import BackgroundScheduler
 
+import bot
 from bot.providers import trainer_matches as tm
 from bot.duel_links_runtime import DuelLinkRunTime
 from bot.providers import Steam
@@ -22,14 +23,16 @@ class TestSteam(TestCase):
 
     images_needed_debug = [
         "street_replay.png",
-        "home_page_steam.png"
+        "home_page_steam.png",
+        os.path.join("steam", "steam_pre_battle.png"),
+        os.path.join("steam", "steam_back.png")
     ]
 
     def setUp(self):
         os.environ['LOG_CFG'] = r'D:\Sync\OneDrive\Yu-gi-oh_bot\config.ini'
         scheduler = BackgroundScheduler()
         dlRuntime = DuelLinkRunTime(default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), scheduler, False)
-        self.provider = Steam(scheduler, default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), dlRuntime)
+        self.provider = Steam(scheduler, default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), dlRuntime, False)
         self.provider.sleep_factor = 0.0
         self.loop = asyncio.get_event_loop()
         self.loop.set_default_executor(ThreadPoolExecutor(2))
@@ -61,6 +64,15 @@ class TestSteam(TestCase):
 
     def test_determine_autoduel_status(self):
         self.fail()
+
+    def test_ensure_resolutions_matches(self):
+        location = os.path.join(self.provider.assets, "steam", "download_update.png")
+        img = cv2.imread(location)
+        self.provider.ensure_resolutions_matches(img)
+        img = img[0:100, 0:100]
+        with self.assertRaises(bot.providers.BotSetupError) as context:
+            self.provider.ensure_resolutions_matches(img)
+
 
     def test_is_process_running(self):
         self.fail()
@@ -118,15 +130,6 @@ class TestSteam(TestCase):
         # t.show_area_bounded(self.provider.predefined.main_area, img)
         # t._debug = True
         self.assertTrue(t.get_matches(location, 3) is False, "Is Ok button not close")
-
-    def test_scan_for_ok(self):
-        img = os.path.join(self.provider.assets, "steam", "steam_ok.png")
-        t = tm.BoundingTrainer(img, bounding_area=self.provider.predefined.main_area)
-        location = os.path.join(self.provider.assets, "ok_box.png")
-        # t.show_area_bounded(self.provider.predefined.main_area, img)
-        # t._debug = True
-        self.assertTrue(t.get_matches(location, 3) is True, "Expecting a back button")
-        # t.compare()
 
     def test_scan_for_download(self):
         img = os.path.join(self.provider.assets, "steam", "download_update.png")

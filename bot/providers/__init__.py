@@ -1,7 +1,19 @@
-from .provider import Provider
-from bot.providers.nox import Nox
-from .steam import Steam
 import logging
+from .provider import Provider
+
+
+class BotSetupError(Exception):
+    """Unexpected error occurred during setup of the bot"""
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return self.value
+
+
+from bot.providers.nox import Nox
+from bot.providers.steam import Steam
 
 available_providers = [Nox, Steam]
 

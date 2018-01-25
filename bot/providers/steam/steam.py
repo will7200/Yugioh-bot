@@ -14,8 +14,9 @@ import numpy as np
 from skimage.measure import compare_ssim
 from win32con import SM_CXSCREEN, SM_CYSCREEN
 
+from bot.providers import BotSetupError
 from bot.providers import trainer_matches as tm
-from bot.providers.common import loop_scan, mask_image, crop_image
+from bot.providers.common import loop_scan, mask_image, crop_image, bot_assertion
 from bot.providers.duellinks import DuelLinksInfo
 from bot.providers.provider import Provider
 from bot.providers.shared import *
@@ -32,10 +33,12 @@ class Steam(Provider):
     def __str__():
         return "Steam"
 
-    def __init__(self, scheduler, config, run_time):
+    def __init__(self, scheduler, config, run_time, run_checks=True):
         super(Steam, self).__init__(scheduler, config, run_time)
         self.predefined = SteamPredefined(self._config, nox_current_version)
         self.SteamPath = os.path.join(self._config.get('steam', 'location'), 'Steam.exe')
+        if run_checks:
+            self.ensure_resolutions_matches()
 
     def __is_initial_screen__(self, *args, **kwargs):
         original = cv2.imread(os.path.join(self.assets, "home_page_steam.png"))
@@ -127,13 +130,22 @@ class Steam(Provider):
     def determine_autoduel_status(self, img):
         super(Steam, self).determine_autoduel_status()
 
+    def ensure_resolutions_matches(self, img=None):
+        if img is None:
+            img = self.get_img_from_screen_shot()
+        height, width, _ = img.shape
+        pre_width, pre_height = self.predefined.resolution
+        bot_assertion(width == pre_width and height == pre_height, BotSetupError,
+            "Unmatched resolution of {}-{} expected {}-{}".format(height, width, pre_height, pre_width))
+
     def is_process_running(self):
         try:
             self.win_handle = win32gui.FindWindow(None, self.predefined.window_name)
-            if self.win_handle:
-                return True
         except:
             return False
+        if self.win_handle:
+            return True
+        return False
 
     def key_escape(self):
         raise NotImplementedError("Function {} has not been implemented".format(getframeinfo(currentframe())[2]))
@@ -158,7 +170,6 @@ class Steam(Provider):
             self.__generic_wait_for__('DuelLinks Landing Page', lambda x: x is True,
                                       self.__is_initial_screen__, timeout=20)
         self.tapnsleep(self.predefined.yugioh_initiate_link, 3)
-        # TODO Check for prompt
         timeout = 45
         if self.scan_for_download():
             timeout = 480

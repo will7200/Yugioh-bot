@@ -41,6 +41,7 @@ def mask_image(lower_mask, upper_mask, img, apply_mask=False):
         return cv2.bitwise_and(img, img, mask=new_img)
     return new_img
 
+
 def mse(image_a, image_b):
     # the 'Mean Squared Error' between the two images is the
     # sum of the squared difference between the two images;
@@ -52,7 +53,13 @@ def mse(image_a, image_b):
     # the two images are
     return err
 
+
 def crop_image(img, left=0, top=0, width=0, height=0):
     left, top, width, height = tuple(np.asanyarray([left, top, width, height], np.uint64).tolist())
     crop_img = img[top:(top + height), left:(left + width)].copy()
     return crop_img
+
+
+def bot_assertion(condition, error_type, message):
+    if not condition:
+        raise error_type(message)

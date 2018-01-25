@@ -322,10 +322,3 @@ class DuelError(Exception):
 
     def __str__(self):
         return self.value
-
-
-class BotSetupError(DuelError):
-    """Exception raised during setup of the bot"""
-
-    def __init__(self, value):
-        super(BotSetupError, self).__init__(value)
