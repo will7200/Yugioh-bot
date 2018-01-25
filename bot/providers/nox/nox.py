@@ -11,7 +11,7 @@ from skimage.measure import compare_ssim
 
 from bot.providers import trainer_matches as tm
 from bot.providers.common import loop_scan, mask_image
-from bot.providers.duellinks import DuelLinksInfo
+from bot.providers.duellinks import DuelLinksInfo, DuelError
 from bot.providers.nox.predefined import NoxPredefined
 from bot.providers.provider import Provider
 from bot.providers.shared import *
@@ -273,7 +273,11 @@ class Nox(Provider):
             version = 0
             if battle:
                 self.tapnsleep((150, 400), 2.5)
-                battle, version = self.verify_battle()
+                try:
+                    battle, version = self.verify_battle()
+                except DuelError:
+                    self.tapnsleep((150, 400), 2.5)
+                    battle, version = self.verify_battle()
             if battle:
                 self.current_battle = True
                 self.root.info(battlemode % (x, y, current_page, "Starting Battle"))
