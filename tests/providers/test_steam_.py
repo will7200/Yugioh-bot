@@ -12,8 +12,8 @@ import bot
 from bot.providers import trainer_matches as tm
 from bot.duel_links_runtime import DuelLinkRunTime
 from bot.providers import Steam
-from bot.providers.common import crop_image
-from bot.providers.shared import alpha_numeric, alphabet
+from bot.common import crop_image
+from bot.shared import alphabet
 from bot.utils.common import default_config
 
 

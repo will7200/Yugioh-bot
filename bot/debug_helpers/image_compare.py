@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from skimage.measure import compare_ssim
-from bot.providers.common import mask_image, mse
+from bot.common import mse
 
 def compare_images(image_a, image_b, title):
     # compute the mean squared error and structural similarity
