@@ -82,6 +82,11 @@ class SteamPredefined(Predefined):
         xrel, yrel = area.get('left'), area.get('top')
         return x + xrel, y + yrel
 
+    def relative_area(self, x, y, height, width, area):
+        area = self.get_area(area)
+        xrel, yrel = area.get('top'), area.get('left')
+        return tupletodict(x + xrel, y + yrel, height, width)
+
     @staticmethod
     def duel_variant_version(value):
         return duel_variant_v.get(value, None)
@@ -217,3 +222,7 @@ class SteamPredefined(Predefined):
     def move_left_button(self):
         """Steam has button to move to left page"""
         return self.relative(0, 430, SteamAreas.MAINAREA)
+
+    @property
+    def duelist_name_area(self):
+        return self.relative_area(660, 5, 35, 150, SteamAreas.MAINAREA)

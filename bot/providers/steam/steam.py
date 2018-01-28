@@ -38,6 +38,9 @@ class Steam(Provider):
         self.predefined = SteamPredefined(self._config, nox_current_version)
         self.SteamPath = os.path.join(self._config.get('steam', 'location'), 'Steam.exe')
         if run_checks:
+            if not self.is_process_running():
+                self.start_process()
+                time.sleep(2)
             self.ensure_resolutions_matches()
 
     def __is_initial_screen__(self, *args, **kwargs):
@@ -82,11 +85,6 @@ class Steam(Provider):
         self.scan_for_ok(LOW_CORR)
         self.wait_for_ui(.1)
         self.scan_for_ok(LOW_CORR)
-        battle_calls = self.run_time.battle_calls
-        #for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
-        #    for value in battle_calls.get(section):
-        #        pass
-        #        # self.root.debug(value)
 
     def check_if_battle(self, img):
         img = np.array(img)
@@ -224,11 +222,7 @@ class Steam(Provider):
                 self.current_battle = True
                 self.root.info(battlemode % (x, y, current_page, "Starting Battle"))
                 self.scan_for_ok(LOW_CORR)
-                self.tapnsleep(battle, 0)
-                if version == 2:
-                    self.battle(dl_info)
-                else:
-                    self.battle(dl_info, check_battle=True)
+                self.battle_mode(battle, version, dl_info)
                 self.current_battle = False
             else:
                 self.wait_for_ui(2)
@@ -338,6 +332,8 @@ class Steam(Provider):
         self.wait_for_ui(time_sleep)
 
     def tap(self, x, y):
+        if self.run_time.stop:
+            return
         x, y = int(x), int(y)
         self.root.debug("Tapping at location ({},{})".format(x, y))
         if self._debug:

@@ -8,8 +8,8 @@ import os
 import cv2
 
 from duel_links_runtime import DuelLinkRunTime
-from modes.Battle import VagabondBattle
-from providers import Nox
+from modes.Battle import VagabondBattle, NPCBattle
+from providers import Nox, Steam
 from providers.duellinks import DuelLinksInfo
 from utils.common import default_config
 
@@ -24,6 +24,11 @@ class TestVagabondBattle(TestCase):
         loop = asyncio.get_event_loop()
         loop.set_default_executor(ThreadPoolExecutor(2))
         self.battler = VagabondBattle(self.provider)
+        dlRuntime = DuelLinkRunTime(default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), None, False)
+        self.provider_steam = Steam(None, default_config(r'D:\Sync\OneDrive\Yu-gi-oh_bot'), dlRuntime, False)
+        self.provider_steam.sleep_factor = 0.0
+        self.battler_steam = VagabondBattle(self.provider_steam)
+        self.battler_npc_steam = NPCBattle(self.provider_steam)
 
     def test_check_battle(self):
         img = cv2.imread(os.path.join(self.provider.assets, 'new_duel_variant.png'))
@@ -32,3 +37,7 @@ class TestVagabondBattle(TestCase):
         self.assertTrue(self.battler.check_battle(info, img) is False, "Name is not vagabond")
         self.assertTrue(self.battler.check_battle(info, vaga_img) is True, "Name is vagabond")
         self.assertTrue(info.name == 'vagabond')
+        img = cv2.imread(os.path.join(self.provider_steam.assets, 'steam', 'new_duel_variant.png'))
+        self.assertTrue(self.battler_steam.check_battle(info, img) is False, "Name is not vagabond")
+        self.assertTrue(self.battler_npc_steam.check_battle(info, img) is True, "NPC battle")
+        self.assertTrue(info.name == 'emma')
