@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
-import PIL as Pillow
 import os
 
 from bot.common import mask_image
@@ -18,9 +17,7 @@ class Trainer(object):
         self.query = query
         self.xThreshold = x
         self.yThreshold = y
-        if type(query) is Pillow.Image.Image:
-            self.query = cv2.cvtColor(np.array(self.query), cv2.COLOR_RGB2BGR)
-        elif type(query) is np.ndarray:
+        if type(query) is np.ndarray:
             self.query = query
         else:
             self.query = cv2.imread(query, 0)
@@ -39,7 +36,8 @@ class Trainer(object):
         # find the keypoints and descriptors with SIFT
         kp1, des1 = sift.detectAndCompute(train_img, None)
         kp2, des2 = sift.detectAndCompute(query_img, None)
-
+        if des1 is None or des2 is None:
+            return False
         # create BFMatcher object
         bf = cv2.BFMatcher()
         try:
@@ -198,7 +196,8 @@ class BoundingTrainer(Trainer):
         # find the keypoints and descriptors with SIFT
         kp1, des1 = sift.detectAndCompute(train_img, None)
         kp2, des2 = sift.detectAndCompute(query_img, None)
-
+        if des1 is None or des2 is None:
+            return False
         # create BFMatcher object
         bf = cv2.BFMatcher()
         try:
