@@ -3,6 +3,8 @@ import os
 import subprocess
 import time
 import win32api
+
+import deprecation
 import win32con
 import win32gui
 import win32ui
@@ -14,6 +16,7 @@ import numpy as np
 from skimage.measure import compare_ssim
 from win32con import SM_CXSCREEN, SM_CYSCREEN
 
+from bot import clean_version
 from bot.providers import BotSetupError
 from bot.providers import trainer_matches as tm
 from bot.common import loop_scan, mask_image, crop_image, bot_assertion
@@ -54,6 +57,8 @@ class Steam(Provider):
             return True
         return False
 
+    @deprecation.deprecated(deprecated_in="0.5.0", removed_in="0.6.0", current_version=clean_version,
+                            details="Battle Modes are now defined separate from the provider")
     def battle(self, info=None, check_battle=None):
         "The main battle mode"
         if check_battle:
@@ -133,7 +138,7 @@ class Steam(Provider):
         height, width, _ = img.shape
         pre_width, pre_height = self.predefined.resolution
         bot_assertion(width == pre_width and height == pre_height, BotSetupError,
-            "Unmatched resolution of {}-{} expected {}-{}".format(height, width, pre_height, pre_width))
+                      "Unmatched resolution of {}-{} expected {}-{}".format(height, width, pre_height, pre_width))
 
     def is_process_running(self):
         try:

@@ -9,7 +9,7 @@ import apscheduler
 import cv2
 from bot.duel_links_runtime import DuelLinkRunTime
 from bot.providers import trainer_matches as tm
-from bot.providers.duellinks import DuelLinks, LOW_CORR, DuelError, alpha_numeric
+from bot.providers.duellinks import DuelLinks, LOW_CORR, DuelError, alpha_numeric, DuelLinksInfo
 from bot.providers.misc import Misc
 from bot.providers.actions import Actions
 from bot.common import crop_image, mask_image
@@ -123,14 +123,11 @@ class Provider(DuelLinks, Misc, Actions):
             try:
                 battle, version = self.verify_battle(log=False)
                 if battle:
+                    dl_info = DuelLinksInfo(None, None, None, "Starting Battle")
                     self.current_battle = True
                     self.root.info("Guided mode on")
                     self.scan_for_ok(LOW_CORR)
-                    self.tapnsleep(battle, 0)
-                    if version == 2:
-                        self.battle()
-                    else:
-                        self.battle(check_battle=True)
+                    self.battle_mode(battle, version, dl_info)
                     self.current_battle = False
             except DuelError:
                 self.wait_for_ui(1)

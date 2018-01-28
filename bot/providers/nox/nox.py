@@ -6,9 +6,11 @@ import sys
 import win32gui
 
 import cv2
+import deprecation
 import numpy as np
 from skimage.measure import compare_ssim
 
+from bot import clean_version
 from bot.providers import trainer_matches as tm
 from bot.common import loop_scan, mask_image
 from bot.providers.duellinks import DuelLinksInfo, DuelError
@@ -190,6 +192,8 @@ class Nox(Provider):
         self.wait_for_ui(.1)
         self.tap(356, 85)
 
+    @deprecation.deprecated(deprecated_in="0.5.0", removed_in="0.6.0", current_version=clean_version,
+                            details="Battle Modes are now defined separate from the provider")
     def battle(self, info=None, check_battle=False):
         "The main battle mode"
         if check_battle:
