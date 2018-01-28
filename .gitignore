@@ -57,7 +57,12 @@ bot/providers/steam/obj/
 ### ignore coveralls
 .coverage
 .coveralls.yml
+coverage_html/
 
 
 ### ignore rst file
 *.rst
+
+
+### ignore some asset dir
+assets/train/

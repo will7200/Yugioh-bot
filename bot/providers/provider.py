@@ -2,11 +2,9 @@ import asyncio
 import datetime
 import logging
 import threading
-import time
 import subprocess
 
 import apscheduler
-import os
 
 import cv2
 from bot.duel_links_runtime import DuelLinkRunTime
@@ -14,7 +12,8 @@ from bot.providers import trainer_matches as tm
 from bot.providers.duellinks import DuelLinks, LOW_CORR, DuelError, alpha_numeric
 from bot.providers.misc import Misc
 from bot.providers.actions import Actions
-from bot.providers.common import crop_image, mask_image
+from bot.common import crop_image, mask_image
+from bot.modes import battle_modes
 
 
 class Provider(DuelLinks, Misc, Actions):
@@ -34,6 +33,7 @@ class Provider(DuelLinks, Misc, Actions):
         self.assets = config.get('locations', 'assets')
         self.lock = None
         self.run_time = run_time  # type: DuelLinkRunTime
+        self.battle_modes = [x(self) for x in battle_modes]
 
     def auto(self):
         t = threading.currentThread()
@@ -54,6 +54,13 @@ class Provider(DuelLinks, Misc, Actions):
                 self.register_thread(None)
                 raise e
         self.register_thread(None)
+
+    def battle_mode(self, battle, version, info):
+        img = self.get_img_from_screen_shot(True)
+        for mode in self.battle_modes:
+            if mode.check_battle(info, img):
+                mode.start(battle, version, info)
+                break
 
     def debug_battle(self):
         self.battle(check_battle=self.check_battle)

@@ -9,7 +9,7 @@ import asyncio
 
 from bot import default_timestamp
 from bot.utils.data import load_dict_from_hdf5, save_dict_to_hdf5
-from .shared import *
+from bot.shared import *
 
 
 class Event(object):
@@ -40,6 +40,7 @@ class DuelLinksInfo(object):
     _y = None
     _page = None
     _status = None
+    _name = None
 
     def __init__(self, x, y, page, status):
         self._x = x
@@ -63,6 +64,10 @@ class DuelLinksInfo(object):
     def status(self):
         return self._status
 
+    @property
+    def name(self):
+        return self._name
+
     @x.setter
     def x(self, value):
         self._x = value
@@ -78,6 +83,11 @@ class DuelLinksInfo(object):
     @status.setter
     def status(self, value):
         self._status = value
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
 
 
 class EventExecutor(object):

@@ -6,7 +6,7 @@ import numpy as _np
 
 from bot import clean_version
 from bot.providers.duellinks import Predefined
-from bot.providers.shared import nox_current_version, tupletodict
+from bot.shared import nox_current_version, tupletodict
 
 left = 319
 top = 79
@@ -116,6 +116,10 @@ class NoxPredefined(Predefined):
     @property
     def street_replay_location(self):
         return 2
+
+    @property
+    def duelist_name_area(self):
+        return tupletodict(590, 0, 25, 150)
 
     @staticmethod
     def duel_variant_version(value):

@@ -10,11 +10,11 @@ import numpy as np
 from skimage.measure import compare_ssim
 
 from bot.providers import trainer_matches as tm
-from bot.providers.common import loop_scan, mask_image
+from bot.common import loop_scan, mask_image
 from bot.providers.duellinks import DuelLinksInfo, DuelError
 from bot.providers.nox.predefined import NoxPredefined
 from bot.providers.provider import Provider
-from bot.providers.shared import *
+from bot.shared import *
 
 
 class Nox(Provider):
@@ -168,7 +168,7 @@ class Nox(Provider):
         except:
             return False
 
-    def compare_with_cancel_button(self, corr=HIGH_CORR, info=None):
+    def compare_with_cancel_button(self, corr=HIGH_CORR, info=None, img=None):
         corrword = 'HIGH' if corr == HIGH_CORR else 'LOW'
         self.root.debug("LOOKING FOR CANCEL BUTTON, {} CORRERLATION".format(corrword))
         img = self.get_img_from_screen_shot()
@@ -222,7 +222,7 @@ class Nox(Provider):
         self.wait_for_ui(.1)
         self.scan_for_ok(LOW_CORR)
         battle_calls = self.run_time.battle_calls
-        #for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
+        # for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
         #    for value in battle_calls.get(section):
         #        pass
         #         self.root.debug(value)
@@ -282,11 +282,7 @@ class Nox(Provider):
                 self.current_battle = True
                 self.root.info(battlemode % (x, y, current_page, "Starting Battle"))
                 self.scan_for_ok(LOW_CORR)
-                self.tapnsleep(battle, 0)
-                if version == 2:
-                    self.battle(dl_info)
-                else:
-                    self.battle(dl_info, check_battle=True)
+                self.battle_mode(battle, version, dl_info)
                 self.current_battle = False
             else:
                 self.wait_for_ui(2)
