@@ -101,6 +101,10 @@ class NoxPredefined(Predefined):
         }
 
     @property
+    def dialog_ok(self):
+        return 150, 400
+
+    @property
     def street_replay(self):
         return {
             'left'  : 181,

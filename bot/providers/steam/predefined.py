@@ -121,6 +121,10 @@ class SteamPredefined(Predefined):
         return tupletodict(790, 480, 40, 260)
 
     @property
+    def dialog_ok(self):
+        return 150, 800
+
+    @property
     def ok_button_duel(self):
         """This specifies the location of the ok button for duels"""
         return tupletodict(855, 720, 50, 180)
@@ -133,7 +137,7 @@ class SteamPredefined(Predefined):
     @property
     def resolution(self):
         return 1606, 929
-    
+
     @property
     def street_replay(self):
         raise NotImplementedError("Function {} has not been implemented".format(getframeinfo(currentframe())[2]))

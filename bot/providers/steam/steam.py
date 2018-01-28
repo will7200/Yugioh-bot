@@ -83,13 +83,12 @@ class Steam(Provider):
         self.wait_for_ui(.1)
         self.scan_for_ok(LOW_CORR)
         battle_calls = self.run_time.battle_calls
-        for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
-            for value in battle_calls.get(section):
-                pass
-                # self.root.debug(value)
+        #for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
+        #    for value in battle_calls.get(section):
+        #        pass
+        #        # self.root.debug(value)
 
     def check_if_battle(self, img):
-        ## TODO Change Image Coordinates
         img = np.array(img)
         img = crop_image(img, **self.predefined.page_area)
         blue_min = np.array([250, 250, 250], np.uint8)
@@ -219,7 +218,7 @@ class Steam(Provider):
             dl_info = DuelLinksInfo(x, y, current_page, "Starting Battle")
             version = 0
             if battle:
-                self.tapnsleep((150, 800), 2.5, True)
+                self.tapnsleep(self.predefined.dialog_ok, 2.5, True)
                 battle, version = self.verify_battle()
             if battle:
                 self.current_battle = True

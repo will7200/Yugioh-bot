@@ -222,10 +222,10 @@ class Nox(Provider):
         self.wait_for_ui(.1)
         self.scan_for_ok(LOW_CORR)
         battle_calls = self.run_time.battle_calls
-        for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
-            for value in battle_calls.get(section):
-                pass
-                # self.root.debug(value)
+        #for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
+        #    for value in battle_calls.get(section):
+        #        pass
+        #         self.root.debug(value)
 
     def check_if_battle(self, img):
         img = np.array(img)
@@ -272,11 +272,11 @@ class Nox(Provider):
             dl_info = DuelLinksInfo(x, y, current_page, "Starting Battle")
             version = 0
             if battle:
-                self.tapnsleep((150, 400), 2.5)
+                self.tapnsleep(self.predefined.dialog_ok, 2.5)
                 try:
                     battle, version = self.verify_battle()
                 except DuelError:
-                    self.tapnsleep((150, 400), 2.5)
+                    self.tapnsleep(self.predefined.dialog_ok, 2.5)
                     battle, version = self.verify_battle()
             if battle:
                 self.current_battle = True
