@@ -16,10 +16,10 @@ from win32con import SM_CXSCREEN, SM_CYSCREEN
 
 from bot.providers import BotSetupError
 from bot.providers import trainer_matches as tm
-from bot.providers.common import loop_scan, mask_image, crop_image, bot_assertion
+from bot.common import loop_scan, mask_image, crop_image, bot_assertion
 from bot.providers.duellinks import DuelLinksInfo
 from bot.providers.provider import Provider
-from bot.providers.shared import *
+from bot.shared import *
 from bot.providers.steam.predefined import SteamPredefined, SteamAreas
 
 

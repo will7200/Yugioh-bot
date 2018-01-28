@@ -6,7 +6,7 @@ import cv2
 import numpy as _np
 
 from bot.providers.duellinks import Predefined
-from bot.providers.shared import nox_current_version, tupletodict
+from bot.shared import nox_current_version, tupletodict
 
 duel_variant_v = {
     'v1'         : (800, 800),

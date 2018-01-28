@@ -126,7 +126,6 @@ class DuelLinksGui(QFrame):
     def location_on_the_screen(self):
         ag = QDesktopWidget().availableGeometry()
         sg = QDesktopWidget().screenGeometry()
-        print(ag, sg)
         widget = self.geometry()
         position = self.get_task_bar_position()
         if position == WINDOWS_TASKBAR_LOCATION.BOTTOM:
