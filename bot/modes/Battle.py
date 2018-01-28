@@ -27,7 +27,7 @@ class AbstractBattle(object):
         self.signalers = signalers
         self.registered_callbacks = {}
         self.provider = provider  # type: Provider
-        self.name_mode = re.findall('[A-Z][^A-Z]*', self.__class__.__name__)
+        self.name_mode = ' '.join(re.findall('[A-Z][^A-Z]*', self.__class__.__name__))
 
     @abstractmethod
     def battle(self, info, check_battle: bool = False):
@@ -68,6 +68,7 @@ class NPCBattle(AbstractBattle):
 
     def __init__(self, *args, **kwargs):
         super(NPCBattle, self).__init__(*args, **kwargs)
+        self.name_mode = 'NPC Battle'
 
     def battle(self, info, check_battle: bool = False):
         self.signalers[CheckPoints.beforeStarting].emit(info)
