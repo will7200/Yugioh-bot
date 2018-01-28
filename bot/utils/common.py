@@ -32,7 +32,8 @@ def default_config(home="."):
         'startBotOnStartUp' : False,  # start bot irregardless of next run time
         'runTimePersistence': 'runTimeOptions.json',  # store runtime options to this file
         'provider'          : 'Choose',
-        'sleep_factor'      : 1
+        'sleep_factor'      : 1,
+        'persist'           : True
     }
 
     config['steam'] = {
@@ -40,7 +41,7 @@ def default_config(home="."):
     }
 
     config['nox'] = {
-        'location': r'C:\Program Files (x86)\Nox\bin',
+        'location'     : r'C:\Program Files (x86)\Nox\bin',
         'killNoxOnDone': True,  # kill nox when a run through is done
     }
     return config

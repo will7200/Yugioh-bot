@@ -102,7 +102,8 @@ class DuelLinkRunTimeOptions(object):
         self.handle_option_change('stop')
 
     _playmode = "autoplay"
-    _available_modes = ['autoplay','guided']
+    _available_modes = ['autoplay', 'guided']
+
     @property
     def playmode(self):
         return self._playmode
@@ -173,20 +174,23 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _job = None
     _allow_event_change = True
     _disable_dump = False
+    _disable_persistence = False
 
     def __init__(self, config, scheduler, auto_start=True):
         self._config = config
         self._file = config.get('bot', 'runTimePersistence')
+        self._disable_persistence = config.get('bot', 'persist')
         self._scheduler = scheduler
-        self.setUp()
         if auto_start:
+            self.setUp()
             self.start()
 
     def start(self):
         self.setUp()
-        logger.debug("Watching {} for runTime Options".format(self._file))
-        self._watcher = SyncWithFile(self._file)
-        self._watcher.settings_modified = self.settings_modified
+        if not self._disable_persistence:
+            logger.debug("Watching {} for runTime Options".format(self._file))
+            self._watcher = SyncWithFile(self._file)
+            self._watcher.settings_modified = self.settings_modified
 
     def setUp(self):
         self._loop = asyncio.get_event_loop()
@@ -278,9 +282,11 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             logger.debug("Dump Getting Called {}".format(tmpdict))
             write_data_file(tmpdict, self._file)
             self._watcher.start_observer()
-        #self._timeout_dump = None
+        # self._timeout_dump = None
 
     def timeout_dump(self):
+        if self._disable_persistence:
+            return
         if self._timeout_dump is not None:
             try:
                 self._timeout_dump.remove()
@@ -304,7 +310,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self.runtime_error(mess)
 
     def schedule_next_run(self):
-        if self._watcher.observer:
+        if not self._disable_persistence and self._watcher.observer:
             self._watcher.stop_observer()
         if self.next_run_at == datetime.datetime.fromtimestamp(default_timestamp):
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
@@ -314,7 +320,8 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             next_at = self.next_run_at - datetime.datetime.now()
             self.next_run_at = datetime.datetime.now(
             ) + datetime.timedelta(seconds=next_at.total_seconds())
-        self._watcher.start_observer()
+        if not self._disable_persistence:
+            self._watcher.start_observer()
 
     def determine_playthrough(self, provider):
         """
@@ -380,7 +387,8 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
                 logger.debug(traceback.format_exc())
-            self._watcher.stop_observer()
+            if not self._disable_persistence:
+                self._watcher.stop_observer()
             self._allow_event_change = False
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(hours=4)
             next_run_at = self.next_run_at
@@ -388,7 +396,8 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
             self._scheduler.add_job(in_main, trigger='date', id=self._job,
                                     run_date=next_run_at)
-            self._watcher.start_observer()
+            if not self._disable_persistence:
+                self._watcher.start_observer()
 
         self._allow_event_change = False
         self._run_main = in_main
@@ -400,9 +409,10 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
         self._scheduler.add_job(in_main, trigger='date', id=self._job,
                                 run_date=next_run_at)
-        self._watcher.start_observer()
+        if not self._disable_persistence:
+            self._watcher.start_observer()
+            logger.info("Tracking %s" % (self._file))
         self._allow_event_change = True
-        logger.info("Tracking %s" % (self._file))
         logger.info('Next run at %s' % (self.next_run_at.isoformat()))
 
     _shutdown = False
