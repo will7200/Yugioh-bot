@@ -7,6 +7,7 @@ import time
 
 class Actions(object):
     """ Defines Actions that must be implemented for each Provider"""
+    last_img = None
 
     def __init__(self):
         pass
@@ -32,10 +33,13 @@ class Actions(object):
     def take_png_screenshot(self):
         raise NotImplementedError("take_png_screenshot not defined")
 
-    def get_img_from_screen_shot(self):
+    def get_img_from_screen_shot(self, last_one=False):
+        if last_one and self.last_img is not None:
+            return self.last_img
         screen_shot = self.take_png_screenshot()
         nparr = np.fromstring(screen_shot, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        self.last_img = img
         return img
 
     @abstractmethod
