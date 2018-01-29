@@ -1,5 +1,10 @@
 from setuptools import setup
-
+try:
+    from pypandoc import convert
+    read_md = lambda f: convert(f, 'rst')
+except ImportError:
+    print("warning: pypandoc module not found, could not convert Markdown to RST")
+    read_md = lambda f: open(f, 'r').read()
 import versioneer
 import unittest
 def bot_test():
@@ -39,7 +44,7 @@ setup(
     python_requires='>=3.5',
     url=URL,
     description="Botting Yugioh-DuelLinks",
-    long_description=open('README.rst', 'rt').read(),
+    long_description=read_md('README.md'),
     keywords='yugioh bot yugioh-bot duellinks duel links yugioh-duellinks',
     test_suite='setup.bot_test'
 )
