@@ -5,7 +5,7 @@ import deprecation
 import numpy as _np
 
 from bot import clean_version
-from bot.providers.duellinks import Predefined
+from bot.providers.predefined import Predefined
 from bot.shared import nox_current_version, tupletodict
 
 left = 319
@@ -30,6 +30,9 @@ class NoxPredefined(Predefined):
     files_needed_for_comparision = [
         "download_button.png"
     ]
+
+    def __init__(self, *args, **kwargs):
+        super(NoxPredefined, self).__init__(*args, **kwargs)
 
     def run_prechecks(self):
         for file in self.files_need:

@@ -5,7 +5,7 @@ from inspect import getframeinfo, currentframe
 import cv2
 import numpy as _np
 
-from bot.providers.duellinks import Predefined
+from bot.providers.predefined import Predefined
 from bot.shared import nox_current_version, tupletodict
 
 duel_variant_v = {
@@ -31,6 +31,9 @@ class SteamPredefined(Predefined):
     ]
 
     dataset = 'steam'
+    
+    def __init__(self, *args, **kwargs):
+        super(SteamPredefined, self).__init__(*args, **kwargs)
 
     def run_prechecks(self):
         for file in self.files_need:
@@ -141,7 +144,7 @@ class SteamPredefined(Predefined):
 
     @property
     def resolution(self):
-        return 1606, 929
+        return 1600, 900
 
     @property
     def street_replay(self):

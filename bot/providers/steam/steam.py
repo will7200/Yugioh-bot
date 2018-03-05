@@ -136,9 +136,10 @@ class Steam(Provider):
         if img is None:
             img = self.get_img_from_screen_shot()
         height, width, _ = img.shape
+        height, width = height - 29, width - 6
         pre_width, pre_height = self.predefined.resolution
         bot_assertion(width == pre_width and height == pre_height, BotSetupError,
-                      "Unmatched resolution of {}-{} expected {}-{}".format(height, width, pre_height, pre_width))
+                      "Unmatched resolution of {}-{} expected {}-{}".format(width, height, pre_width, pre_height))
 
     def is_process_running(self):
         try:
