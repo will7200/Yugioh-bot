@@ -18,8 +18,10 @@ install:
   # We need wheel installed to build wheels
   - "%PYTHON%\\python.exe -m pip install -r requirements.txt"
   - "%PYTHON%\\python.exe -m pip install pypandoc"
+  - "%PYTHON%\\python.exe -m pip install pyinstaller"
 
-build: off
+build_script:
+  - "pyinstaller main.spec"
 
 test_script:
   # Put your test command here.
