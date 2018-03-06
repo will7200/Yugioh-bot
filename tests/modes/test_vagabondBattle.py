@@ -7,7 +7,7 @@ import os
 
 import cv2
 
-from duel_links_runtime import DuelLinkRunTime
+from bot.duel_links_runtime import DuelLinkRunTime
 from modes.Battle import VagabondBattle, NPCBattle
 from providers import Nox, Steam
 from providers.duellinks import DuelLinksInfo
