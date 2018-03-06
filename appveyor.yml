@@ -21,7 +21,7 @@ install:
   - "%PYTHON%\\python.exe -m pip install pyinstaller"
 
 build_script:
-  - "pyinstaller main.spec"
+  - "%PYTHON%\\Scripts\\pyinstaller.exe main.spec"
 
 test_script:
   # Put your test command here.
