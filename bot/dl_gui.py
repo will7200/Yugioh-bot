@@ -40,6 +40,7 @@
 # $QT_END_LICENSE$
 ##
 #############################################################################
+import threading
 import time
 
 from PyQt5 import QtCore
@@ -47,7 +48,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QAction, QApplication, QCheckBox, QComboBox,
                              QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
                              QMessageBox, QMenu, QPushButton, QSpinBox, QStyle, QSystemTrayIcon,
-                             QTextEdit, QVBoxLayout, QDesktopWidget, QWidget, QFrame)
+                             QTextEdit, QVBoxLayout, QDesktopWidget, QWidget, QFrame, qApp)
 from enum import Enum
 from bot.duel_links_runtime import DuelLinkRunTime
 from bot import images_qr
@@ -368,8 +369,7 @@ class DuelLinksGui(QFrame):
             self.pauseButton.setDisabled(False)
             self.pauseButton.setEnabled(False)
         if self.dlRunTime._shutdown:
-            self.hide()
-            QApplication.instance().quit()
+            self.__quit__()
 
     def createActions(self):
         self.minimizeAction = QAction("Mi&nimize", self, triggered=self.hide)
@@ -382,8 +382,14 @@ class DuelLinksGui(QFrame):
 
     def __quit__(self):
         self.hide()
-        self.dlRunTime.shutdown()
+        if not self.dlRunTime._shutdown:
+            self.dlRunTime.shutdown()
+        self.in_timer.stop()
+        self.in_timer.deleteLater()
         self.close()
+        qApp.closeAllWindows()
+        QApplication.instance().closingDown()
+        QApplication.instance().quit()
 
     def createBotActions(self):
         self.startAction = QAction('Start', self, triggered=self.start_bot)

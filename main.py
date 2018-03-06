@@ -1,18 +1,15 @@
-import signal
 import logging
 import logging.config
+import os
+import signal
+import sip
+import sys
+import time
 import traceback
 
 import click
-import time
-import os
-
-import sys
-
-import sip
-from apscheduler.schedulers.background import BackgroundScheduler
-
 import yaml
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 def setup_logging(
@@ -43,7 +40,7 @@ def setup_runtime(uconfig):
     setup_logging()
     scheduler = BackgroundScheduler()
     dlRuntime = DuelLinkRunTime(uconfig, scheduler)
-    dlRuntime.stop = False # Need to Ensure that it runs
+    dlRuntime.stop = False  # Need to Ensure that it runs
     scheduler.start()
     try:
         dlRuntime.set_provider(get_provider(uconfig.get('bot', 'provider'))(scheduler, uconfig, dlRuntime))
@@ -70,7 +67,7 @@ def cli():
 @click.option("--generate-config", default=False, help="Generate Config file", is_flag=True)
 @click.option("--file-path", default="configtest.ini", help="File Location")
 def config(generate_config, file_path):
-    from bot.utils.common import make_config_file, default_config
+    from bot.utils.common import make_config_file
     if generate_config:
         make_config_file(file_path)
 
@@ -129,9 +126,13 @@ def gui(start, config_file):
         uconfig.read(config_file)
         dlRuntime = setup_runtime(uconfig)
         dlRuntime.main()
-        window = DuelLinksGui(dlRuntime, uconfig.get('locations','assets'))
+        window = DuelLinksGui(dlRuntime, uconfig.get('locations', 'assets'))
         window.show()
-        sys.exit(app.exec_())
+
+        def inmain():
+            app.exec_()
+
+        inmain()
 
 
 cli.add_command(bot)
