@@ -130,9 +130,9 @@ def gui(start, config_file):
         window.show()
 
         def inmain():
-            app.exec_()
+            return app.exec_()
 
-        inmain()
+        sys.exit(inmain())
 
 
 cli.add_command(bot)
