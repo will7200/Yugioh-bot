@@ -142,3 +142,9 @@ The MIT License (MIT). Please see [License File](LICENSE) for more information.
 [link-code-quality]: https://scrutinizer-ci.com/g/:vendor/:package_name
 [link-author]: https://github.com/will7200
 [link-contributors]: ../../contributors
+
+## Donate
+[![Donate with Open Source Citizen](http://www.opensourcecitizen.org/badge?url=github.com/will7200/Yugioh-bot)](http://www.opensourcecitizen.org/project?url=github.com/will7200/Yugioh-bot)
+
+If you found this library useful, donate some CPU cycles to its
+development efforts by clicking above. Thank you! 😇
