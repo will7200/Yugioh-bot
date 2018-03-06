@@ -389,6 +389,8 @@ class DuelLinksGui(QFrame):
         self.close()
         qApp.closeAllWindows()
         QApplication.instance().closingDown()
+        del self.dlRunTime
+        time.sleep(2)
         QApplication.instance().quit()
 
     def createBotActions(self):
