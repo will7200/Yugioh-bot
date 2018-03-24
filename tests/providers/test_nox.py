@@ -11,7 +11,7 @@ from skimage.measure import compare_ssim
 
 from bot.providers import Nox
 from bot.utils.common import default_config
-from duel_links_runtime import DuelLinkRunTime
+from bot.duel_links_runtime import DuelLinkRunTime
 from bot.common import mask_image, mse
 
 
