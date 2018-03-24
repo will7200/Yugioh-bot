@@ -26,6 +26,17 @@ except ImportError:
 
 
 class DuelLinkRunTimeOptions(object):
+    """Class defines options used at runtime"""
+    _active = False
+
+    @property
+    def active(self):
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        self._active = True
+
     _last_run_at = datetime.datetime.fromtimestamp(default_timestamp)
 
     @property
@@ -82,11 +93,11 @@ class DuelLinkRunTimeOptions(object):
         self.timeout_dump()
         self.handle_option_change('run_now')
 
-    _stop = False
+    _stop = threading.Event()
 
     @property
     def stop(self):
-        return self._stop
+        return self._stop.is_set()
 
     @stop.setter
     def stop(self, stop):
@@ -95,7 +106,10 @@ class DuelLinkRunTimeOptions(object):
             return
         if self._stop == stop:
             return
-        self._stop = stop
+        if stop:
+            self._stop.set()
+        else:
+            self._stop.clear()
         frame = inspect.currentframe()
         logger.debug("Value {} modified".format(inspect.getframeinfo(frame).function))
         self.timeout_dump()
@@ -160,6 +174,27 @@ class DuelLinkRunTimeOptions(object):
         raise NotImplementedError("handle_option_change not implemented")
 
 
+class DuelLinkTasks(object):
+
+    def __init__(self, dlrto):
+        self.dlRunTime = dlrto  # type: DuelLinkRunTime
+
+    async def check_next_run(self):
+        while True:
+            time_diff = self.dlRunTime.next_run_at - datetime.datetime.now()
+            if time_diff.total_seconds() < -50 and self.dlRunTime.active is False:
+                logger.info("APScheduler failed to schedule run, forcing run now")
+                self.dlRunTime.run_now = True
+            logger.debug("Checking runtime again at {}".format(
+                (datetime.datetime.now() + datetime.timedelta(seconds=60)).isoformat()))
+            await asyncio.sleep(60)
+
+    def start(self):
+        loop = self.dlRunTime.get_loop()
+        assert (loop.is_running())
+        asyncio.run_coroutine_threadsafe(self.check_next_run(), loop)
+
+
 class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _file = None
     _unknown_options = []
@@ -175,14 +210,15 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
     _allow_event_change = True
     _disable_dump = False
     _disable_persistence = False
+    _loop_thread = None
 
     def __init__(self, config, scheduler, auto_start=True):
         self._config = config
         self._file = config.get('bot', 'runTimePersistence')
         self._disable_persistence = config.get('bot', 'persist')
         self._scheduler = scheduler
+        self._task_runner = DuelLinkTasks(self)
         if auto_start:
-            self.setUp()
             self.start()
 
     def start(self):
@@ -191,6 +227,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             logger.debug("Watching {} for runTime Options".format(self._file))
             self._watcher = SyncWithFile(self._file)
             self._watcher.settings_modified = self.settings_modified
+        self._task_runner.start()
 
     def setUp(self):
         self._loop = asyncio.get_event_loop()
@@ -200,6 +237,12 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         pathlib.Path(os.path.dirname(self._file)).mkdir(parents=True, exist_ok=True)
         if os.path.exists(self._file):
             self.update()
+        if not self._loop.is_running():
+            def run_loop():
+                self._loop.run_forever()
+
+            self._loop_thread = threading.Thread(target=run_loop)
+            self._loop_thread.start()
 
     def handle_option_change(self, value):
         if self._provider is None:
@@ -208,12 +251,9 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             if self.stop and self._provider.current_thread is not None:
                 for x in threading.enumerate():
                     if x == self._provider.current_thread:
-                        self._provider.current_thread.do_run = False
                         logger.info("Stopping Bot Execution")
             elif self._provider.current_thread is not None:
                 logger.info("Resuming Bot Execution")
-            elif self.stop:
-                self.stop = False
         if value == 'run_now' and self.run_now:
             logger.info("Forcing run now")
             if self._provider.current_thread is None:
@@ -341,79 +381,75 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             logger.critical("Unknown play through mode")
 
     def main(self):
-        def schedule_shutdown():
-            try:
-                self._scheduler.shutdown()
-            except SchedulerNotRunningError:
-                pass
-
-        def thread_shutdown():
-            self.shutdown()
-            schedule_shutdown()
-
-        def handle_exception(e):
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            logger.error(e)
-            logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
-            logger.debug(traceback.format_exc())
-            logger.critical("Provider does not have method correctly implemented cannot continue")
-            tt = threading.Thread(target=thread_shutdown, args=())
-            tt.start()  # (schedule_shutdown, args=(), id='shutdown')
-
-        def in_main():
-            self.last_run_at = datetime.datetime.now()
-            provider = self.get_provider()
-            try:
-                if not provider.is_process_running():
-                    provider.start_process()
-                    provider.wait_for_ui(30)
-                    provider.pass_through_initial_screen(False)
-                else:
-                    provider.pass_through_initial_screen(True)
-                provider.compare_with_back_button()
-                self.determine_playthrough(provider)
-            except NotImplementedError as ee:
-                handle_exception(ee)
-                return
-            except AttributeError as ee:
-                handle_exception(ee)
-                return
-            except TypeError as ee:
-                handle_exception(ee)
-                return
-            except Exception as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
-                logger.debug(traceback.format_exc())
-            if not self._disable_persistence:
-                self._watcher.stop_observer()
-            self._allow_event_change = False
-            self.next_run_at = datetime.datetime.now() + datetime.timedelta(hours=4)
-            next_run_at = self.next_run_at
-            self._allow_event_change = True
-            self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
-            self._scheduler.add_job(in_main, trigger='date', id=self._job,
-                                    run_date=next_run_at)
-            if not self._disable_persistence:
-                self._watcher.start_observer()
-
         self._allow_event_change = False
-        self._run_main = in_main
+        self._run_main = self.in_main
         if self._config.getboolean("bot", "startBotOnStartUp"):
             self.next_run_at = datetime.datetime.now() + datetime.timedelta(seconds=1)
         else:
             self.schedule_next_run()
         next_run_at = self.next_run_at
         self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
-        self._scheduler.add_job(in_main, trigger='date', id=self._job,
+        self._scheduler.add_job(self._run_main, trigger='date', id=self._job,
                                 run_date=next_run_at)
         if not self._disable_persistence:
             self._watcher.start_observer()
-            logger.info("Tracking %s" % (self._file))
+            logger.info("Tracking {}".format(self._file))
         self._allow_event_change = True
-        logger.info('Next run at %s' % (self.next_run_at.isoformat()))
+        logger.info('Next run at {}'.format(self.next_run_at.isoformat()))
+
+    def in_main(self):
+        def thread_shutdown(_self):
+            _self.shutdown()
+
+        def handle_exception(_self, e):
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            logger.error(e)
+            logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
+            logger.debug(traceback.format_exc())
+            logger.critical("Provider does not have method correctly implemented cannot continue")
+            tt = threading.Thread(target=thread_shutdown, args=(_self))
+            tt.start()  # (schedule_shutdown, args=(), id='shutdown')
+
+        self.active = True
+        self.last_run_at = datetime.datetime.now()
+        provider = self.get_provider()
+        try:
+            if not provider.is_process_running():
+                provider.start_process()
+                provider.wait_for_ui(30)
+                provider.pass_through_initial_screen(False)
+            else:
+                provider.pass_through_initial_screen(True)
+            provider.compare_with_back_button()
+            self.determine_playthrough(provider)
+        except NotImplementedError as ee:
+            handle_exception(self, ee)
+            return
+        except AttributeError as ee:
+            handle_exception(self, ee)
+            return
+        except TypeError as ee:
+            handle_exception(self, ee)
+            return
+        except Exception:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
+            logger.debug(traceback.format_exc())
+        if not self._disable_persistence:
+            self._watcher.stop_observer()
+        self._allow_event_change = False
+        self.next_run_at = datetime.datetime.now() + datetime.timedelta(hours=4)
+        next_run_at = self.next_run_at
+        self._allow_event_change = True
+        self._job = 'cron_main_at_{}'.format(next_run_at.isoformat())
+        self._scheduler.add_job(lambda: self._run_main, trigger='date', id=self._job,
+                                run_date=next_run_at)
+        self.active = False
+        self.stop = False
+        if not self._disable_persistence:
+            self._watcher.start_observer()
 
     _shutdown = False
 
@@ -422,10 +458,21 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         self._disable_dump = True  # will not write to run time options
         self.stop = True  # signals all long_running operations to not execute, os calls will not occur either
         while self._provider.current_thread is not None:
-            logger.warning('waiting for thread to stop')
+            logger.warning('Waiting for bot thread to stop')
             time.sleep(5)
-        self._scheduler.shutdown()
+        self._loop.call_soon_threadsafe(self._loop.stop)
+        try:
+            self._scheduler.shutdown()
+        except SchedulerNotRunningError:
+            pass
         self._shutdown = True
+        self._loop.close()
+        if self._loop_thread:
+            self._loop_thread.join()
+        logger.info("Shutdown complete")
+
+    def get_loop(self):
+        return self._loop
 
     def __exit__(self):
         self.dump()
