@@ -185,14 +185,27 @@ class DuelLinkTasks(object):
             if time_diff.total_seconds() < -50 and self.dlRunTime.active is False:
                 logger.info("APScheduler failed to schedule run, forcing run now")
                 self.dlRunTime.run_now = True
-            logger.debug("Checking runtime again at {}".format(
-                (datetime.datetime.now() + datetime.timedelta(seconds=60)).isoformat()))
             await asyncio.sleep(60)
 
     def start(self):
-        loop = self.dlRunTime.get_loop()
+        loop = asyncio.get_event_loop()  # self.dlRunTime.get_loop()
         assert (loop.is_running())
         asyncio.run_coroutine_threadsafe(self.check_next_run(), loop)
+
+    def shutdown(self):
+        loop = asyncio.get_event_loop()  # self.dlRunTime.get_loop()
+
+        async def st():
+            tasks = [task for task in asyncio.Task.all_tasks() if task is not
+                     asyncio.tasks.Task.current_task()]
+            list(map(lambda task: task.cancel(), tasks))
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for r in results:
+                if isinstance(r, str):
+                    logger.warning("Task {}".format(r))
+
+        future = asyncio.run_coroutine_threadsafe(st(), loop)
+        future.result()
 
 
 class DuelLinkRunTime(DuelLinkRunTimeOptions):
@@ -437,6 +450,7 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             logger.debug("{} {} {}".format(exc_type, fname, exc_tb.tb_lineno))
             logger.debug(traceback.format_exc())
+            return
         if not self._disable_persistence:
             self._watcher.stop_observer()
         self._allow_event_change = False
@@ -460,18 +474,20 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         while self._provider.current_thread is not None:
             logger.warning('Waiting for bot thread to stop')
             time.sleep(5)
+        logger.info("Shutdown started")
+        self._task_runner.shutdown()
         self._loop.call_soon_threadsafe(self._loop.stop)
         try:
             self._scheduler.shutdown()
         except SchedulerNotRunningError:
             pass
-        self._shutdown = True
         if self._loop_thread:
             self._loop_thread.join()
         while self._loop.is_running():
             pass
         self._loop.close()
         logger.info("Shutdown complete")
+        self._shutdown = True
 
     def get_loop(self):
         return self._loop

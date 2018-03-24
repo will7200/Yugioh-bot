@@ -112,6 +112,7 @@ def gui(start, config_file):
         from bot.utils.common import make_config_file, default_config
         from bot.duel_links_runtime import DuelLinkRunTime
         from bot.dl_gui import DuelLinksGui
+        from bot import logger
         sip.setdestroyonexit(False)
         app = QApplication(sys.argv)
 
@@ -128,7 +129,12 @@ def gui(start, config_file):
         dlRuntime.main()
         window = DuelLinksGui(dlRuntime, uconfig.get('locations', 'assets'))
         window.show()
+        def handler(signum, frame):
+            if signum == signal.SIGINT:
+                window.__quit__()
+                logger.info("Exiting Yugioh-DuelLinks Bots")
 
+        signal.signal(signal.SIGINT, handler)
         def inmain():
             return app.exec_()
 

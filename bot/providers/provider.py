@@ -257,7 +257,7 @@ class Provider(DuelLinks, Misc, Actions):
         async def main(self):
             return await wait_for(self)
 
-        loop = self.run_time._loop
+        loop = self.run_time.get_loop()
         future = asyncio.run_coroutine_threadsafe(main(self), loop)
         return future.result(timeout)
 

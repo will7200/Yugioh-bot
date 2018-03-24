@@ -9,7 +9,7 @@ h5py==2.7.1
 deprecation==1.0.1
 numpy>=1.11
 APScheduler==3.4.0
-PyQt5==5.9.2
+PyQt5==5.10.1
 scikit_learn==0.19.1
 win32gui==221.6
 PyYAML==3.12
