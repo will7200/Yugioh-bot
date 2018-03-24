@@ -234,27 +234,32 @@ class Provider(DuelLinks, Misc, Actions):
     def __generic_wait_for__(self, message, condition_check, fn, *args, **kwargs):
         self.root.info("Waiting for {}".format(message))
         timeout = kwargs.get('timeout', 10)
+        throwException = kwargs.get('throw', True)
 
         async def wait_for(self):
             exceptions_occurred = 0
             while not self.run_time.stop:
                 try:
                     condition = fn(*args, **kwargs)
-                except Exception as e:
+                except Exception:
                     if exceptions_occurred > 5:
-                        raise Exception("Maximum exception count occurred")
+                        if throwException:
+                            raise Exception("Maximum exception count occurred waiting for {}".format(message))
+                        return False
                     exceptions_occurred += 1
                     await self.async_wait_for_ui(1)
                     continue
                 if condition_check(condition):
                     break
                 await self.async_wait_for_ui(2)
+            return True
 
         async def main(self):
-            await wait_for(self)
+            return await wait_for(self)
 
         loop = self.run_time._loop
-        loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
+        future = asyncio.run_coroutine_threadsafe(main(self), loop)
+        return future.result(timeout)
 
     def __wrapper_kmeans_result__(self, trainer, location, corr, info=None):
         if trainer.get_matches(location, corr):
