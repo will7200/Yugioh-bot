@@ -85,9 +85,7 @@ class DuelLinksGui(QFrame):
         self.assets = assets
         assert (type(duelLinksRunTime) is DuelLinkRunTime)
         self.dlRunTime = duelLinksRunTime  # type: DuelLinkRunTime
-        # self.createIconGroupBox()
         self.createRunTimeFields()
-        self.createMessageGroupBox()
         self.createBotControls()
 
         self.setObjectName("BotFrame")
@@ -97,11 +95,8 @@ class DuelLinksGui(QFrame):
         self.createBotActions()
         self.createTrayIcon()
         self.setShouldShowSystrayBox(mock_data)
-        # self.showMessageButton.clicked.connect(self.showMessage)
         self.hideButton.clicked.connect(self.close)
         self.exitButton.clicked.connect(self.__quit__)
-        # self.showIconCheckBox.toggled.connect(self.trayIcon.setVisible)
-        # self.iconComboBox.currentIndexChanged.connect(self.setIcon)
         self.trayIcon.messageClicked.connect(self.messageClicked)
         self.trayIcon.activated.connect(self.iconActivated)
 
@@ -112,8 +107,6 @@ class DuelLinksGui(QFrame):
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.runTimeGroupBox)
         mainLayout.addWidget(self.botControls)
-        # mainLayout.addWidget(self.iconGroupBox)
-        # mainLayout.addWidget(self.messageGroupBox)
         self.setLayout(mainLayout)
 
         self.setIcon()
@@ -216,24 +209,6 @@ class DuelLinksGui(QFrame):
     def modeChange(self, index):
         self.dlRunTime.playmode = self.available_modes.currentData()
 
-    def createIconGroupBox(self):
-        self.iconGroupBox = QGroupBox("Tray Icon")
-
-        self.iconLabel = QLabel("Icon:")
-
-        self.iconComboBox = QComboBox()
-        self.iconComboBox.addItem(QIcon('assets/yugioh.ico'), "Duel-Card")
-
-        self.showIconCheckBox = QCheckBox("Show icon")
-        self.showIconCheckBox.setChecked(True)
-
-        iconLayout = QHBoxLayout()
-        iconLayout.addWidget(self.iconLabel)
-        iconLayout.addWidget(self.iconComboBox)
-        iconLayout.addStretch()
-        iconLayout.addWidget(self.showIconCheckBox)
-        self.iconGroupBox.setLayout(iconLayout)
-
     def createBotControls(self):
         self.botControls = QGroupBox("Controls")
         controlLayout = QGridLayout()
@@ -264,61 +239,6 @@ class DuelLinksGui(QFrame):
         controlLayout.addWidget(self.exitButton, 3, 2, 1, 2)
         self.botControls.setLayout(controlLayout)
 
-    def createMessageGroupBox(self):
-        # self.messageGroupBox = QGroupBox("Balloon Message")
-
-        typeLabel = QLabel("Type:")
-
-        self.typeComboBox = QComboBox()
-        self.typeComboBox.addItem("None", QSystemTrayIcon.NoIcon)
-        self.typeComboBox.addItem(self.style().standardIcon(
-            QStyle.SP_MessageBoxInformation), "Information",
-            QSystemTrayIcon.Information)
-        self.typeComboBox.addItem(self.style().standardIcon(
-            QStyle.SP_MessageBoxWarning), "Warning",
-            QSystemTrayIcon.Warning)
-        self.typeComboBox.addItem(self.style().standardIcon(
-            QStyle.SP_MessageBoxCritical), "Critical",
-            QSystemTrayIcon.Critical)
-        self.typeComboBox.setCurrentIndex(1)
-
-        self.durationLabel = QLabel("Duration:")
-
-        self.durationSpinBox = QSpinBox()
-        self.durationSpinBox.setRange(5, 60)
-        self.durationSpinBox.setSuffix(" s")
-        self.durationSpinBox.setValue(15)
-
-        durationWarningLabel = QLabel("(some systems might ignore this hint)")
-        durationWarningLabel.setIndent(10)
-
-        titleLabel = QLabel("Title:")
-
-        self.titleEdit = QLineEdit("Cannot connect to network")
-
-        bodyLabel = QLabel("Body:")
-
-        self.bodyEdit = QTextEdit()
-        self.bodyEdit.setPlainText("Don't believe me. Honestly, I don't have "
-                                   "a clue.\nClick this balloon for details.")
-
-        # self.showMessageButton = QPushButton("Show Message")
-        # self.showMessageButton.setDefault(True)
-        """
-        messageLayout = QGridLayout()
-        messageLayout.addWidget(typeLabel, 0, 0)
-        messageLayout.addWidget(self.typeComboBox, 0, 1, 1, 2)
-        messageLayout.addWidget(self.durationLabel, 1, 0)
-        messageLayout.addWidget(self.durationSpinBox, 1, 1)
-        messageLayout.addWidget(durationWarningLabel, 1, 2, 1, 3)
-        messageLayout.addWidget(titleLabel, 2, 0)
-        messageLayout.addWidget(self.titleEdit, 2, 1, 1, 4)
-        messageLayout.addWidget(bodyLabel, 3, 0)
-        messageLayout.addWidget(self.bodyEdit, 3, 1, 2, 4)
-        messageLayout.addWidget(self.showMessageButton, 5, 4)
-        messageLayout.setColumnStretch(3, 1)
-        messageLayout.setRowStretch(4, 1)
-        self.messageGroupBox.setLayout(messageLayout)"""
 
     def createRunTimeFields(self):
         self.runTimeGroupBox = QGroupBox("RunTime Fields")
@@ -415,21 +335,3 @@ class DuelLinksGui(QFrame):
 
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
-
-
-if __name__ == '__main__':
-
-    import sys
-
-    app = QApplication(sys.argv)
-
-    if not QSystemTrayIcon.isSystemTrayAvailable():
-        QMessageBox.critical(None, "Systray",
-                             "Systray not dected on system.")
-        sys.exit(1)
-
-    QApplication.setQuitOnLastWindowClosed(False)
-
-    window = Window()
-    window.show()
-    sys.exit(app.exec_())
