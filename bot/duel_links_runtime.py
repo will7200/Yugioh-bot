@@ -466,9 +466,11 @@ class DuelLinkRunTime(DuelLinkRunTimeOptions):
         except SchedulerNotRunningError:
             pass
         self._shutdown = True
-        self._loop.close()
         if self._loop_thread:
             self._loop_thread.join()
+        while self._loop.is_running():
+            pass
+        self._loop.close()
         logger.info("Shutdown complete")
 
     def get_loop(self):
