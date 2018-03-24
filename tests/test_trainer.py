@@ -5,7 +5,7 @@ import os
 import cv2
 
 from bot.providers import trainer_matches as tm
-from shared import LOW_CORR
+from bot.shared import LOW_CORR
 
 base = '..\\assets'
 
