@@ -24,6 +24,8 @@ build_script:
   - "%PYTHON%\\Scripts\\pyinstaller.exe main.spec"
   - "%PYTHON%\\python.exe fix_build.py"
 
+after_build:
+  - 7z a dlbot.zip dist\dlbot\*
 test_script:
   # Put your test command here.
   # If you don't need to build C extensions on 64-bit Python 3.3 or 3.4,
@@ -44,7 +46,7 @@ after_test:
 
 artifacts:
   # bdist_wheel puts your built wheel in the dist directory
-  - path: dist\dlbot\*
+  - path: dlbot.zip
     name: botexe
 
   - path: dist\*
