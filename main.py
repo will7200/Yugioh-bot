@@ -10,7 +10,7 @@ import traceback
 import click
 import yaml
 from apscheduler.schedulers.background import BackgroundScheduler
-from install import main_install
+from install import set_pip_test, main_install
 
 
 def setup_logging(
@@ -148,6 +148,7 @@ def version():
 
 @click.command()
 def setup():
+    set_pip_test(True)
     main_install()
 
 

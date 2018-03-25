@@ -7,6 +7,7 @@ from tqdm import tqdm
 import re
 from colorama import init
 from colorama import Fore, Back, Style
+
 init(autoreset=True)
 # THESE ARE THE PARAMETERS USED TO CHECK AND INSTALL
 # Change these to suit your needs
@@ -18,6 +19,7 @@ DEBUG = True
 NOX_BIN = os.path.join(os.environ.get(
     'USERPROFILE'), 'AppData', 'Roaming', 'Nox', 'bin')
 NOX_BIN_OTHER = os.path.join(r'C:\Program Files (x86)\Nox\bin')
+SKIP_PIP_TEST = False
 
 
 def run_command(command, check_output=False):
@@ -95,7 +97,7 @@ def download_tesseract():
     tess_links = list(filter(lambda x: re.search(
         tess_search, x.text_content()), links))
     original_link = list(filter(lambda x: x.text_content()
-                                == tess_tested_against, links))
+                                          == tess_tested_against, links))
     if len(original_link) == 1:
         tess_download = original_link[0]
         print(Back.GREEN + 'Found Expected Tesseract on site ({}), downloading'.format(
@@ -136,17 +138,25 @@ def install_tesseract():
     except FileNotFoundError:
         print("Oooo something happened when I downloaded the file, rerun this script")
 
+
+def set_pip_test(value):
+    global SKIP_PIP_TEST
+    SKIP_PIP_TEST = value
+
+
 def check_required_packages():
+    if SKIP_PIP_TEST:
+        return
     installed_packages = pip.get_installed_distributions()
     packages = {}
     for package in installed_packages:
         packages[package.project_name] = package.version
     with open('requirements.txt') as f:
-        required = list(map(lambda x: x.split('=')[0].replace('>',''), f.read().splitlines()))
+        required = list(map(lambda x: x.split('=')[0].replace('>', ''), f.read().splitlines()))
     required = filter(lambda x: not '#' in x, required)
     all_installed = True
     for x in required:
-        if x in ['scikit_image','scikit_learn','opencv_contrib_python']:
+        if x in ['scikit_image', 'scikit_learn', 'opencv_contrib_python']:
             continue
         if x not in packages:
             print(Back.YELLOW + "Not in pip {}".format(x))
@@ -159,15 +169,17 @@ def check_required_packages():
         print(Back.RED + "Import error for package")
         print(Back.Red + e)
     if not all_installed:
-        print(Back.RED + Style.BRIGHT + "Not all packages required were found\ntry running `pip -r requirements.txt` again" + Back.CYAN)
+        print(
+            Back.RED + Style.BRIGHT + "Not all packages required were found\ntry running `pip -r requirements.txt` again" + Back.CYAN)
     else:
-        print(Back.GREEN + "All required packages found"+ Back.CYAN)
+        print(Back.GREEN + "All required packages found" + Back.CYAN)
+
 
 # Commands to Run
 commands = [
     ['Creating Temp Folder \t', 'mkdir tmp'],
     ['Installing Tesseract \t', install_tesseract],
-    #['Installing Requirements', 'pip install -r requirements.txt'], this command hangs have to do manually
+    # ['Installing Requirements', 'pip install -r requirements.txt'], this command hangs have to do manually
     ['Copying nox files required \t', copy_nox_bin_files],
     ['Checking required packages\t', check_required_packages]
 ]
@@ -183,12 +195,14 @@ def command_runner(comm):
     else:
         run_command(comm)
 
+
 def main_install():
     print(Back.CYAN + Style.BRIGHT + warning)
     print(Back.CYAN + "Installing Required components to get this bot up and running")
     for index, command in enumerate(commands):
-        print(Back.CYAN + "Component {}: {}{}".format(index,  Fore.RED, command[0]) + Fore.WHITE)
+        print(Back.CYAN + "Component {}: {}{}".format(index, Fore.RED, command[0]) + Fore.WHITE)
         command_runner(command[1])
+
 
 if __name__ == "__main__":
     main_install()
