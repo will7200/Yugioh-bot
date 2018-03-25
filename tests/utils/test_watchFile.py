@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import os
 from watchdog.observers import Observer
 
 from bot import last_record
@@ -15,17 +16,19 @@ class TestWatchFile(TestCase):
 
     def setUp(self):
         set_data_file(self.data_file)
+        write_data_file({}, self.data_file)
         self.watcher = WatchFile(patterns=[self.data_file])
-        self.observer = Observer()
-        self.observer.schedule(self.watcher, r"D:\Sync\OneDrive\Yu-gi-oh_bot", recursive=False)
-        self.observer.start()
-        self.data = read_data_file()
-        self.data['test'] = 'yes'
 
         def nothing_important(_):
             pass
 
         self.watcher.event_notification = nothing_important
+        self.observer = Observer()
+        self.observer.schedule(self.watcher, r"D:\Sync\OneDrive\Yu-gi-oh_bot", recursive=False)
+        self.observer.start()
+        self.data = read_data_file()
+        self.data['test'] = 'yes'
+        write_data_file(self.data, self.data_file)
 
     def test_notify_event(self):
         write_data_file(self.data)
@@ -34,3 +37,4 @@ class TestWatchFile(TestCase):
 
     def tearDown(self):
         self.observer.stop()
+        os.remove(self.data_file)

@@ -381,6 +381,7 @@ class DuelLinksGui(QFrame):
                                   triggered=self.__quit__)
 
     def __quit__(self):
+        QApplication.instance().closingDown()
         self.hide()
         if not self.dlRunTime._shutdown:
             self.dlRunTime.shutdown()
@@ -388,9 +389,8 @@ class DuelLinksGui(QFrame):
         self.in_timer.deleteLater()
         self.close()
         qApp.closeAllWindows()
-        QApplication.instance().closingDown()
+        time.sleep(1)
         del self.dlRunTime
-        time.sleep(2)
         QApplication.instance().quit()
 
     def createBotActions(self):

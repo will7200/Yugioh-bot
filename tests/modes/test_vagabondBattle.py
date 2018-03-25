@@ -8,10 +8,10 @@ import os
 import cv2
 
 from bot.duel_links_runtime import DuelLinkRunTime
-from modes.Battle import VagabondBattle, NPCBattle
-from providers import Nox, Steam
-from providers.duellinks import DuelLinksInfo
-from utils.common import default_config
+from bot.modes.Battle import VagabondBattle, NPCBattle
+from bot.providers import Nox, Steam
+from bot.providers.duellinks import DuelLinksInfo
+from bot.utils.common import default_config
 
 
 class TestVagabondBattle(TestCase):
