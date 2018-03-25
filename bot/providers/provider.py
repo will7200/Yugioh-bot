@@ -14,6 +14,7 @@ from bot.providers.misc import Misc
 from bot.providers.actions import Actions
 from bot.common import crop_image, mask_image
 from bot.modes import battle_modes
+from bot.modes.SpecialEvents import StreetReplay, RankedDuelsQuickStart
 
 
 class Provider(DuelLinks, Misc, Actions):
@@ -34,6 +35,10 @@ class Provider(DuelLinks, Misc, Actions):
         self.lock = None
         self.run_time = run_time  # type: DuelLinkRunTime
         self.battle_modes = [x(self) for x in battle_modes]
+        self.check_events = [
+            StreetReplay(self),
+            RankedDuelsQuickStart(self)
+        ]
 
     def auto(self):
         t = threading.currentThread()
@@ -151,6 +156,12 @@ class Provider(DuelLinks, Misc, Actions):
                 break
             yield x, y, current_page
 
+    def special_events(self, dl_info: DuelLinksInfo):
+        img = self.get_img_from_screen_shot(True)
+        for event in self.check_events:
+            if event.event_condition(dl_info, img):
+                event.event_occurred(dl_info, img)
+
     def scan(self):
         raise NotImplementedError("scan not implemented")
 
@@ -212,7 +223,11 @@ class Provider(DuelLinks, Misc, Actions):
             subprocess.call(command, shell=True, creationflags=CREATE_NO_WINDOW)
 
     @staticmethod
-    def img_to_string(img, char_set=None):
+    def img_to_string(img, char_set=None, mask_area=None):
+        if mask_area is not None:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            lower, upper = mask_area[0], mask_area[1]
+            img = mask_image(lower, upper, img)
         cv2.imwrite("tmp\\ocr.png", img)
         command = "bin\\tess\\tesseract.exe --tessdata-dir bin\\tess\\tessdata tmp\\ocr.png tmp\\ocr "
         if char_set is not None:
@@ -234,27 +249,32 @@ class Provider(DuelLinks, Misc, Actions):
     def __generic_wait_for__(self, message, condition_check, fn, *args, **kwargs):
         self.root.info("Waiting for {}".format(message))
         timeout = kwargs.get('timeout', 10)
+        throwException = kwargs.get('throw', True)
 
         async def wait_for(self):
             exceptions_occurred = 0
             while not self.run_time.stop:
                 try:
                     condition = fn(*args, **kwargs)
-                except Exception as e:
+                except Exception:
                     if exceptions_occurred > 5:
-                        raise Exception("Maximum exception count occurred")
+                        if throwException:
+                            raise Exception("Maximum exception count occurred waiting for {}".format(message))
+                        return False
                     exceptions_occurred += 1
                     await self.async_wait_for_ui(1)
                     continue
                 if condition_check(condition):
                     break
                 await self.async_wait_for_ui(2)
+            return True
 
         async def main(self):
-            await wait_for(self)
+            return await wait_for(self)
 
-        loop = self.run_time._loop
-        loop.run_until_complete(asyncio.wait_for(main(self), timeout=timeout, loop=loop))
+        loop = self.run_time.get_loop()
+        future = asyncio.run_coroutine_threadsafe(main(self), loop)
+        return future.result(timeout)
 
     def __wrapper_kmeans_result__(self, trainer, location, corr, info=None):
         if trainer.get_matches(location, corr):

@@ -1,4 +1,5 @@
 import base64
+import concurrent.futures
 import logging
 import os
 import subprocess
@@ -11,8 +12,8 @@ import numpy as np
 from skimage.measure import compare_ssim
 
 from bot import clean_version
-from bot.providers import trainer_matches as tm
 from bot.common import loop_scan, mask_image
+from bot.providers import trainer_matches as tm
 from bot.providers.duellinks import DuelLinksInfo, DuelError
 from bot.providers.nox.predefined import NoxPredefined
 from bot.providers.provider import Provider
@@ -57,8 +58,8 @@ class Nox(Provider):
         return png_screenshot_data
 
     def tap(self, x, y):
-        self.root.debug("Tapping at location ({},{})".format(x, y))
-        command = "bin\\adb.exe shell input tap %d %d" % (x, y)
+        self.root.debug("Tapping at location ({},{})".format(int(x), int(y)))
+        command = "bin\\adb.exe shell input tap %d %d" % (int(x), int(y))
         if self._debug:
             # Helper to debug taps
             input("waiting for confirmation press enter")
@@ -108,11 +109,18 @@ class Nox(Provider):
         self.do_system_call(command)
 
     def pass_through_initial_screen(self, already_started=False):
-        if already_started:
-            self.__start_app__()
-            return
-        self.root.info("Passing Through Start Screen")
         self.__start_app__()
+        if not already_started:
+            self.root.info("Passing Through Start Screen")
+        else:
+            self.root.info("Checking for Start Screen")
+            try:
+                is_home_screen = self.__generic_wait_for__('DuelLinks Landing Page', lambda x: x is True,
+                                                           self.__is_initial_screen__, timeout=4, throw=False)
+            except concurrent.futures.TimeoutError:
+                is_home_screen = False
+            if not is_home_screen:
+                return
         self.__generic_wait_for__('DuelLinks Landing Page', lambda x: x is True,
                                   self.__is_initial_screen__, timeout=20)
         self.tapnsleep(self.predefined.yugioh_initiate_link, 2)
@@ -225,7 +233,7 @@ class Nox(Provider):
         self.scan_for_ok(LOW_CORR)
         self.wait_for_ui(.1)
         self.scan_for_ok(LOW_CORR)
-        battle_calls = self.run_time.battle_calls
+        # battle_calls = self.run_time.battle_calls
         # for section in ["beforeStart", "afterStart", "beforeEnd", "afterEnd"]:
         #    for value in battle_calls.get(section):
         #        pass
@@ -290,10 +298,7 @@ class Nox(Provider):
                 self.current_battle = False
             else:
                 self.wait_for_ui(2)
-                if self.predefined.street_replay_location == current_page \
-                        and self.is_street_replay():
-                    dl_info.status = "street replay cancelling"
-                    self.compare_with_cancel_button(info=dl_info)
+                self.special_events(dl_info)
                 dl_info.status = "failure/Back-Button"
                 loop_scan(self.compare_with_back_button, **{'info': dl_info})
                 dl_info.status = "failure/Close-Button"

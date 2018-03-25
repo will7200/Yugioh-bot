@@ -111,14 +111,14 @@ class NoxPredefined(Predefined):
     def street_replay(self):
         return {
             'left'  : 181,
-            'top'   : 286,
+            'top'   : 283,
             'width' : 311 - 181,
-            'height': 307 - 286
+            'height': 307 - 285
         }
 
     @property
-    def street_replay_location(self):
-        return 2
+    def quick_rankduel_area(self):
+        return tupletodict(307, 110, 25, 260)
 
     @property
     def duelist_name_area(self):

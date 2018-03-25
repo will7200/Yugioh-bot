@@ -33,12 +33,16 @@ class Actions(object):
     def take_png_screenshot(self):
         raise NotImplementedError("take_png_screenshot not defined")
 
-    def get_img_from_screen_shot(self, last_one=False):
+    def get_img_from_screen_shot(self, last_one=False, fail=0):
         if last_one and self.last_img is not None:
             return self.last_img
         screen_shot = self.take_png_screenshot()
         nparr = np.fromstring(screen_shot, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if fail == 5:
+            raise Exception("Cannot obtain proper image for provider")
+        if img is None:
+            return self.get_img_from_screen_shot(fail=fail+1)
         self.last_img = img
         return img
 
