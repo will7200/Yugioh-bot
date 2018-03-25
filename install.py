@@ -183,9 +183,12 @@ def command_runner(comm):
     else:
         run_command(comm)
 
+def main_install():
+    print(Back.CYAN + Style.BRIGHT + warning)
+    print(Back.CYAN + "Installing Required components to get this bot up and running")
+    for index, command in enumerate(commands):
+        print(Back.CYAN + "Component {}: {}{}".format(index,  Fore.RED, command[0]) + Fore.WHITE)
+        command_runner(command[1])
 
-print(Back.CYAN + Style.BRIGHT + warning)
-print(Back.CYAN + "Installing Required components to get this bot up and running")
-for index, command in enumerate(commands):
-    print(Back.CYAN + "Component {}: {}{}".format(index,  Fore.RED, command[0]) + Fore.WHITE)
-    command_runner(command[1])
+if __name__ == "__main__":
+    main_install()
