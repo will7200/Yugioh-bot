@@ -140,10 +140,16 @@ def gui(start, config_file):
 
         sys.exit(inmain())
 
+@click.command()
+def version():
+    import bot
+    print("Using {}".format(bot.__version__))
+
 
 cli.add_command(bot)
 cli.add_command(config)
 cli.add_command(gui)
+cli.add_command(version)
 
 if __name__ == "__main__":
     cli()
