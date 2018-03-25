@@ -206,12 +206,15 @@ class Provider(DuelLinks, Misc, Actions):
         b = self.check_if_battle(img)
         while not b and not self.run_time.stop:
             if tryScanning:
-                self.scan_for_ok(LOW_CORR)
+                found = self.scan_for_ok(LOW_CORR)
+                if found:
+                    self.wait_for_ui(.5)
             img = self.get_img_from_screen_shot()
             b = self.check_if_battle(img)
             if b:
                 break
             self.wait_for_ui(1)
+        self.root.debug("White Bottom Found")
 
     def wait_for_ui(self, amount):
         if not self.run_time.stop:
