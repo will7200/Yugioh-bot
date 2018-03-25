@@ -58,8 +58,8 @@ class Nox(Provider):
         return png_screenshot_data
 
     def tap(self, x, y):
-        self.root.debug("Tapping at location ({},{})".format(x, y))
-        command = "bin\\adb.exe shell input tap %d %d" % (x, y)
+        self.root.debug("Tapping at location ({},{})".format(int(x), int(y)))
+        command = "bin\\adb.exe shell input tap %d %d" % (int(x), int(y))
         if self._debug:
             # Helper to debug taps
             input("waiting for confirmation press enter")
@@ -298,10 +298,7 @@ class Nox(Provider):
                 self.current_battle = False
             else:
                 self.wait_for_ui(2)
-                if self.predefined.street_replay_location == current_page \
-                        and self.is_street_replay():
-                    dl_info.status = "street replay cancelling"
-                    self.compare_with_cancel_button(info=dl_info)
+                self.special_events(dl_info)
                 dl_info.status = "failure/Back-Button"
                 loop_scan(self.compare_with_back_button, **{'info': dl_info})
                 dl_info.status = "failure/Close-Button"

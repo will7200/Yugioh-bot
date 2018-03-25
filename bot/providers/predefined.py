@@ -97,3 +97,11 @@ class Predefined(object):
     @abstractmethod
     def generate(self):
         raise NotImplementedError("Class {} did not implement generate".format(self.__class__.__name__))
+
+    @property
+    def street_replay_location(self):
+        return 4
+
+    @property
+    def quick_rankduel_location(self):
+        return 2

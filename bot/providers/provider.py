@@ -14,6 +14,7 @@ from bot.providers.misc import Misc
 from bot.providers.actions import Actions
 from bot.common import crop_image, mask_image
 from bot.modes import battle_modes
+from bot.modes.SpecialEvents import StreetReplay, RankedDuelsQuickStart
 
 
 class Provider(DuelLinks, Misc, Actions):
@@ -34,6 +35,10 @@ class Provider(DuelLinks, Misc, Actions):
         self.lock = None
         self.run_time = run_time  # type: DuelLinkRunTime
         self.battle_modes = [x(self) for x in battle_modes]
+        self.check_events = [
+            StreetReplay(self),
+            RankedDuelsQuickStart(self)
+        ]
 
     def auto(self):
         t = threading.currentThread()
@@ -151,6 +156,12 @@ class Provider(DuelLinks, Misc, Actions):
                 break
             yield x, y, current_page
 
+    def special_events(self, dl_info: DuelLinksInfo):
+        img = self.get_img_from_screen_shot(True)
+        for event in self.check_events:
+            if event.event_condition(dl_info, img):
+                event.event_occurred(dl_info, img)
+
     def scan(self):
         raise NotImplementedError("scan not implemented")
 
@@ -212,7 +223,11 @@ class Provider(DuelLinks, Misc, Actions):
             subprocess.call(command, shell=True, creationflags=CREATE_NO_WINDOW)
 
     @staticmethod
-    def img_to_string(img, char_set=None):
+    def img_to_string(img, char_set=None, mask_area=None):
+        if mask_area is not None:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            lower, upper = mask_area[0], mask_area[1]
+            img = mask_image(lower, upper, img)
         cv2.imwrite("tmp\\ocr.png", img)
         command = "bin\\tess\\tesseract.exe --tessdata-dir bin\\tess\\tessdata tmp\\ocr.png tmp\\ocr "
         if char_set is not None:
