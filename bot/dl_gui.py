@@ -53,6 +53,7 @@ from PyQt5.QtWidgets import (QAction, QApplication, QComboBox,
                              QTextEdit, QVBoxLayout, QDesktopWidget, QWidget, QFrame, qApp, QTabWidget, QMainWindow)
 
 from bot.duel_links_runtime import DuelLinkRunTime
+from bot import images_qr
 
 
 class WINDOWS_TASKBAR_LOCATION(Enum):
