@@ -32,7 +32,7 @@ test_script:
   # Note that you must use the environment variable %PYTHON% to refer to
   # the interpreter you're using - Appveyor does not do anything special
   # to put the Python version you want to use on PATH.
-  - "%PYTHON%\\python.exe setup.py test"
+  - "rem"
 
 after_test:
   # This step builds your wheels.
@@ -44,7 +44,11 @@ after_test:
 
 artifacts:
   # bdist_wheel puts your built wheel in the dist directory
+  - path: dist\dlbot\*
+    name: botexe
+
   - path: dist\*
+    name: wheels
 
 #on_success:
 #  You can use this step to upload your artifacts to a public website.
