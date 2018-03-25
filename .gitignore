@@ -67,3 +67,4 @@ coverage_html/
 ### ignore some asset dir
 assets/train/
 test_config.ini
+install_requirements.txt

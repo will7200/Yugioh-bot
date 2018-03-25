@@ -13,3 +13,9 @@ PyQt5==5.10.1
 scikit_learn==0.19.1
 win32gui==221.6
 PyYAML==3.12
+requests==2.18.4
+lxml==4.1.1
+tqdm==4.19.4
+pip==9.0.1
+colorama==0.3.9
+cssselect>=1.0.3

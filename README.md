@@ -29,16 +29,14 @@ Via git
 ``` bash
 $ git clone https://github.com/will7200/Yugioh-bot
 $ cd Yugioh-bot
-$ pip install -r requirements.txt (or use conda if using)
-$ pip install -r install_requirements.txt
+$ pip install -r requirements.txt
 $ python install.py
 ```
 
 Via zip file -- Unzip Contents
 ``` bash
 $ cd Yugioh-bot
-$ pip install -r requirements.txt (or use conda if using)
-$ pip install -r install_requirements.txt
+$ pip install -r requirements.txt
 $ python install.py
 ```
 
@@ -104,7 +102,7 @@ This will start the bot with gui controls.
 So far the following signals have been implemented: 
 * Stop
 * Run Now  
-![Image of Gui](https://image.ibb.co/ccQ79b/yugioh_duel_bots_gui.png)
+![Image of Gui](https://s9.postimg.org/a7da6tq8v/yugioh_duel_bots_gui.png)
 
 ## Wakatime
 
