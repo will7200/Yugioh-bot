@@ -188,20 +188,25 @@ class DuelLinksGui(QFrame, QMainWindow):
         self.update_values(True)
 
     def add_to_log(self, msg):
-        cursor = self.textViewLog.textCursor()
-        src = msg.split('|')
-        if len(src) != 4:
-            self.widget.append(msg)
-        else:
-            text = ""
-            text += "<span>"
-            text += "<b>{}</b>".format(src[0])
-            text += "<span style=\"color:blue;\">{}</span>".format(src[1])
-            text += src[2]
-            text += src[3]
-            text += "</span>"
-            cursor.insertHtml(text + "<br>")
-        self.textViewLog.moveCursor(QtGui.QTextCursor.End)
+        try:
+            cursor = self.textViewLog.textCursor()
+            src = msg.split('|')
+            if len(src) != 4:
+                self.textViewLog.append(msg)
+            else:
+                text = ""
+                text += "<span>"
+                text += "<b>{}</b>".format(src[0])
+                text += "<span style=\"color:blue;\">{}</span>".format(src[1])
+                text += src[2]
+                text += src[3]
+                text += "</span>"
+                cursor.insertHtml(text + "<br>")
+            self.textViewLog.moveCursor(QtGui.QTextCursor.End)
+        except Exception as e:
+            print('Error on updating log: ', end='')
+            print(e)
+
 
     def location_on_the_screen(self):
         ag = QDesktopWidget().availableGeometry()
