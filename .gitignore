@@ -1,0 +1,74 @@
+### bin directory
+bin/tess/*
+bin/*.exe
+bin/*.dll
+# exception to the bin rule
+!bin/tess/.gitkeep 
+### log directory
+log/
+
+### temp directory
+tmp/
+
+### compiled files
+*.pyc
+*.lnk
+
+### ignore ide folders
+.vscode/
+.idea/
+
+
+### distribution files
+dist/
+MANIFEST
+yugioh-bot*/
+build/
+yugioh_bot*/
+
+### ignore test and debug files
+*test.json
+*test.ini
+*debug*.png
+test.py
+temp.py
+
+### ignore log files
+*.log
+
+### ignore h5 cache
+*.h5
+
+### ignore runtime files
+runTimeOptions.json
+
+### ignore new tesseract distributions
+tess_*
+
+### ignore spec files
+###*.spec
+###fix_build.py
+
+### ignore c# project bin
+bot/providers/steam/bin/
+bot/providers/steam/obj/
+
+
+### ignore coveralls
+.coverage
+.coveralls.yml
+coverage_html/
+
+
+### ignore rst file
+*.rst
+
+
+### ignore some asset dir
+assets/train/
+test_config.ini
+install_requirements.txt
+test
+
+### ignore python files
+*.py
