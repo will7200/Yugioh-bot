@@ -6,6 +6,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/fk0j6na84w1mw7du/branch/master?svg=true)](https://ci.appveyor.com/project/will7200/yugioh-bot/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/will7200/Yugioh-bot/badge.svg?branch=master)](https://coveralls.io/github/will7200/Yugioh-bot?branch=master)
 [![Quality Score][ico-code-quality]][link-code-quality]
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwill7200%2FYugioh-bot.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwill7200%2FYugioh-bot?ref=badge_shield)
 
 
 Bot to help with those npc in Yugioh Duel Links.
@@ -140,6 +141,9 @@ The MIT License (MIT). Please see [License File](LICENSE) for more information.
 [link-code-quality]: https://scrutinizer-ci.com/g/:vendor/:package_name
 [link-author]: https://github.com/will7200
 [link-contributors]: ../../contributors
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwill7200%2FYugioh-bot.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwill7200%2FYugioh-bot?ref=badge_large)
 
 ## Donate
 [![Donate with Open Source Citizen](http://www.opensourcecitizen.org/badge?url=github.com/will7200/Yugioh-bot)](http://www.opensourcecitizen.org/project?url=github.com/will7200/Yugioh-bot)
