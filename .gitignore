@@ -1,17 +1,21 @@
+### Ignore executable files
+*
+!*/
+!*.*
+
+### Exceptions
+!LICENSE
+
+### ignore some utils directories
+utils/dialer/
+
 ### bin directory
-bin/tess/*
-bin/*.exe
-bin/*.dll
-# exception to the bin rule
-!bin/tess/.gitkeep 
-### log directory
-log/
+bin/
 
 ### temp directory
 tmp/
 
 ### compiled files
-*.pyc
 *.lnk
 
 ### ignore ide folders
@@ -22,37 +26,16 @@ tmp/
 ### distribution files
 dist/
 MANIFEST
-yugioh-bot*/
 build/
-yugioh_bot*/
 
 ### ignore test and debug files
-*test.json
-*test.ini
-*debug*.png
-test.py
-temp.py
+
 
 ### ignore log files
 *.log
 
 ### ignore h5 cache
 *.h5
-
-### ignore runtime files
-runTimeOptions.json
-
-### ignore new tesseract distributions
-tess_*
-
-### ignore spec files
-###*.spec
-###fix_build.py
-
-### ignore c# project bin
-bot/providers/steam/bin/
-bot/providers/steam/obj/
-
 
 ### ignore coveralls
 .coverage
@@ -65,10 +48,35 @@ coverage_html/
 
 
 ### ignore some asset dir
-assets/train/
-test_config.ini
-install_requirements.txt
 test
 
-### ignore python files
-*.py
+### ignore vendor folder
+vendor/
+
+### Mac
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
