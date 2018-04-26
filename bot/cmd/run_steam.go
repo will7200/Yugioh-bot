@@ -9,15 +9,15 @@ import (
 // guiCmd represents the gui command
 var guiCmd = &cobra.Command{
 	Use:   "gui",
-	Short: "Start the gui version of the bot",
-	Long: `Starts the gui version of the bot with an ui interface to control the bot`,
+	Short: "Starts the gui version of the bot",
+	Long:  `Starts the gui version of the bot with an ui interface to control the bot`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("gui called")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(guiCmd)
+	runCmd.AddCommand(guiCmd)
 
 	// Here you will define your flags and configuration settings.
 

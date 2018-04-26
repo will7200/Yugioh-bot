@@ -1,0 +1,120 @@
+# Gopkg.toml example
+#
+# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+
+[[constraint]]
+  name = "github.com/adelowo/onecache"
+  version = "2.5.0"
+
+[[constraint]]
+  name = "github.com/emirpasic/gods"
+  version = "1.9.0"
+
+[[constraint]]
+  name = "github.com/fatih/color"
+  version = "1.6.0"
+
+[[constraint]]
+  name = "github.com/fsnotify/fsnotify"
+  version = "1.4.7"
+
+[[constraint]]
+  name = "github.com/mattn/go-colorable"
+  version = "0.0.9"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mitchellh/go-homedir"
+
+[[constraint]]
+  name = "github.com/otiai10/gosseract"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/patrickmn/go-cache"
+  version = "2.1.0"
+
+[[constraint]]
+  name = "github.com/pelletier/go-toml"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.5"
+
+[[constraint]]
+  name = "github.com/spf13/afero"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "0.0.2"
+
+[[constraint]]
+  name = "github.com/spf13/viper"
+  version = "1.0.2"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/will7200/mjs"
+
+[[constraint]]
+  name = "gocv.io/x/gocv"
+  version = "0.11.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true
+
+[[constraint]]
+  name = "github.com/eapache/channels"
+  version = "1.1.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/yuin/gopher-lua"
+
+[[constraint]]
+  name = "github.com/ahmetb/go-linq"
+  version = "3.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/zach-klippenstein/goadb"
+  source = "github.com/gobotlogic/goadb"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/prometheus/common"
+  source = "github.com/gobotlogic/common/log"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mitchellh/go-ps"
