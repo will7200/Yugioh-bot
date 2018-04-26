@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/will7200/Yugioh-bot/bot/providers"
+	"fmt"
 	"reflect"
-	. "github.com/dave/jennifer/jen"
-	"github.com/will7200/Yugioh-bot/gen/lib"
 	"strconv"
 	"strings"
-	"fmt"
+
+	. "github.com/dave/jennifer/jen"
+	"github.com/will7200/Yugioh-bot/bot/providers"
+	"github.com/will7200/Yugioh-bot/gen/lib"
 )
 
 func luaprovider() *File {
@@ -73,7 +74,7 @@ func luaprovider() *File {
 			callFunction := (func(arg string) *Statement {
 				lFunc := "L.Check"
 				addInterface := false
-				switch(arg) {
+				switch arg {
 				case "int":
 					lFunc += "Int"
 				case "int64":

@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/afero"
-	"github.com/pelletier/go-toml"
 	"os"
+
+	"github.com/pelletier/go-toml"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 )
 
 // configChangeCmd represents the configChange command

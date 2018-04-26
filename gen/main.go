@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-
-	"os"
-	"github.com/dave/jennifer/jen"
 	"log"
+	"os"
+
+	"github.com/dave/jennifer/jen"
 )
 
-var registerGenerators map[string]func()*jen.File
+var registerGenerators map[string]func() *jen.File
 
 const (
 	provider    = "LuaProvider"
@@ -18,7 +18,7 @@ const (
 )
 
 func init() {
-	registerGenerators = make(map[string]func()*jen.File)
+	registerGenerators = make(map[string]func() *jen.File)
 	registerGenerators["luaprovider"] = luaprovider
 }
 func main() {

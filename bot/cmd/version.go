@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"runtime"
-	"github.com/will7200/Yugioh-bot/bot/base"
 	"fmt"
+	"runtime"
+
+	"github.com/spf13/cobra"
+	"github.com/will7200/Yugioh-bot/bot/base"
 )
 
 // versionCmd represents the version command

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"gocv.io/x/gocv"
-	"os"
 	"image"
+	"os"
+
+	"gocv.io/x/gocv"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
