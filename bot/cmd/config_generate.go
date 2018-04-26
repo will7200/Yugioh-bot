@@ -1,29 +1,17 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"path"
 	"fmt"
-	"github.com/spf13/viper"
-	"github.com/mitchellh/go-homedir"
 	"os"
-	"github.com/spf13/afero"
+	"path"
+
+	"github.com/mitchellh/go-homedir"
 	"github.com/pelletier/go-toml"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/will7200/Yugioh-bot/bot"
 )
-
-type defaultTomlConfig struct {
-	Title string
-	Bot   BotConfig `toml:"bot"`
-}
-
-type BotConfig struct {
-	RunOnStartUp               bool
-	RunTimePersistenceLocation string
-	Provider                   string
-	SleepFactor                float64
-	Persist                    bool
-	KillProviderOnFinish       bool
-}
 
 // configGenerateCmd represents the configGenerate command
 var configGenerateCmd = &cobra.Command{
@@ -73,26 +61,24 @@ func genConfig(_ *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 	config := getDefaultConfig()
-	config.Bot.RunTimePersistenceLocation = path.Join(home, homeDir, persistanceFileName)
+	config.Bot.PersistenceLocation = path.Join(home, homeDir, persistanceFileName)
 	err = toml.NewEncoder(file).Encode(*config)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	file.Close()
-	fmt.Println("Do not forget to change provider\nEither Open file or run dlbot config change")
 }
 
-func getDefaultConfig() *defaultTomlConfig {
-	config := &defaultTomlConfig{
-		"Duel Links Bot Config",
-		BotConfig{
-			RunOnStartUp:               false,
-			RunTimePersistenceLocation: "",
-			Provider:                   "Change",
-			SleepFactor:                1,
-			Persist:                    true,
-			KillProviderOnFinish:       false,
+func getDefaultConfig() *bot.BotConfig {
+	config := &bot.BotConfig{
+		Title: "Duel Links Bot Config",
+		Bot: bot.BotOptions{
+			RunOnStartUp:         false,
+			PersistenceLocation:  "",
+			SleepFactor:          1,
+			KillProviderOnFinish: false,
+			PersistenceType:      "file",
 		},
 	}
 	return config
