@@ -1,5 +1,9 @@
 package base
 
+
+const (
+	HomeDir = "~/DLBot"
+)
 var (
 	Version    string
 	BuildDate  string

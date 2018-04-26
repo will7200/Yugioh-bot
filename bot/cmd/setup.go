@@ -1,18 +1,17 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/will7200/Yugioh-bot/bot/base"
 )
 
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Get the bots up and running so that you can get going",
-	Long: `Setup will download tesseract if need be. Will Copy required files, hence forth.`,
+	Long:  `Setup will download tesseract if need be. Will Copy required files, hence forth.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("setup called")
+		base.Setup()
 	},
 }
 
