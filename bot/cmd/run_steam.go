@@ -1,18 +1,16 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 // guiCmd represents the gui command
 var guiCmd = &cobra.Command{
-	Use:   "gui",
-	Short: "Starts the gui version of the bot",
-	Long:  `Starts the gui version of the bot with an ui interface to control the bot`,
+	Use:   "steam",
+	Short: "Starts a bot instance using the steam app",
+	Long:  `Starts a bot using the Yu-gi-oh App from steam. This is limited to max one instance per machine.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("gui called")
+		log.Panic("steam not implemented yet")
 	},
 }
 
