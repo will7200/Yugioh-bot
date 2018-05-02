@@ -8,9 +8,9 @@
 [![Quality Score][ico-code-quality]][link-code-quality]
 
 
-Bot to help with those npc in Yugioh Duel Links. 
-Currently working on phasing python version into golang to help with better concurrent processes. 
-It will also help a lot with distribution that a lot of issues are arising from.
+Bot to help with those npc in Yugioh Duel Links.  
+Currently working on phasing python version into golang to help with better concurrent processes, data updates will be streamlined, and distribution will be easier.  
+Check the progress here [go port](https://github.com/will7200/Yugioh-bot/tree/go-yugioh).
 
 ## Features
 - Auto-duel npc
