@@ -1,7 +1,8 @@
 import os
 import subprocess
+import pkg_resources
+from shutil import copyfile
 import requests
-import pip
 from lxml import etree, html, cssselect
 from tqdm import tqdm
 import re
@@ -36,18 +37,19 @@ def copy_nox_bin_files():
     dll_file_name = 'AdbWinApi.dll'
     path = NOX_BIN
     try:
-        adb = os.stat(os.path.join(path, adb_file_name))
-        dll = os.stat(os.path.join(path, dll_file_name))
+        os.stat(os.path.join(path, adb_file_name))
+        os.stat(os.path.join(path, dll_file_name))
     except FileNotFoundError:
         try:
             path = NOX_BIN_OTHER
-            adb = os.stat(os.path.join(path, adb_file_name))
-            dll = os.stat(os.path.join(path, dll_file_name))
+            os.stat(os.path.join(path, adb_file_name))
+            os.stat(os.path.join(path, dll_file_name))
         except FileNotFoundError:
             print(Fore.RED + """Cannot find the required nox files in either
                     {} or {}, help is requireed""".format(NOX_BIN_OTHER, NOX_BIN))
-    run_command('cp "{}" bin/adb.exe'.format(os.path.join(path, adb_file_name)))
-    run_command('cp "{}" bin/'.format(os.path.join(path, dll_file_name)))
+            return
+    copyfile(os.path.join(path, adb_file_name), os.path.join('bin', 'adb.exe'))
+    copyfile(os.path.join(path, dll_file_name), os.path.join('bin', dll_file_name))
     print(Back.GREEN + "Copied [{}] into bin folder".format(', '.join([adb_file_name, dll_file_name])) + Back.CYAN)
 
 
@@ -147,7 +149,7 @@ def set_pip_test(value):
 def check_required_packages():
     if SKIP_PIP_TEST:
         return
-    installed_packages = pip.get_installed_distributions()
+    installed_packages = pkg_resources.working_set
     packages = {}
     for package in installed_packages:
         packages[package.project_name] = package.version
