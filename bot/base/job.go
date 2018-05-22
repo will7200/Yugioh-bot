@@ -1,16 +1,17 @@
 package base
 
 import (
+	"errors"
 	"fmt"
-	"strings"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"reflect"
-	"github.com/will7200/mjs/utils/iso8601"
-	"github.com/satori/go.uuid"
-	"errors"
+
+	"github.com/cenkalti/backoff"
 	"github.com/eapache/channels"
+	"github.com/satori/go.uuid"
+	"github.com/will7200/mjs/utils/iso8601"
 )
 
 var (
@@ -52,12 +53,7 @@ type GenericMiddlewareHandler func(*Job, NextMiddlewareFunc) error
 // NextMiddlewareFunc is a function type (whose instances are named 'next') that you call to advance to the next middleware.
 type NextMiddlewareFunc func() error
 
-type middlewareHandler struct {
-	IsGeneric                bool
-	DynamicMiddleware        reflect.Value
-	GenericMiddlewareHandler GenericMiddlewareHandler
-}
-
+// Job
 type Job struct {
 	Name string `json:"Name"` // command is required
 	ID   string `json:"ID"`
@@ -73,22 +69,25 @@ type Job struct {
 	SendResult   bool
 	SendTo       channels.NativeChannel
 	Schedule     string    `json:"Schedule"`
-	ScheduleTime time.Time
+	ScheduleTime time.Time `json:"Schedule Time"`
 	NextRunAt    time.Time `json:"Next Run At"`
 
 	Epsilon         string            `json:"epsilon,omitempty"`
 	DelayDuration   *iso8601.Duration `json:"-"`
-	EpsilonDuration *iso8601.Duration
+	EpsilonDuration *iso8601.Duration `json:"-"`
 
 	LastRunAt      time.Time
 	TimesRan       int64
 	SuccessfulRuns int64
 	TimesToRepeat  int64
 
+	BackOff backoff.BackOff
+
 	jobTimer *time.Timer
 	lock     sync.RWMutex
 }
 
+// NewJob
 func NewJob(name, executor, runInterval string, repeatTimes int64, args map[string]interface{}) *Job {
 	var runTimes string
 	id, err := uuid.NewV4()
@@ -111,6 +110,7 @@ func NewJob(name, executor, runInterval string, repeatTimes int64, args map[stri
 	return j
 }
 
+// NewJobFromMap
 func NewJobFromMap(args map[string]interface{}) *Job {
 	id, err := uuid.NewV4()
 	if err != nil {
@@ -126,6 +126,7 @@ func NewJobFromMap(args map[string]interface{}) *Job {
 	}
 }
 
+// NewOneOffJob
 func NewOneOffJob(name, executor string, args map[string]interface{}) *Job {
 	return &Job{
 		Name:       name,
@@ -146,6 +147,7 @@ func (j *Job) setArg(key string, val interface{}) {
 	j.Args[key] = val
 }
 
+// ParseSchedule
 func (j *Job) ParseSchedule(allowPastSchedules bool) error {
 	var err error
 	splitTime := strings.Split(j.Schedule, "/")
@@ -175,7 +177,7 @@ func (j *Job) ParseSchedule(allowPastSchedules bool) error {
 			return err
 		}
 	}
-	if (time.Duration(j.ScheduleTime.UnixNano() - time.Now().UnixNano())) < 0 && !allowPastSchedules {
+	if (time.Duration(j.ScheduleTime.UnixNano()-time.Now().UnixNano())) < 0 && !allowPastSchedules {
 		return fmt.Errorf("Schedule time has passed on Job with id of %s", j.ID)
 	}
 
@@ -206,6 +208,7 @@ func (j *Job) ParseSchedule(allowPastSchedules bool) error {
 	return nil
 }
 
+// CheckSchedule
 func (j *Job) CheckSchedule(d *Dispatcher) {
 	if !j.IsActive {
 		return
@@ -220,6 +223,7 @@ func (j *Job) CheckSchedule(d *Dispatcher) {
 	}
 }
 
+// Init
 func (j *Job) Init(d *Dispatcher) error {
 	j.lock.Lock()
 
@@ -249,6 +253,8 @@ func (j *Job) Init(d *Dispatcher) error {
 	j.StartWaiting(d)
 	return nil
 }
+
+// StartWaiting
 func (j *Job) StartWaiting(d *Dispatcher) {
 	waitDuration := j.GetWaitDuration()
 
@@ -261,6 +267,7 @@ func (j *Job) StartWaiting(d *Dispatcher) {
 	d.AddFutureJob(j, waitDuration)
 }
 
+// GetWaitDuration
 func (j *Job) GetWaitDuration() time.Duration {
 	waitDuration := time.Duration(j.ScheduleTime.UnixNano() - time.Now().UnixNano())
 	if waitDuration < 0 {
@@ -293,12 +300,14 @@ func (j *Job) GetWaitDuration() time.Duration {
 	return waitDuration
 }
 
+// SetChannel
 func (j *Job) SetChannel(ch channels.NativeChannel) {
 	j.lock.Lock()
 	defer j.lock.Unlock()
 	j.SendTo = ch
 }
 
+// CloseChannel
 func (j *Job) CloseChannel() {
 	j.lock.Lock()
 	defer j.lock.Unlock()
@@ -307,6 +316,7 @@ func (j *Job) CloseChannel() {
 	j.SendTo = nil
 }
 
+// validation
 func (j *Job) validation() error {
 	var err error
 	if j.Name == "" || j.Executor == "" {
