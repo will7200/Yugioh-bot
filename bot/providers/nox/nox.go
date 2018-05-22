@@ -1,14 +1,23 @@
 package nox
 
 import (
-	"github.com/will7200/Yugioh-bot/bot/providers"
-	"github.com/will7200/Yugioh-bot/bot/base"
-	"github.com/zach-klippenstein/goadb"
-	"github.com/pkg/errors"
+	"bufio"
+	"context"
 	"encoding/base64"
-	"github.com/mitchellh/go-ps"
-	"github.com/ahmetb/go-linq"
+	"fmt"
+	"image"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/ahmetb/go-linq"
+	"github.com/mitchellh/go-ps"
+	"github.com/pkg/errors"
+	"github.com/spf13/afero"
+	"github.com/will7200/Yugioh-bot/bot/base"
+	"github.com/will7200/Yugioh-bot/bot/dl"
+	"github.com/zach-klippenstein/goadb"
+	"gocv.io/x/gocv"
 )
 
 var (
@@ -18,15 +27,18 @@ var (
 )
 
 func init() {
-	providers.RegisterProvider("Nox", NewNoxProvider)
+	dl.RegisterProvider("Nox", NewNoxProvider)
 }
 
 type NoxProvider struct {
-	providers.Provider
-	noxPath string
-	device  *adb.Device
-	client  *adb.Adb
-	options *providers.Options
+	dl.Provider
+	noxPath             string
+	device              *adb.Device
+	client              *adb.Adb
+	options             *dl.Options
+	predefined          *dl.Predefined
+	imageCaptureCommand []string
+	dimensions          image.Point
 }
 
 // IsProcessRunning this function is practically useless now that I think is about for the Nox provider at least
@@ -47,7 +59,7 @@ func (nox *NoxProvider) IsProcessRunning() bool {
 			strings.Contains(strings.ToLower(p.(ps.Process).Executable()), "nox.exe")
 	}).First()
 	if process == nil {
-		log.Fatal("Could not find the nox executable")
+		log.Panic("Could not find the nox executable")
 		return false
 	}
 	switch process.(type) {
@@ -132,12 +144,169 @@ func (nox *NoxProvider) TakePNGScreenShot() ([]byte, error) {
 	return img, err
 }
 
-func NewNoxProvider(o *providers.Options) providers.Provider {
+func (nox *NoxProvider) startApp() error {
+	_, err := nox.device.RunCommand("monkey", "-p", "jp.konami.duellinks", "-c", "android.intent.category.LAUNCHER", "1")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (nox *NoxProvider) getImage(key string, tryDefault bool) (gocv.Mat, error) {
+	var asset dl.AssetMap
+	asset = nox.GetAsset(key)
+	if asset == (dl.AssetMap{}) && tryDefault {
+		asset = nox.predefined.GetAsset("Asset-" + dl.TransformKey(key, dl.DefaultSize))
+	}
+	if asset == (dl.AssetMap{}) {
+		log.Panicf("Asset resource %s does not have a mapping", key)
+	}
+	original, err := dl.OpenUIAsset(asset.Name, nox.options.HomeDir, nox.options.FileSystem)
+	if err != nil {
+		return gocv.Mat{}, err
+	}
+	b, err := afero.ReadAll(original)
+	original.Close()
+	if err != nil {
+		return gocv.Mat{}, err
+	}
+	imgMat := gocv.IMDecode(b, gocv.IMReadGrayScale)
+	if imgMat.Empty() {
+		return imgMat, fmt.Errorf("Matrix is empty for resource %s", key)
+	}
+	if tryDefault {
+		resizedImage := gocv.NewMat()
+		gocv.Resize(imgMat, &resizedImage, nox.dimensions, 0, 0, gocv.InterpolationNearestNeighbor)
+		imgMat.Close()
+		return resizedImage, nil
+	}
+	return imgMat, nil
+
+}
+
+func (nox *NoxProvider) isStartScreen() bool {
+	imgMat, err := nox.getImage("start_screen", true)
+	if err != nil {
+		log.Panic("Cannot make comparision against the open page, missing a start_screen asset")
+	}
+	against := nox.GetImgFromScreenShot(false, 1)
+	if !base.CVEqualDim(imgMat, against) {
+		log.Panic("Cannot compare two images that are not the same dimensions")
+	}
+	grayedMat := base.CvtColor(against, gocv.ColorBGRToGray)
+	against.Close()
+	defer imgMat.Close()
+	defer grayedMat.Close()
+
+	if gocv.CountNonZero(grayedMat) == 0 {
+		return false
+	}
+
+	lb := base.NewMatSCScalar(140)
+	ub := base.NewMatSCScalar(255)
+	maskedMat := base.MaskImage(grayedMat, lb, ub, true)
+	maskedOriginal := base.MaskImage(imgMat, lb, ub, true)
+	defer lb.Close()
+	defer ub.Close()
+	defer maskedOriginal.Close()
+	defer maskedMat.Close()
+	score := base.SSIM_GOCV(&maskedMat, &maskedOriginal)
+	log.Debugf("Start Screen Similarity: %.2f vs %.2f", score, nox.predefined.BotConst.StartScreenSimilarity)
+	if score > nox.predefined.BotConst.StartScreenSimilarity {
+		return true
+	}
+	return false
+}
+
+func (nox *NoxProvider) PassThroughInitialScreen(started bool) error {
+	if err := nox.startApp(); err != nil {
+		return err
+	}
+	if started {
+		log.Info("Checking for start screen")
+		ct := context.WithValue(context.Background(), "panicWait", 1*time.Second)
+		ct = context.WithValue(ct, "onFalseCondition", 500*time.Millisecond)
+		ctx, cancel := context.WithTimeout(ct, 5*time.Second)
+		defer cancel()
+		homeScreen, err := dl.GenericWaitFor(ctx,
+			nox, "DuelLinks Landing Page", func(i interface{}) bool {
+				return i.(bool)
+			}, func(i map[string]interface{}) interface{} {
+				return nox.isStartScreen()
+			}, map[string]interface{}{})
+		if err != nil {
+			return err
+		}
+		if !homeScreen {
+			return nil
+		}
+	}
+	ct := context.WithValue(context.Background(), "panicWait", 1*time.Second)
+	ct = context.WithValue(ct, "onFalseCondition", 500*time.Millisecond)
+	ctx, cancel := context.WithTimeout(ct, 20*time.Second)
+	defer cancel()
+	homeScreen, err := dl.GenericWaitFor(ctx,
+		nox, "DuelLinks Landing Page", func(i interface{}) bool {
+			return i.(bool)
+		}, func(i map[string]interface{}) interface{} {
+			return nox.isStartScreen()
+		}, map[string]interface{}{})
+	if err != nil {
+		log.Warn("No home screen detected")
+		return err
+	}
+	if !homeScreen {
+		log.Warn("No home screen detected")
+		return nil
+	}
+	log.Info("Passing through start screen")
+	nox.Tap(nox.GetUILocation("initiate_link"))
+	nox.WaitForUi(time.Second * 2)
+	/*timeout := 45
+	if nox.CompareWithBackButton() {
+		timeout = 300
+	}*/
+
+	return nil
+}
+
+func (nox *NoxProvider) GetScreenDimensions() image.Point {
+	message, err := nox.device.RunCommand("wm", "size")
+	if err != nil {
+		log.Panic(err)
+	}
+	sizeMessage := strings.TrimSpace(strings.SplitAfter(message, ":")[1])
+	if strings.Contains(sizeMessage, "x") {
+		size := strings.Split(sizeMessage, "x")
+		if len(size) != 2 {
+			log.Panic("Size dimension is not len of 2 cannot parse")
+		}
+		width, err := strconv.Atoi(size[0])
+		if err != nil {
+			log.Panic("Cannot parse dimensions")
+		}
+		height, err := strconv.Atoi(size[1])
+		if err != nil {
+			log.Panic("Cannot parse dimensions")
+		}
+		nox.dimensions = image.Pt(width, height)
+		return nox.dimensions
+	}
+	log.Panic("Cannot parse dimensions")
+	return image.Pt(0, 0)
+}
+
+func (nox *NoxProvider) ScreenDimensions() image.Point {
+	return nox.dimensions
+}
+
+func NewNoxProvider(o *dl.Options) dl.Provider {
 	np := &NoxProvider{
-		Provider: providers.NewBaseProvider(o),
+		Provider: dl.NewBaseProvider(o),
 		noxPath:  o.Path,
 	}
 	np.options = o
+	np.predefined = o.Predefined
 	o.Provider = np
 	return np
 }
