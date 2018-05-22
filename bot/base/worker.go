@@ -2,8 +2,11 @@ package base
 
 import (
 	"time"
+
+	"github.com/cenkalti/backoff"
 )
 
+// Worker
 type Worker struct {
 	ID          int
 	Work        chan WorkRequest
@@ -12,8 +15,8 @@ type Worker struct {
 	QuitChan    chan struct{}
 }
 
+// NewWorker creates a new worker
 func NewWorker(id int, workerQueue chan chan WorkRequest, check chan *Job) Worker {
-	// Create, and return the worker.
 	worker := Worker{
 		ID:          id,
 		Work:        make(chan WorkRequest),
@@ -44,15 +47,15 @@ func (w *Worker) Start() {
 			w.WorkerQueue <- w.Work
 			select {
 			case work := <-w.Work:
-				work.Run.lock.Lock()
-				work.Run.LastRunAt = time.Now()
-				work.Run.lock.Unlock()
-				if executor, ok := RegisteredExecutors[work.Run.Executor]; ok {
-					work.Run.lock.RLock()
+				work.job.lock.Lock()
+				work.job.LastRunAt = time.Now()
+				work.job.lock.Unlock()
+				if executor, ok := RegisteredExecutors[work.job.Executor]; ok {
+					work.job.lock.RLock()
 					var skipExectuor bool
 					var err error
 					var result interface{}
-					if middlewares, ok := RegisteredMiddleware[work.Run.Executor]; ok {
+					if middlewares, ok := RegisteredMiddleware[work.job.Executor]; ok {
 						currentMiddleware := 0
 						maxMiddleware := len(middlewares)
 						var next NextMiddlewareFunc
@@ -60,38 +63,59 @@ func (w *Worker) Start() {
 							if currentMiddleware < maxMiddleware {
 								mw := middlewares[currentMiddleware]
 								currentMiddleware++
-								return mw(work.Run, next)
+								return mw(work.job, next)
 							}
 							return nil
 						}
 						err := next()
 						if err != nil {
-							log.Errorf("Could not complete %s instance %s due to:  %s", work.Run.Name, work.Run.ID, err.Error())
+							log.Errorf("Could not complete %s instance %s due to:  %s", work.job.Name, work.job.ID, err.Error())
 							skipExectuor = true
 						}
 					}
 					if !skipExectuor {
-						result, err = executor(work.Run)
+						if work.job.BackOff != nil {
+							operation := func() error {
+								result, err = executor(work.job)
+								if err != nil {
+									return err
+								}
+								if work.job.SendTo != nil && result != nil && err == nil && work.job.SendResult {
+									work.job.SendTo <- result
+								}
+								return nil
+							}
+							err = backoff.RetryNotify(operation, work.job.BackOff, func(e error, duration time.Duration) {
+								log.Warnf("Request %s with job %s failed",
+									work.ID, work.job.Name)
+								log.Warnf("Waiting %s for next run ", duration.String())
+							})
+							if err == nil {
+								work.job.BackOff.Reset()
+							}
+						} else {
+							result, err = executor(work.job)
 
-						if work.Run.SendTo != nil && result != nil && err == nil && work.Run.SendResult {
-							work.Run.SendTo <- result
+							if work.job.SendTo != nil && result != nil && err == nil && work.job.SendResult {
+								work.job.SendTo <- result
+							}
 						}
 					}
-					work.Run.lock.RUnlock()
-					work.Run.lock.Lock()
-					work.Run.TimesRan += 1
+					work.job.lock.RUnlock()
+					work.job.lock.Lock()
+					work.job.TimesRan += 1
 					if err == nil {
-						work.Run.SuccessfulRuns += 1
+						work.job.SuccessfulRuns += 1
 					}
-					work.Run.lock.Unlock()
+					work.job.lock.Unlock()
 				} else {
-					log.Warnf("Job -- %s is empty, Disabling until fixed", work.Run.Name)
-					work.Run.lock.Lock()
-					work.Run.IsActive = false
-					work.Run.lock.Unlock()
+					log.Warnf("Job -- %s is empty, Disabling until fixed", work.job.Name)
+					work.job.lock.Lock()
+					work.job.IsActive = false
+					work.job.lock.Unlock()
 				}
 
-				w.CheckQueue <- work.Run
+				w.CheckQueue <- work.job
 			case <-w.QuitChan:
 				// We have been asked to stop.
 				log.Infof("Worker %d stopping", w.ID)
