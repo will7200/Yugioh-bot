@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime"
+	"runtime/debug"
+	"strconv"
 	"time"
 
-	"github.com/mitchellh/go-homedir"
+	"github.com/cenkalti/backoff"
 	"github.com/pelletier/go-toml"
 	log2 "github.com/prometheus/common/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/will7200/Yugioh-bot/bot/base"
-	"github.com/will7200/Yugioh-bot/bot/providers"
+	"github.com/will7200/Yugioh-bot/bot/dl"
 	"github.com/yuin/gopher-lua"
 )
 
@@ -113,16 +116,22 @@ type RunTime interface {
 	Main() error
 	SetUp() error
 	HandleOptionChange(name string, value interface{})
-	GetProvider() providers.Provider
+	GetProvider() dl.Provider
+	SetChan(chan struct{})
+	SetComparator(o dl.Comparator)
 }
 
 type runTime struct {
 	options    RunTimeOptions
 	rtOptions  BotOptions
 	fs         afero.Fs
+	appfs      afero.Fs
 	dispatcher *base.Dispatcher
-	provider   providers.Provider
+	provider   dl.Provider
+	comparator dl.Comparator
 	mainJob    *base.Job
+	signal     chan struct{}
+	homedir    string
 }
 
 func (rt *runTime) Start() error {
@@ -134,41 +143,50 @@ func (rt *runTime) Start() error {
 	err := rt.provider.PreCheck()
 	if err != nil {
 		log.Error("Prechecks failed")
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	if rt.mainJob == nil {
-		j := base.NewJob("Duel Links Main", "main", "PT4H",
+		j := base.NewJob("Duel Links Main", "main", "PT1S",
 			-1, map[string]interface{}{"rt": rt})
+		b := backoff.NewExponentialBackOff()
+		b.MaxElapsedTime = time.Hour * 1
+		b.InitialInterval = time.Second * 10
+		b.MaxInterval = time.Minute * 30
+		bf := backoff.WithMaxRetries(b, 10)
+		j.BackOff = bf
 		j.Init(rt.dispatcher)
 	}
 	return nil
 }
 
 func (rt *runTime) Main() error {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("%v", r)
+			fmt.Print(string(debug.Stack()))
+			rt.signal <- struct{}{}
+			//panic(r)
+		}
+	}()
 	rt.options.Active = true
 	rt.options.LastRunAt = time.Now()
-	provider := rt.GetProvider()
-	if isRunning := provider.IsProcessRunning(); !isRunning {
-		provider.StartProcess()
-		provider.WaitForUi(30)
-	}
-	home, err := homedir.Expand(base.HomeDir)
+	file, err := rt.appfs.Open(path.Join(rt.homedir, "lua", "entrypoint.lua"))
 	if err != nil {
 		return err
 	}
-	file, err := rt.fs.Open(path.Join(home, "lua", "entrypoint.lua"))
-	if err != nil {
-		return err
-	}
-	os.Setenv("LUA_PATH", path.Join(home, "lua")+string(os.PathSeparator)+"?.lua;")
+	os.Setenv("LUA_PATH", path.Join(rt.homedir, "lua")+string(os.PathSeparator)+"?.lua;")
 	L := lua.NewState(lua.Options{})
 	defer L.Close()
-	L.PreloadModule("provider", providers.ProviderLoader(rt.provider))
-	L.PreloadModule("register", Loader)
+	L.PreloadModule("provider", dl.ProviderLoader(rt.provider))
+	L.PreloadModule("rt", RunTimeLoader(rt))
+	L.PreloadModule("comparator", dl.ComparatorLoader(rt.comparator))
 	L.SetGlobal("luaprint", L.NewFunction(luaPrint))
+	file.Close()
 	if err := L.DoFile(file.Name()); err != nil {
-		log.Error(err)
+		return err
 	}
+	runtime.GC()
+	debug.FreeOSMemory()
 	return nil
 }
 
@@ -178,14 +196,15 @@ func luaPrint(L *lua.LState) int {
 		args[i-1] = L.Get(i)
 	}
 	if base.CheckIfDebug() {
-		if debug, ok := L.GetStack(1); ok {
-			L.GetInfo("l", debug, lua.LNil)
-			L.GetInfo("S", debug, lua.LNil)
-			if debug.Source == "" {
+		if debug2, ok := L.GetStack(1); ok {
+			L.GetInfo("l", debug2, lua.LNil)
+			L.GetInfo("S", debug2, lua.LNil)
+			if debug2.Source == "" {
 				luaLog.Info(args...)
 				return 0
 			}
-			luaLog.With("source", debug.Source).With("line", debug.CurrentLine).Info(args...)
+			lineNumber := strconv.Itoa(debug2.CurrentLine)
+			luaLog.With("source", debug2.Source+":"+lineNumber).Info(args...)
 			return 0
 		}
 	}
@@ -210,24 +229,31 @@ func (rt *runTime) HandleOptionChange(name string, value interface{}) {
 	log.Panic("implement me")
 }
 
-func (rt *runTime) GetProvider() providers.Provider {
+func (rt *runTime) GetProvider() dl.Provider {
 	return rt.provider
 }
 
-func NewRunTime(d *base.Dispatcher, provider providers.Provider) RunTime {
-	appfs := base.NewFSFromName("os")
+func (rt *runTime) SetChan(o chan struct{}) {
+	rt.signal = o
+}
+
+func (rt *runTime) SetComparator(o dl.Comparator) {
+	rt.comparator = o
+}
+
+func NewRunTime(d *base.Dispatcher, provider dl.Provider, home string, appfs afero.Fs) RunTime {
 	config := BotConfig{}
 	file, err := appfs.Open(viper.ConfigFileUsed())
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	tree, err := toml.LoadReader(file)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	err = tree.Unmarshal(&config)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	botOptions := config.Bot
 	options, fs := readPersistanceFile(&botOptions)
@@ -235,6 +261,8 @@ func NewRunTime(d *base.Dispatcher, provider providers.Provider) RunTime {
 		rtOptions:  botOptions,
 		options:    options,
 		fs:         fs,
+		appfs:      appfs,
+		homedir:    home,
 		dispatcher: d,
 		provider:   provider,
 	}
