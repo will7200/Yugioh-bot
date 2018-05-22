@@ -1,6 +1,12 @@
 // +build windows
 
-package providers
+package dl
+
+import (
+	"fmt"
+	"syscall"
+	"unsafe"
+)
 
 var (
 	user32             = syscall.MustLoadDLL("user32.dll")

@@ -1,4 +1,4 @@
-package providers
+package dl
 
 type Bot interface {
 	BattleMode(battle, version, info string)
@@ -14,27 +14,27 @@ type BaseBot struct {
 }
 
 func (*BaseBot) BattleMode(battle, version, info string) {
-	panic("implement me")
+	log.Panic("implement me")
 }
 
 func (*BaseBot) GuidedMode() {
-	panic("implement me")
+	log.Panic("implement me")
 }
 
 func (*BaseBot) PossibleBattlePoints() {
-	panic("implement me")
+	log.Panic("implement me")
 }
 
 func (*BaseBot) SpecialEvents(info DuelLinksInstanceInfo) {
-	panic("implement me")
+	log.Panic("implement me")
 }
 
 func (*BaseBot) SystemCall() {
-	panic("implement me")
+	log.Panic("implement me")
 }
 
 func (*BaseBot) ImgToString() {
-	panic("implement me")
+	log.Panic("implement me")
 }
 
 func NewBaseBot(o *Options) Bot {

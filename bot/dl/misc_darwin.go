@@ -1,9 +1,7 @@
 // +build darwin
 
-package providers
+package dl
 
 type DuelLinksMisc struct {
 	BaseMiscellaneous
 }
-
-

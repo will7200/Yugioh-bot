@@ -1,4 +1,4 @@
-package providers
+package dl
 
 // Provider abstracts away different providers to have a uniform api
 type Provider interface {
