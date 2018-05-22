@@ -58,8 +58,37 @@ func (nox *NoxProvider) IsProcessRunning() bool {
 	return false
 }
 
-func (nox *NoxProvider) Tap(x, y int) {
-	log.Panic("Implement me")
+func (nox *NoxProvider) Tap(args ...interface{}) {
+	if len(args) < 1 {
+		log.Panic("Tap: requires at minimum one arguments")
+	}
+	var x, y int
+	var err error
+	switch t := args[0].(type) {
+	case dl.UILocation:
+		x = t.Point.X
+		y = t.Point.Y
+
+	case int:
+		if len(args) != 2 {
+			log.Panic("Tap: int type requires two arguments to be passed")
+		}
+		x, err = base.GetInt(t)
+		if err != nil {
+			log.Panic(err)
+		}
+		y, err = base.GetInt(t)
+		if err != nil {
+			log.Panic(err)
+		}
+	default:
+		log.Panicf("Tap: type %T", t)
+	}
+	log.Debug(fmt.Sprintf("Tapping at %d, %d", x, y))
+	_, err = nox.device.RunCommand("input", "tap", fmt.Sprintf("%d", x), fmt.Sprintf("%d", y))
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 func (nox *NoxProvider) SetClientDevice(client *adb.Adb, device adb.DeviceDescriptor) {
