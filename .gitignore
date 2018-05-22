@@ -5,6 +5,7 @@
 
 ### Exceptions
 !LICENSE
+!Makefile
 
 ### ignore some utils directories
 utils/dialer/
