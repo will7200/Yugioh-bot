@@ -100,6 +100,22 @@ func (nox *NoxProvider) PreCheck() error {
 	if nox.device.String() == "" {
 		return errors.New("Android Device Is Null")
 	}
+	result, err := nox.device.RunCommand(takeBase64Image[0], takeBase64Image[1:]...)
+	if err != nil {
+		return &dl.PreCheckError{Reason: err}
+	}
+	scanner := bufio.NewScanner(strings.NewReader(result))
+	if scanner.Scan() {
+		if !strings.Contains(scanner.Text(), "not found") {
+			log.Info("Android Device has busybox using base64 encoder")
+			nox.imageCaptureCommand = takeBase64Image
+		} else {
+			log.Warn("Android Device does not have busybox note image transfer may be slows")
+			nox.imageCaptureCommand = takeImage
+		}
+	}
+	dims := nox.GetScreenDimensions()
+	log.Infof("Using device with %dx%d screen size", dims.X, dims.Y)
 	return nil
 }
 
