@@ -1,23 +1,25 @@
 package base
 
 import (
+	"time"
+
 	"github.com/emirpasic/gods/lists/arraylist"
 	rbt "github.com/emirpasic/gods/trees/redblacktree"
-	"time"
 	"github.com/satori/go.uuid"
 )
 
 var (
 	log = CheckWithSourcedLog().With("package", "bot.base")
 )
-//WorkRequest possible
+
+// WorkRequest contains identifier along with job
 type WorkRequest struct {
-	Run  *Job
+	job  *Job
 	ID   uuid.UUID
 	when *Timer
 }
 
-//Dispatcher keeps track of the workers
+// Dispatcher keeps track of the workers
 type Dispatcher struct {
 	Workers     *arraylist.List
 	Work        chan WorkRequest
@@ -28,15 +30,17 @@ type Dispatcher struct {
 	Waiting     *rbt.Tree
 }
 
+// AddFutureJob wraps a job into a work request that executes after a time duration
 func (d *Dispatcher) AddFutureJob(w *Job, t time.Duration) {
 	uid, err := uuid.NewV4()
 	if err != nil {
 		panic(err)
 	}
-	work := WorkRequest{Run: w, ID: uid}
+	work := WorkRequest{job: w, ID: uid}
 	d.AddWorkRequest(work, t)
 }
 
+// RemoveWaiting removes a waiting job from the queue
 func (d *Dispatcher) RemoveWaiting(t *WorkRequest) {
 	_, found := d.Waiting.Get(t.ID.String())
 	if found {
@@ -45,23 +49,26 @@ func (d *Dispatcher) RemoveWaiting(t *WorkRequest) {
 		d.Waiting.Remove(t.ID.String())
 	}
 }
+
+// AddWorkRequest Runs a work request after specified time duration
 func (d *Dispatcher) AddWorkRequest(w WorkRequest, t time.Duration) {
-	w.Run.lock.Lock()
-	defer w.Run.lock.Unlock()
+	w.job.lock.Lock()
+	defer w.job.lock.Unlock()
 	f := func() {
 		d.RemoveWaiting(&w)
 	}
 	w.when = NewAfterFunc(t, f)
-	w.Run.jobTimer = w.when.timer
+	w.job.jobTimer = w.when.timer
 	d.Waiting.Put(w.ID.String(), w)
 }
 
+// AddJob adds a job to the dispatcher
 func (d *Dispatcher) AddJob(w WorkRequest) {
-	log.Debugf("Workrequest Added To Queue -- Running %s shortly", w.Run.Name)
+	log.Debugf("Workrequest Added To Queue -- Running %s shortly", w.job.Name)
 	d.Work <- w
 }
 
-//StartDispatcher will
+// StartDispatcher starts the dispatcher will the amount of workers specified
 func (d *Dispatcher) StartDispatcher(nworkers int) {
 	// First, initialize the channel we are going to but the workers' work channels into.
 	d.Work = make(chan WorkRequest, nworkers)
@@ -94,6 +101,7 @@ func (d *Dispatcher) StartDispatcher(nworkers int) {
 	}()
 }
 
+// ScaleWorkers does nothing for now
 func (d *Dispatcher) ScaleWorkers(n int) {
 	if n < 1 || n > 100 || n == len(d.Work) {
 		return
