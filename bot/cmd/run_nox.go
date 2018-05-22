@@ -1,19 +1,26 @@
 package cmd
 
 import (
+	"context"
 	"errors"
+	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
-	"os/signal"
 	"time"
 
 	"github.com/ahmetb/go-linq"
+	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/will7200/Yugioh-bot/bot"
 	"github.com/will7200/Yugioh-bot/bot/base"
-	"github.com/will7200/Yugioh-bot/bot/providers"
+	"github.com/will7200/Yugioh-bot/bot/dl"
+	"github.com/will7200/Yugioh-bot/bot/internal/controlserver"
 	_ "github.com/will7200/Yugioh-bot/bot/providers/nox"
 	nox2 "github.com/will7200/Yugioh-bot/bot/providers/nox"
+	"github.com/will7200/Yugioh-bot/bot/rpc/control"
 	"github.com/zach-klippenstein/goadb"
 )
 
@@ -62,6 +69,10 @@ func (t *remoteStart) Start() error {
 }
 
 func noxInstance(cmd *cobra.Command, args []string) {
+	if len(args) > 0 && args[0] == "client" {
+		client()
+		return
+	}
 	d := &base.Dispatcher{}
 	d.StartDispatcher(viper.GetInt(botWorkers))
 	rs := remoteStart{}
@@ -75,6 +86,7 @@ func noxInstance(cmd *cobra.Command, args []string) {
 	})
 	if err != nil {
 		log.Error("Could not connect to the adb server")
+		log.Error(err)
 		log.Fatal("Try again")
 	}
 	devices, err := client.ListDevices()
@@ -82,6 +94,9 @@ func noxInstance(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 	var device *adb.DeviceInfo
+	if len(devices) == 0 {
+		log.Fatal("No devices connected to adb server")
+	}
 	if len(devices) == 1 {
 		device = devices[0]
 	} else {
@@ -94,20 +109,45 @@ func noxInstance(cmd *cobra.Command, args []string) {
 		log.Fatal("Re-run command with --adb-device={{ device name }}")
 	}
 	log.Infof("Using device %s", device.Serial)
-	options := &providers.Options{
+	home, err := homedir.Expand(base.HomeDir)
+	if err != nil {
+		panic(err)
+	}
+	failure := make(chan struct{}, 1)
+	list, err := base.GetListener(failure)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		log.Warnln("Recovering socket from failure")
+		list.Close()
+	}()
+	appfs := base.NewFSFromName("os")
+	options := &dl.Options{
 		Dispatcher:  d,
 		IsRemote:    viper.GetBool(noxAdbRemote),
-		SleepFactor: viper.GetInt(botSleepFactor),
+		SleepFactor: viper.GetFloat64(botSleepFactor),
 		Path:        viper.GetString(noxPath),
+		FileSystem:  appfs,
+		HomeDir:     home,
+		Predefined:  readDataFile(appfs),
+		ImageCache:  base.NewImageCache(),
 	}
-	nox := providers.GetProvider("Nox", options)
+	nox := dl.GetProvider("Nox", options)
 	options.Provider = nox
 	noxp := interface{}(nox).(*nox2.NoxProvider)
 	noxp.SetClientDevice(client, adb.DeviceWithSerial(device.Serial))
-	runTime := bot.NewRunTime(d, nox)
+	noxp.GetScreenDimensions()
+	runTime := bot.NewRunTime(d, nox, home, appfs)
+	runTime.SetChan(failure)
+	runTime.SetComparator(dl.NewComparator(options))
 	runTime.Start()
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	<-c
+
+	server := controlserver.NewServer(bot.AvailableModes, bot.SetMode)
+	twirpHandle := control.NewControlServer(server, nil)
+	err = http.Serve(list, twirpHandle)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Infoln("Exiting Now")
 }
