@@ -1,23 +1,35 @@
 package cmd
 
 import (
+	"path"
 	"strings"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/will7200/Yugioh-bot/bot/base"
+	"github.com/will7200/Yugioh-bot/bot/dl"
 )
 
 const (
 	botWorkers     = "bot.workers"
 	botSleepFactor = "bot.SleepFactor"
+
+	defaultDataFileName = "data.xml"
+	dataMalformedKey    = "data.malformed"
+	dataFileKey         = "data.file"
 )
 
 var (
-	watchConfig bool
-	runAsGui    bool
+	watchConfig         bool
+	runAsGui            bool
+	dataFile            string
+	dataMalformed       bool
+	home, _             = homedir.Dir()
+	defaultDataFilePath = path.Join(home, homeDir, defaultDataFileName)
 )
 
 // runCmd represents the run command
@@ -29,21 +41,20 @@ var runCmd = &cobra.Command{
 
 func init() {
 	cobra.OnInitialize(cobraRunInit)
+
 	rootCmd.AddCommand(runCmd)
+
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	runCmd.PersistentFlags().BoolVar(&watchConfig, "watch-config", false, "Reload Bot on config change")
 	runCmd.PersistentFlags().BoolVar(&runAsGui, "gui-interface", false, "Run the bot as a gui interface")
 	runCmd.PersistentFlags().Int("workers", 4, "Amount of concurrency workers for jobs to use")
+	runCmd.PersistentFlags().StringVar(&dataFile, "data-file", defaultDataFilePath, "read in data file")
+	runCmd.PersistentFlags().BoolVar(&dataMalformed, "data-malformed", true, "fails when data file is malformed, otherwise read what was packaged with binary")
+
 	viper.BindPFlag(botWorkers, runCmd.Flag("workers"))
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// runCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// runCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	viper.BindPFlag(dataMalformedKey, rootCmd.Flag("data-malformed"))
+	viper.BindPFlag(dataFileKey, rootCmd.Flag("data-file"))
 }
 
 func cobraRunInit() {
@@ -54,4 +65,28 @@ func cobraRunInit() {
 			base.ConfigChanged(e)
 		})
 	}
+}
+
+func readDataFile(app afero.Fs) *dl.Predefined {
+	exists, err := afero.Exists(app, dataFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if exists {
+		file, err := app.Open(dataFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		predefined, err := dl.ReadPredefined(file)
+		if err != nil && !dataMalformed {
+			log.Fatal(err)
+		} else if err == nil {
+			return predefined
+		}
+	} else {
+		log.Warn("File dne")
+		log.Warn(defaultDataFilePath)
+	}
+	log.Warn("Reading data bundled with binary, might be out dated")
+	return dl.GetDefaultsPredefined()
 }
