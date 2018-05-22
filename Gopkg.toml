@@ -24,11 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
-[[constraint]]
-  name = "github.com/adelowo/onecache"
-  version = "2.5.0"
-
 [[constraint]]
   name = "github.com/emirpasic/gods"
   version = "1.9.0"
@@ -48,10 +43,6 @@
 [[constraint]]
   branch = "master"
   name = "github.com/mitchellh/go-homedir"
-
-[[constraint]]
-  name = "github.com/otiai10/gosseract"
-  branch = "master"
 
 [[constraint]]
   name = "github.com/patrickmn/go-cache"
@@ -87,7 +78,8 @@
 
 [[constraint]]
   name = "gocv.io/x/gocv"
-  version = "0.11.0"
+  branch = "master"
+  source = "github.com/will7200/gocv"
 
 [prune]
   go-tests = true
@@ -118,3 +110,15 @@
 [[constraint]]
   branch = "master"
   name = "github.com/mitchellh/go-ps"
+
+[[constraint]]
+  name = "github.com/cenkalti/backoff"
+  version = "2.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/therecipe/qt"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/bugra/kmeans"
