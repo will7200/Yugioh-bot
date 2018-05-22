@@ -19,6 +19,8 @@ const (
 	homeDir             = "DLBot"
 	configFileName      = "yugioh-bot.toml"
 	persistanceFileName = "RunTimePersistence.toml"
+
+	logLevelName = "log.level"
 )
 
 var (
@@ -56,7 +58,9 @@ func init() {
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", messageDefaultFile)
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "Change log level for bot")
-	viper.BindPFlag("log-level", rootCmd.Flag("log-level"))
+
+	viper.BindPFlag(logLevelName, rootCmd.Flag("log-level"))
+
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
