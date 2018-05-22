@@ -13,7 +13,8 @@ import (
 
 var (
 	log             = base.CheckWithSourcedLog().With("package", "bot.provider.nox")
-	takeBase64Image = []string{"screencap", "-p", "|", "busybox", "base64"}
+	takeImage       = []string{"screencap", "-p"}
+	takeBase64Image = append(takeImage, []string{"|", "busybox", "base64"}...)
 )
 
 func init() {
@@ -120,9 +121,12 @@ func (nox *NoxProvider) PreCheck() error {
 }
 
 func (nox *NoxProvider) TakePNGScreenShot() ([]byte, error) {
-	result, err := nox.device.RunCommand("screencap", "-p", "|", "busybox", "base64")
+	result, err := nox.device.RunCommand(nox.imageCaptureCommand[0], nox.imageCaptureCommand[1:]...)
 	if err != nil {
 		return nil, err
+	}
+	if len(nox.imageCaptureCommand) == len(takeImage) {
+		return []byte(result), nil
 	}
 	img, err := base64.StdEncoding.DecodeString(result)
 	return img, err
