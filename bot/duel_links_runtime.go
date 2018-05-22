@@ -29,6 +29,7 @@ var (
 	playModesRegistered = map[PlayMode]*lua.LFunction{}
 	log                 = base.CheckWithSourcedLog().With("package", "bot")
 	luaLog              = log2.NewPassedLoggerUnsourced(logrus.StandardLogger()).With("from", "lua")
+	currentMode         = PlayMode("")
 )
 
 func init() {
@@ -43,6 +44,10 @@ func init() {
 }
 
 type PlayMode string
+
+func (p *PlayMode) String() string {
+	return string(*p)
+}
 
 type ErrInvalidPlayMode struct {
 	m string
@@ -61,6 +66,24 @@ func GetPlayMode(mode string) (PlayMode, error) {
 		return PlayMode(mode), nil
 	}
 	return PlayMode(""), &ErrInvalidPlayMode{mode}
+}
+
+func AvailableModes() []string {
+	var playModes []string
+	for key := range playModesRegistered {
+		playModes = append(playModes, key.String())
+	}
+	return playModes
+}
+
+func SetMode(mode string) error {
+	pb, err := GetPlayMode(mode)
+	if err != nil {
+		return err
+	}
+	currentMode = pb
+	log.Infof("Mode change: %v", currentMode)
+	return nil
 }
 
 type RunTimeOptions struct {
