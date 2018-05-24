@@ -21,3 +21,4 @@ cssselect>=1.0.3
 pywin32==223
 cryptography>=2.0.3
 scipy>=1.0.0
+sip==4.19.8
