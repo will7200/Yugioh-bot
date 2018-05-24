@@ -6,7 +6,7 @@ block_cipher = None
 a = Analysis(['main.py'],
              pathex=['D:\\Sync\\OneDrive\\Yu-gi-oh_bot'],
              binaries=[],
-             datas=[    ('assets/', 'assets'),('config.ini','.'),('bin/','bin/'), ('.gitignore','tmp'), ('logging.yaml','.')],
+             datas=[    ('assets/', 'assets'),('config.ini','.'),('bin/','bin/'), ('.gitignore','tmp'), ('logging.yaml','.'), ('version.txt', '.')],
              hiddenimports=['scipy._lib.messagestream',
               'cython', 'sklearn', 'sklearn.tree','sklearn.neighbors.quad_tree','sklearn.neighbors.typedefs',
               'sklearn.tree._utils','apscheduler.triggers.date'],

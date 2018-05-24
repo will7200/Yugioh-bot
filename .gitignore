@@ -68,3 +68,4 @@ coverage_html/
 assets/train/
 test_config.ini
 install_requirements.txt
+version.txt

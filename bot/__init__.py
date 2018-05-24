@@ -24,8 +24,16 @@ if '+' in __version__:
 else:
     clean_version = __version__
 if clean_version == 0 or clean_version == '0':
-    logger.fatal("Clean version is wrong (0) cannot be zero something happened")
-    logger.fatal("Try running git reset --hard origin/master")
+    try:
+        with open('version.txt', 'r') as f:
+            file_version = f.read()
+            __version__ = file_version
+            if '-' in file_version:
+                file_version = file_version.split('-')[0]
+            clean_version = file_version
+    except FileNotFoundError:
+        logger.fatal("Clean version is wrong (0) cannot be zero something happened")
+        logger.fatal("Try running git reset --hard origin/master")
 del get_versions
 
 
