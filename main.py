@@ -10,6 +10,7 @@ import traceback
 import click
 import yaml
 from apscheduler.schedulers.background import BackgroundScheduler
+
 from install import set_pip_test, main_install
 
 
@@ -130,21 +131,25 @@ def gui(start, config_file):
         dlRuntime.main()
         window = DuelLinksGui(dlRuntime, uconfig.get('locations', 'assets'))
         window.show()
+
         def handler(signum, frame):
             if signum == signal.SIGINT:
                 window.__quit__()
                 logger.info("Exiting Yugioh-DuelLinks Bots")
 
         signal.signal(signal.SIGINT, handler)
+
         def inmain():
             return app.exec_()
 
         sys.exit(inmain())
 
+
 @click.command()
 def version():
     import bot
     print("Using {}".format(bot.__version__))
+
 
 @click.command()
 def setup():

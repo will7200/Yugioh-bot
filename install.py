@@ -1,13 +1,13 @@
 import os
+import re
 import subprocess
 import pkg_resources
 from shutil import copyfile
 import requests
-from lxml import etree, html, cssselect
-from tqdm import tqdm
-import re
-from colorama import init
 from colorama import Fore, Back, Style
+from colorama import init
+from lxml import html
+from tqdm import tqdm
 
 init(autoreset=True)
 # THESE ARE THE PARAMETERS USED TO CHECK AND INSTALL
