@@ -30,6 +30,9 @@ func (c *comparator) Compare(key string, img gocv.Mat, correlation Correlation) 
 	if err != nil {
 		log.Panic(err)
 	}
+	if trainImage.Empty() || img.Empty() {
+		log.Panic("image is empty")
+	}
 	var scaleFactor float64
 	scaleFactor = asset.ScaleFactor
 	if asset.ScaleFactor == 0 {
@@ -41,6 +44,7 @@ func (c *comparator) Compare(key string, img gocv.Mat, correlation Correlation) 
 
 	kp1, des1 := sift.DetectAndCompute(trainImage, mask)
 	kp2, des2 := sift.DetectAndCompute(img, mask)
+
 	defer des1.Close()
 	defer des2.Close()
 
