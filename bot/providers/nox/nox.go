@@ -218,9 +218,9 @@ func (nox *NoxProvider) isStartScreen() bool {
 	return false
 }
 
-func (nox *NoxProvider) PassThroughInitialScreen(started bool) error {
+func (nox *NoxProvider) InitialScreen(started bool) (bool, error) {
 	if err := nox.startApp(); err != nil {
-		return err
+		return false, err
 	}
 	if started {
 		log.Info("Checking for start screen")
@@ -235,10 +235,10 @@ func (nox *NoxProvider) PassThroughInitialScreen(started bool) error {
 				return nox.isStartScreen()
 			}, map[string]interface{}{})
 		if err != nil {
-			return err
+			return false, err
 		}
 		if !homeScreen {
-			return nil
+			return false, nil
 		}
 	}
 	ct := context.WithValue(context.Background(), "panicWait", 1*time.Second)
@@ -252,22 +252,16 @@ func (nox *NoxProvider) PassThroughInitialScreen(started bool) error {
 			return nox.isStartScreen()
 		}, map[string]interface{}{})
 	if err != nil {
-		log.Warn("No home screen detected")
-		return err
+		log.Error("Error occurred while waiting for home screen")
+		return false, err
 	}
 	if !homeScreen {
 		log.Warn("No home screen detected")
-		return nil
+		return false, nil
 	}
-	log.Info("Passing through start screen")
-	nox.Tap(nox.GetUILocation("initiate_link"))
-	nox.WaitForUi(time.Second * 2)
-	/*timeout := 45
-	if nox.CompareWithBackButton() {
-		timeout = 300
-	}*/
-
-	return nil
+	//log.Info("Passing through start screen")
+	//nox.Tap(nox.GetUILocation("initiate_link"))
+	return true, nil
 }
 
 func (nox *NoxProvider) GetScreenDimensions() image.Point {

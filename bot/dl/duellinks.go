@@ -17,7 +17,7 @@ type DuelLinks interface {
 	CheckIfBattle()
 	DetermineAutoDuelStatus()
 	GetCurrentPage(mat *gocv.Mat)
-	PassThroughInitialScreen(started bool) error
+	InitialScreen(started bool) (bool, error)
 	ScanFor()
 	Scan()
 	VerifyBattle()
@@ -70,9 +70,9 @@ func (*BaseDuelLinks) VerifyBattle() {
 	log.Panic("implement me")
 }
 
-func (*BaseDuelLinks) PassThroughInitialScreen(bool) error {
+func (*BaseDuelLinks) InitialScreen(bool) (bool, error) {
 	log.Panic("implement me")
-	return nil
+	return false, nil
 }
 
 func (*BaseDuelLinks) WaitFor() {

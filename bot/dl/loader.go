@@ -22,35 +22,35 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 		_ = L.NewTypeMetatable("gocv.Mat")
 		luaProvider := NewLuaProvider(provider)
 		exports := map[string]lua.LGFunction{
-			"battle":                      luaProvider.Battle,
-			"battle_mode":                 luaProvider.BattleMode,
-			"check_battle":                luaProvider.CheckBattle,
-			"check_if_battle":             luaProvider.CheckIfBattle,
-			"determine_auto_duel_status":  luaProvider.DetermineAutoDuelStatus,
-			"ensure_resolution_matches":   luaProvider.EnsureResolutionMatches,
-			"get_area_location":           luaProvider.GetAreaLocation,
-			"get_asset":                   luaProvider.GetAsset,
-			"get_current_page":            luaProvider.GetCurrentPage,
-			"get_img_from_screen_shot":    luaProvider.GetImgFromScreenShot,
-			"get_location":                luaProvider.GetLocation,
-			"get_ui_location":             luaProvider.GetUILocation,
-			"guided_mode":                 luaProvider.GuidedMode,
-			"img_to_string":               luaProvider.ImgToString,
-			"is_process_running":          luaProvider.IsProcessRunning,
-			"kill_process":                luaProvider.KillProcess,
-			"pass_through_initial_screen": luaProvider.PassThroughInitialScreen,
-			"possible_battle_points":      luaProvider.PossibleBattlePoints,
-			"pre_check":                   luaProvider.PreCheck,
-			"scan":                        luaProvider.Scan,
-			"scan_for":                    luaProvider.ScanFor,
-			"screen_dimensions":           luaProvider.ScreenDimensions,
-			"special_events":              luaProvider.SpecialEvents,
-			"start_process":               luaProvider.StartProcess,
-			"swipe":                       luaProvider.Swipe,
-			"swipe_right":                 luaProvider.SwipeRight,
-			"swipe_time":                  luaProvider.SwipeTime,
-			"system_call":                 luaProvider.SystemCall,
-			"take_png_screen_shot":        luaProvider.TakePNGScreenShot,
+			"battle":                     luaProvider.Battle,
+			"battle_mode":                luaProvider.BattleMode,
+			"check_battle":               luaProvider.CheckBattle,
+			"check_if_battle":            luaProvider.CheckIfBattle,
+			"determine_auto_duel_status": luaProvider.DetermineAutoDuelStatus,
+			"ensure_resolution_matches":  luaProvider.EnsureResolutionMatches,
+			"get_area_location":          luaProvider.GetAreaLocation,
+			"get_asset":                  luaProvider.GetAsset,
+			"get_current_page":           luaProvider.GetCurrentPage,
+			"get_img_from_screen_shot":   luaProvider.GetImgFromScreenShot,
+			"get_location":               luaProvider.GetLocation,
+			"get_ui_location":            luaProvider.GetUILocation,
+			"guided_mode":                luaProvider.GuidedMode,
+			"img_to_string":              luaProvider.ImgToString,
+			"is_process_running":         luaProvider.IsProcessRunning,
+			"kill_process":               luaProvider.KillProcess,
+			"initial_screen":             luaProvider.InitialScreen,
+			"possible_battle_points":     luaProvider.PossibleBattlePoints,
+			"pre_check":                  luaProvider.PreCheck,
+			"scan":                       luaProvider.Scan,
+			"scan_for":                   luaProvider.ScanFor,
+			"screen_dimensions":          luaProvider.ScreenDimensions,
+			"special_events":             luaProvider.SpecialEvents,
+			"start_process":              luaProvider.StartProcess,
+			"swipe":                      luaProvider.Swipe,
+			"swipe_right":                luaProvider.SwipeRight,
+			"swipe_time":                 luaProvider.SwipeTime,
+			"system_call":                luaProvider.SystemCall,
+			"take_png_screen_shot":       luaProvider.TakePNGScreenShot,
 			"tap":           luaProvider.Tap,
 			"verify_battle": luaProvider.VerifyBattle,
 			"wait_for":      luaProvider.WaitFor,
@@ -191,14 +191,16 @@ func (lp *LuaProvider) KillProcess(L *lua.LState) int {
 	return 0
 }
 
-// PassThroughInitialScreen wrapper for lua engine
-func (lp *LuaProvider) PassThroughInitialScreen(L *lua.LState) int {
-	A := lp.provider.PassThroughInitialScreen(L.CheckBool(1))
-	if A != nil {
-		L.Push(lua.LString(A.Error()))
+// InitialScreen wrapper for lua engine
+func (lp *LuaProvider) InitialScreen(L *lua.LState) int {
+	A, B := lp.provider.InitialScreen(L.CheckBool(1))
+	if B != nil {
+		L.Push(lua.LBool(A))
+		L.Push(lua.LString(B.Error()))
 		return 1
 	}
-	return 0
+	L.Push(lua.LBool(A))
+	return 1
 }
 
 // PossibleBattlePoints wrapper for lua engine
