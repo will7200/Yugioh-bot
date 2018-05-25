@@ -36,74 +36,76 @@ func SSIM_GOCV(x, y *gocv.Mat) float64 {
 	I1_2 := MatMultiply(I1, I1)
 	I1_I2 := MatMultiply(I1, I2)
 
-	defer I1.Close()
-	defer I2.Close()
-	defer I2_2.Close()
-	defer I1_I2.Close()
-	defer I1_2.Close()
-
 	mu1 := MatGuassianBlur(I1, defPoint, defSigma, gocv.BorderReflect)
-	mu2 := MatGuassianBlur(I2, defPoint, defSigma, gocv.BorderReflect)
+	I1.Close()
 
-	defer mu1.Close()
-	defer mu2.Close()
+	mu2 := MatGuassianBlur(I2, defPoint, defSigma, gocv.BorderReflect)
+	I2.Close()
 
 	mu1_2 := MatMultiply(mu1, mu1)
 	mu2_2 := MatMultiply(mu2, mu2)
 	mu1_mu2 := MatMultiply(mu1, mu2)
 
-	defer mu1_2.Close()
-	defer mu2_2.Close()
-	defer mu1_mu2.Close()
+	mu1.Close()
+	mu2.Close()
 
 	sigmal1_2t := MatGuassianBlur(I1_2, defPoint, defSigma, gocv.BorderReflect)
+	I1_2.Close()
 	sigmal1_2 := MatSubtract(sigmal1_2t, mu1_2)
 
 	sigmal2_2t := MatGuassianBlur(I2_2, defPoint, defSigma, gocv.BorderReflect)
+	I2_2.Close()
 	sigmal2_2 := MatSubtract(sigmal2_2t, mu2_2)
 
 	sigmal2t := MatGuassianBlur(I1_I2, defPoint, defSigma, gocv.BorderReflect)
+	I1_I2.Close()
 	sigmal2 := MatSubtract(sigmal2t, mu1_mu2)
 
-	defer sigmal1_2t.Close()
-	defer sigmal1_2.Close()
+	sigmal1_2t.Close()
 
-	defer sigmal2_2t.Close()
-	defer sigmal2_2.Close()
+	sigmal2_2t.Close()
 
-	defer sigmal2t.Close()
-	defer sigmal2.Close()
+	sigmal2t.Close()
 
 	scalar2 := NewMatSCScalar(2.0)
 	scalarC1 := NewMatSCScalar(C1)
 	scalarC2 := NewMatSCScalar(C2)
 
-	defer scalarC1.Close()
-	defer scalarC2.Close()
-	defer scalar2.Close()
-
 	t1t := MatMultiply(mu1_mu2, scalar2)
+	mu1_mu2.Close()
+
 	t1 := MatAdd(t1t, scalarC1)
 	t2t := MatMultiply(sigmal2, scalar2)
+	sigmal2.Close()
 	t2 := MatAdd(t2t, scalarC2)
 	t3 := MatMultiply(t1, t2)
 
-	defer t1t.Close()
-	defer t1.Close()
-	defer t2t.Close()
-	defer t2.Close()
+	t1t.Close()
+	t1.Close()
+	t2t.Close()
+	t2.Close()
 	defer t3.Close()
 
 	t1tm := MatAdd(mu1_2, mu2_2)
+	mu1_2.Close()
+	mu2_2.Close()
 	t1m := MatAdd(t1tm, scalarC1)
+	t1tm.Close()
+
 	t2tm := MatAdd(sigmal1_2, sigmal2_2)
+	sigmal1_2.Close()
+	sigmal2_2.Close()
 	t2m := MatAdd(t2tm, scalarC2)
+	t2tm.Close()
+
+	scalarC1.Close()
+	scalarC2.Close()
+	scalar2.Close()
+
 	t1mm := MatMultiply(t1m, t2m)
 
-	defer t1tm.Close()
-	defer t1m.Close()
-	defer t2tm.Close()
-	defer t2m.Close()
+	t1m.Close()
+	t2m.Close()
 	defer t1mm.Close()
 
 	ssimMap := MatDivide(t3, t1mm)
