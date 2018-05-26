@@ -1,16 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"errors"
-	"net"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 	"time"
 
 	"github.com/ahmetb/go-linq"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
