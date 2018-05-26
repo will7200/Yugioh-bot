@@ -66,9 +66,12 @@ func (c *comparator) Compare(key string, img gocv.Mat, correlation Correlation) 
 			cluster = append(cluster, []float64{kpTrain.X, kpTrain.Y})
 		}
 	}
+	log.Debugf("SIFT run for %s correlation %d: %d, %t", asset.Description, correlation, len(cluster), len(cluster) > int(correlation))
 	if len(cluster) < int(correlation) {
 		return false
 	}
+
+	log.Debug("Running clustering algo")
 	model := cluster2.NewKMeans(1, 300, cluster)
 
 	if model.Learn() != nil {
