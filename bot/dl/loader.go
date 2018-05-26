@@ -47,7 +47,6 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 			"special_events":             luaProvider.SpecialEvents,
 			"start_process":              luaProvider.StartProcess,
 			"swipe":                      luaProvider.Swipe,
-			"swipe_right":                luaProvider.SwipeRight,
 			"swipe_time":                 luaProvider.SwipeTime,
 			"system_call":                luaProvider.SystemCall,
 			"take_png_screen_shot":       luaProvider.TakePNGScreenShot,
@@ -252,13 +251,15 @@ func (lp *LuaProvider) StartProcess(L *lua.LState) int {
 
 // Swipe wrapper for lua engine
 func (lp *LuaProvider) Swipe(L *lua.LState) int {
-	lp.provider.Swipe(L.CheckInt(1), L.CheckInt(2), L.CheckInt(3), L.CheckInt(4))
-	return 0
-}
-
-// SwipeRight wrapper for lua engine
-func (lp *LuaProvider) SwipeRight(L *lua.LState) int {
-	lp.provider.SwipeRight(L.CheckInt(1))
+	args := make([]interface{}, L.GetTop())
+	for i := 1; i <= L.GetTop(); i++ {
+		if lv, ok := L.Get(i).(*lua.LUserData); ok {
+			args[i-1] = lv.Value
+			continue
+		}
+		args[i-1] = L.CheckInt(i)
+	}
+	lp.provider.Swipe(args...)
 	return 0
 }
 

@@ -15,9 +15,8 @@ const (
 // Actions
 type Actions interface {
 	Tap(args ...interface{})
-	Swipe(x1, y1, x2, y2 int)
-	SwipeTime(x1, y1, x2, y2, timeAmount int)
-	SwipeRight(timeSleep int)
+	Swipe(args ...interface{})
+	SwipeTime(args ...interface{})
 	WaitForUi(timeSleep time.Duration)
 	TakePNGScreenShot() ([]byte, error)
 	GetImgFromScreenShot(fromCache bool, fail int) gocv.Mat
@@ -40,15 +39,11 @@ func (action *BaseActions) Tap(args ...interface{}) {
 	log.Panic("implement me")
 }
 
-func (action *BaseActions) Swipe(x1, y1, x2, y2 int) {
+func (action *BaseActions) Swipe(args ...interface{}) {
 	log.Panic("implement me")
 }
 
-func (action *BaseActions) SwipeTime(x1, y1, x2, y2, timeAmount int) {
-	log.Panic("implement me")
-}
-
-func (action *BaseActions) SwipeRight(timeSleep int) {
+func (action *BaseActions) SwipeTime(args ...interface{}) {
 	log.Panic("implement me")
 }
 
