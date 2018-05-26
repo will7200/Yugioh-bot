@@ -3,9 +3,11 @@
 [![Join the chat at https://gitter.im/Yugioh-bot/Lobby](https://badges.gitter.im/Yugioh-bot/Lobby.svg)](https://gitter.im/Yugioh-bot/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Discord](https://img.shields.io/discord/392538066633359360.svg?colorB=0082ff&style=flat)](https://discord.gg/PGWedhf)
 [![Software License][ico-license]](LICENSE)
-[![Build status]()](https://ci.appveyor.com/project/will7200/yugioh-bot/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/5bdvynik9cbgrm21?svg=true)](https://ci.appveyor.com/project/will7200/yugioh-bot)
 [![Coverage Status](https://coveralls.io/repos/github/will7200/Yugioh-bot/badge.svg?branch=master)](https://coveralls.io/github/will7200/Yugioh-bot?branch=master)
-[![Quality Score][ico-code-quality]][link-code-quality]
+[![maturity](https://img.shields.io/badge/status-alpha-red.svg)](https://github.com/will7200/Yugioh-bot) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/the-anna-project/annad)](https://goreportcard.com/report/github.com/the-anna-project/annad) 
+[![GoDoc](https://godoc.org/github.com/will7200/Yugioh-bot?status.svg)](http://godoc.org/github.com/will7200/Yugioh-bot)
 
 
 Bot to help with those npc in Yugioh Duel Links.
