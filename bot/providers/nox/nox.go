@@ -90,7 +90,7 @@ func (nox *NoxProvider) Tap(args ...interface{}) {
 		if err != nil {
 			log.Panic(err)
 		}
-		y, err = base.GetInt(t)
+		y, err = base.GetInt(args[1])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -99,6 +99,53 @@ func (nox *NoxProvider) Tap(args ...interface{}) {
 	}
 	log.Debug(fmt.Sprintf("Tapping at %d, %d", x, y))
 	_, err = nox.device.RunCommand("input", "tap", fmt.Sprintf("%d", x), fmt.Sprintf("%d", y))
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+func (nox *NoxProvider) Swipe(args ...interface{}) {
+	var px1, py1, px2, py2 int
+	var err error
+	switch t := args[0].(type) {
+	case dl.UILocation:
+		if len(args) != 2 {
+			log.Panic("Using dl.UILocation requires two parameters")
+		}
+		p2, ok := args[1].(dl.UILocation)
+		if !ok {
+			log.Panic(err)
+		}
+		px1, py1 = t.Point.X, t.Point.Y
+		px2, py2 = p2.Point.X, p2.Point.Y
+	case image.Point:
+		if len(args) != 2 {
+			log.Panic("Using image.Point requires two parameters")
+		}
+		p2, ok := args[1].(image.Point)
+		if !ok {
+			log.Panic(err)
+		}
+		px1, py1 = t.X, t.Y
+		px2, py2 = p2.X, p2.Y
+	case int:
+		if len(args) != 4 {
+			log.Panic("Using int requires four parameters")
+		}
+		var ok, ok2, ok3 bool
+		py1, ok = args[1].(int)
+		px2, ok2 = args[2].(int)
+		py2, ok3 = args[3].(int)
+		if !ok || !ok2 || !ok3 {
+			log.Panic("Could not convert the remaining parameters to int")
+		}
+	default:
+		log.Panicf("Swipe: type %T", t)
+	}
+	log.Debug(fmt.Sprintf("Swiping from (%d, %d) to (%d, %d)", px1, py1, px2, py2))
+	noxArgs := strings.Split(fmt.Sprintf("%d %d %d %d", px1, py1, px2, py2), " ")
+	noxArgs = append([]string{"swipe"}, noxArgs...)
+	_, err = nox.device.RunCommand("input", noxArgs...)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -195,10 +242,10 @@ func (nox *NoxProvider) isStartScreen() bool {
 	}
 	grayedMat := base.CvtColor(against, gocv.ColorBGRToGray)
 	against.Close()
-	defer imgMat.Close()
-	defer grayedMat.Close()
 
 	if gocv.CountNonZero(grayedMat) == 0 {
+		grayedMat.Close()
+		imgMat.Close()
 		return false
 	}
 
@@ -206,11 +253,16 @@ func (nox *NoxProvider) isStartScreen() bool {
 	ub := base.NewMatSCScalar(255)
 	maskedMat := base.MaskImage(grayedMat, lb, ub, true)
 	maskedOriginal := base.MaskImage(imgMat, lb, ub, true)
-	defer lb.Close()
-	defer ub.Close()
+
+	imgMat.Close()
+	grayedMat.Close()
+
+	lb.Close()
+	ub.Close()
+
 	defer maskedOriginal.Close()
 	defer maskedMat.Close()
-	score := base.SSIM_GOCV(&maskedMat, &maskedOriginal)
+	score := base.SSIM_GOCV(maskedMat, maskedOriginal)
 	log.Debugf("Start Screen Similarity: %.2f vs %.2f", score, nox.predefined.BotConst.StartScreenSimilarity)
 	if score > nox.predefined.BotConst.StartScreenSimilarity {
 		return true
