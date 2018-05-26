@@ -71,6 +71,9 @@ func GetImageFromAsset(asset AssetMap, options Options) (gocv.Mat, error) {
 	return imgMat, nil
 }
 
+// TryImageFromCache
+// Warning do not close the images from the cache, they will be closed on eviction
+// If you need to modify, clone it.
 func TryImageFromCache(asset AssetMap, options Options, c *cache.Cache) (gocv.Mat, error) {
 	if image, found := c.Get(asset.Key); found {
 		return image.(gocv.Mat), nil
