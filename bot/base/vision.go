@@ -27,11 +27,11 @@ func SSIM_Image(x, y image.Image) float64 {
 	return numerator / denominator
 }
 
-func SSIM_GOCV(x, y *gocv.Mat) float64 {
+func SSIM_GOCV(x, y gocv.Mat) float64 {
 
 	defPoint := image.Pt(defWinSize, defWinSize)
 	defSigma := 1.5
-	I1, I2 := ConvertTo(x, gocv.MatTypeCV64F), ConvertTo(y, gocv.MatTypeCV64F)
+	I1, I2 := ConvertTo(&x, gocv.MatTypeCV64F), ConvertTo(&y, gocv.MatTypeCV64F)
 	I2_2 := MatMultiply(I2, I2)
 	I1_2 := MatMultiply(I1, I1)
 	I1_I2 := MatMultiply(I1, I2)

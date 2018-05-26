@@ -82,8 +82,8 @@ func TestInRange(t *testing.T) {
 
 func TestBitwiseAnd(t *testing.T) {
 	type args struct {
-		src  *gocv.Mat
-		mask *gocv.Mat
+		src  gocv.Mat
+		mask gocv.Mat
 	}
 	tests := []struct {
 		name string
@@ -103,7 +103,7 @@ func TestBitwiseAnd(t *testing.T) {
 
 func TestCvtColor(t *testing.T) {
 	type args struct {
-		src  *gocv.Mat
+		src  gocv.Mat
 		code gocv.ColorConversionCode
 	}
 	tests := []struct {
@@ -124,9 +124,9 @@ func TestCvtColor(t *testing.T) {
 
 func TestMaskImage(t *testing.T) {
 	type args struct {
-		src        *gocv.Mat
-		lowerBound *gocv.Mat
-		upperBound *gocv.Mat
+		src        gocv.Mat
+		lowerBound gocv.Mat
+		upperBound gocv.Mat
 		applyMask  bool
 	}
 	tests := []struct {
@@ -210,7 +210,7 @@ func TestMatDivide(t *testing.T) {
 
 func TestMatGuassianBlur(t *testing.T) {
 	type args struct {
-		src        *gocv.Mat
+		src        gocv.Mat
 		ksize      image.Point
 		sigmaX     float64
 		borderType gocv.BorderType
@@ -233,8 +233,8 @@ func TestMatGuassianBlur(t *testing.T) {
 
 func TestMatSubtract(t *testing.T) {
 	type args struct {
-		src  *gocv.Mat
-		src2 *gocv.Mat
+		src  gocv.Mat
+		src2 gocv.Mat
 	}
 	tests := []struct {
 		name string
@@ -254,8 +254,8 @@ func TestMatSubtract(t *testing.T) {
 
 func TestMatAdd(t *testing.T) {
 	type args struct {
-		src  *gocv.Mat
-		src2 *gocv.Mat
+		src  gocv.Mat
+		src2 gocv.Mat
 	}
 	tests := []struct {
 		name string
@@ -294,11 +294,11 @@ func FakeMatClose() {
 
 func FakeMatRunTime() {
 	dst := gocv.NewMat()
-	runtime.SetFinalizer(&dst, freeMat)
+	runtime.SetFinalizer(&dst, FreeMat)
 	src := gocv.IMRead(ep, gocv.IMReadColor)
-	runtime.SetFinalizer(&src, freeMat)
+	runtime.SetFinalizer(&src, FreeMat)
 	scalar := NewMatSCScalar(2.0)
-	runtime.SetFinalizer(&scalar, freeMat)
+	runtime.SetFinalizer(&scalar, FreeMat)
 	gocv.Pow(src, 2, &dst)
 }
 
