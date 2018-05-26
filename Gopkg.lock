@@ -24,9 +24,13 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/bugra/kmeans"
-  packages = ["."]
-  revision = "bf06fda928a76d03b9802e7a677229ff038969ef"
+  name = "github.com/cdipaolo/goml"
+  packages = [
+    "base",
+    "cluster"
+  ]
+  revision = "22d44a3979b9d604f2a6e5c07cab6fd62ce022eb"
+  source = "github.com/will7200/goml"
 
 [[projects]]
   name = "github.com/cenkalti/backoff"
@@ -200,7 +204,7 @@
   name = "github.com/prometheus/common"
   packages = ["log"]
   revision = "4360548312b552bf475a280b16a04909c2b30c25"
-  source = "github.com/gobotlogic/common/log"
+  source = "github.com/gobotlogic/common"
 
 [[projects]]
   branch = "master"
@@ -426,6 +430,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "09efe7a511a9b82b564388f4f8afcdc9f4ec48bd7b4eaa273f110acae5c108d3"
+  inputs-digest = "8ed8384a4aff5511464f857b561d65082edd4c189776402bd047816f45f52f08"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -105,7 +105,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/prometheus/common"
-  source = "github.com/gobotlogic/common/log"
+  source = "github.com/gobotlogic/common"
 
 [[constraint]]
   branch = "master"
@@ -119,6 +119,11 @@
   branch = "master"
   name = "github.com/therecipe/qt"
 
+#[[constraint]]
+#  branch = "master"
+#  name = "github.com/bugra/kmeans"
+
 [[constraint]]
   branch = "master"
-  name = "github.com/bugra/kmeans"
+  name = "github.com/cdipaolo/goml"
+  source = "github.com/will7200/goml"
