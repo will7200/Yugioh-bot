@@ -3,7 +3,6 @@ package dl
 import (
 	"encoding/xml"
 	"fmt"
-	"image"
 	"os"
 	"testing"
 
@@ -35,40 +34,24 @@ func TestLocation_String(t *testing.T) {
 	}
 }
 
-var xmlTestString = `
-<?xml version="1.0" encoding="UTF-8" ?>
-<Predefined>
-	<Locations>
-		<Location key="quick_rank_duel">
-			<PropertyName>Quick RankDuels</PropertyName>
-			<Description></Description>
-			<PageLocation>2</PageLocation>
-		</Location>
-		<Location key="street_replay">
-			<PropertyName>Street Replay</PropertyName>
-			<Description></Description>
-			<PageLocation>4</PageLocation>
-		</Location>
-	</Locations>
-	<AssetMap>
-		<Asset key="start_screen">
-			<Name>start_screen.png</Name>
-		</Asset>
-	</AssetMap>
-</Predefined>`
-
 func Test_XMLParser(t *testing.T) {
 	v := &Predefined{}
-	err := xml.Unmarshal([]byte(xmlTestString), &v)
+	xmlTest := box.Bytes("data.xml")
+	err := xml.Unmarshal(xmlTest, &v)
 	assert.Nil(t, err)
 	fmt.Printf("%#v\n", v)
 	_ = &Predefined{
 		Locations: []Location{{PageLocation: 4, basePredefined: basePredefined{Key: "taken"}}},
 	}
-	nn := image.Pt(100, 100)
+	tv := &BotConst{}
+	tv.CirclesDefinitions = CirclesDefinitions{
+		215, 255, HoughCirclesDefinitions{
+			1, 45, 50, 30, 3, 60,
+		},
+	}
 	enc := xml.NewEncoder(os.Stdout)
 	enc.Indent("  ", "    ")
-	if err := enc.Encode(nn); err != nil {
+	if err := enc.Encode(tv); err != nil {
 		fmt.Printf("error: %v\n", err)
 	}
 }

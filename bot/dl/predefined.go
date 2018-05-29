@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"os"
+	"path"
 	"strconv"
 
 	"github.com/emirpasic/gods/trees/redblacktree"
+	"github.com/gobuffalo/packr"
 	"github.com/spf13/afero"
 )
 
 var (
 	DefaultSize = image.Pt(480, 800)
+	box         = packr.NewBox(path.Join(os.Getenv("HOME"), "DLBot"))
 )
 
 type Predefined struct {
@@ -100,6 +104,28 @@ type AssetMap struct {
 
 type BotConst struct {
 	StartScreenSimilarity float64
+	CompareDefinitions    CompareDefinitions
+	CirclesDefinitions    CirclesDefinitions
+}
+
+type CompareDefinitions struct {
+	DefaultScaleFactor float64
+	TrainIterations    int
+}
+
+type CirclesDefinitions struct {
+	LowerBound              float64
+	UpperBound              float64
+	HoughCirclesDefinitions HoughCirclesDefinitions
+}
+
+type HoughCirclesDefinitions struct {
+	DP        float64
+	MinDist   float64
+	Param1    float64
+	Param2    float64
+	MinRadius int
+	MaxRadius int
 }
 
 type Location struct {
@@ -111,41 +137,10 @@ func (l Location) String() string {
 	return fmt.Sprintf("Location %s: page %d", l.PropertyName, l.PageLocation)
 }
 
-var xmlString = `
-<?xml version="1.0" encoding="UTF-8" ?>
-<Predefined>
-	<Locations>
-		<Location key="quick_rank_duel">
-			<PropertyName>Quick RankDuels</PropertyName>
-			<Description></Description>
-			<PageLocation>2</PageLocation>
-		</Location>
-		<Location key="street_replay">
-			<PropertyName>Street Replay</PropertyName>
-			<Description></Description>
-			<PageLocation>4</PageLocation>
-		</Location>
-	</Locations>
-	<AssetMap>
-		<Asset key="start_screen" height="800" width="480">
-			<Name>new_open.png</Name>
-		</Asset>
-	</AssetMap>
-	<UILocations>
-		<UILocation key="initiate_link" height="800" width="480">
-			<PropertyName>Yugioh Initiate Link</PropertyName>
-			<Description>Location of ui button to pass through start screen</Description>
-			<Point>
-				<X>240</X>
-				<Y>530</Y>
-			</Point>
-		</UILocation>
-	</UILocations>
-</Predefined>`
-
 func GetDefaultsPredefined() *Predefined {
 	v := &Predefined{}
-	err := xml.Unmarshal([]byte(xmlString), &v)
+	xmlString := box.Bytes("data.xml")
+	err := xml.Unmarshal(xmlString, &v)
 	if err != nil {
 		log.Panic(err)
 	}
