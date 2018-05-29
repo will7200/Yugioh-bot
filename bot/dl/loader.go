@@ -321,21 +321,26 @@ func (lp *LuaProvider) WaitForUi(L *lua.LState) int {
 	return 0
 }
 
-// ComparatorLoader loads all exposed comparator methods
-func ComparatorLoader(comparator Comparator) func(*lua.LState) int {
+// DetectorLoader loads all exposed detector methods
+func DetectorLoader(detector Detector) func(*lua.LState) int {
 	return func(L *lua.LState) int {
 		luaComparator := NewLuaComparator(comparator)
 		exports := map[string]lua.LGFunction{"compare": luaComparator.Compare}
 		mod := L.SetFuncs(L.NewTable(), exports)
-		L.SetField(mod, "name", lua.LString("comparator"))
+		L.SetField(mod, "name", lua.LString("detector"))
 		L.Push(mod)
 		return 1
 	}
 }
 
-// LuaComparator methods exposed in lua engine
-type LuaComparator struct {
-	comparator Comparator
+// LuaDetector methods exposed in lua engine
+type LuaDetector struct {
+	detector Detector
+}
+
+// NewLuaDetector returns a lua provider instance
+func NewLuaDetector(detector Detector) *LuaDetector {
+	return &LuaDetector{detector: detector}
 }
 
 // NewLuaComparator returns a lua provider instance
@@ -344,7 +349,7 @@ func NewLuaComparator(comparator Comparator) *LuaComparator {
 }
 
 // Compare wrapper for lua engine
-func (lp *LuaComparator) Compare(L *lua.LState) int {
+func (lp *LuaDetector) Compare(L *lua.LState) int {
 	v := L.Get(3)
 	var corr Correlation
 	if intv, ok := v.(lua.LNumber); ok {
@@ -352,7 +357,7 @@ func (lp *LuaComparator) Compare(L *lua.LState) int {
 	} else {
 		corr = L.CheckUserData(3).Value.(Correlation)
 	}
-	A := lp.comparator.Compare(L.CheckString(1), L.CheckUserData(2).Value.(gocv.Mat), corr)
+	A := lp.detector.Compare(L.CheckString(1), L.CheckUserData(2).Value.(gocv.Mat), corr)
 	L.Push(lua.LBool(A))
 	return 1
 }

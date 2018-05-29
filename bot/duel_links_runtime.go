@@ -118,7 +118,7 @@ type RunTime interface {
 	HandleOptionChange(name string, value interface{})
 	GetProvider() dl.Provider
 	SetChan(chan struct{})
-	SetComparator(o dl.Comparator)
+	SetDetector(o dl.Detector)
 }
 
 type runTime struct {
@@ -128,7 +128,7 @@ type runTime struct {
 	appfs      afero.Fs
 	dispatcher *base.Dispatcher
 	provider   dl.Provider
-	comparator dl.Comparator
+	detector   dl.Detector
 	mainJob    *base.Job
 	signal     chan struct{}
 	homedir    string
@@ -179,7 +179,7 @@ func (rt *runTime) Main() error {
 	defer L.Close()
 	L.PreloadModule("provider", dl.ProviderLoader(rt.provider))
 	L.PreloadModule("rt", RunTimeLoader(rt))
-	L.PreloadModule("comparator", dl.ComparatorLoader(rt.comparator))
+	L.PreloadModule("detector", dl.DetectorLoader(rt.detector))
 	L.SetGlobal("luaprint", L.NewFunction(luaPrint))
 	file.Close()
 	if err := L.DoFile(file.Name()); err != nil {
@@ -237,8 +237,8 @@ func (rt *runTime) SetChan(o chan struct{}) {
 	rt.signal = o
 }
 
-func (rt *runTime) SetComparator(o dl.Comparator) {
-	rt.comparator = o
+func (rt *runTime) SetDetector(o dl.Detector) {
+	rt.detector = o
 }
 
 func NewRunTime(d *base.Dispatcher, provider dl.Provider, home string, appfs afero.Fs) RunTime {

@@ -136,7 +136,7 @@ func noxInstance(cmd *cobra.Command, args []string) {
 	noxp.GetScreenDimensions()
 	runTime := bot.NewRunTime(d, nox, home, appfs)
 	runTime.SetChan(failure)
-	runTime.SetComparator(dl.NewComparator(options))
+	runTime.SetDetector(dl.NewDetector(options))
 	runTime.Start()
 
 	server := controlserver.NewServer(bot.AvailableModes, bot.SetMode)
