@@ -20,7 +20,7 @@ const (
 func init() {
 	registerGenerators = make(map[string]func() *jen.File)
 	registerGenerators["luaprovider"] = luaprovider
-	registerGenerators["luacomparator"] = luacomparator
+	registerGenerators["luadetector"] = luadetector
 }
 func main() {
 	if len(os.Args) < 2 {
