@@ -1,9 +1,8 @@
 package dl
 
 import (
-	"time"
-
 	"runtime"
+	"time"
 
 	"github.com/will7200/Yugioh-bot/bot/base"
 	"github.com/yuin/gopher-lua"
@@ -22,34 +21,28 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 		_ = L.NewTypeMetatable("gocv.Mat")
 		luaProvider := NewLuaProvider(provider)
 		exports := map[string]lua.LGFunction{
-			"battle":                     luaProvider.Battle,
-			"check_battle":               luaProvider.CheckBattle,
-			"check_if_battle":            luaProvider.CheckIfBattle,
-			"determine_auto_duel_status": luaProvider.DetermineAutoDuelStatus,
-			"ensure_resolution_matches":  luaProvider.EnsureResolutionMatches,
-			"get_area_location":          luaProvider.GetAreaLocation,
-			"get_asset":                  luaProvider.GetAsset,
-			"get_current_page":           luaProvider.GetCurrentPage,
-			"get_img_from_screen_shot":   luaProvider.GetImgFromScreenShot,
-			"get_location":               luaProvider.GetLocation,
-			"get_ui_location":            luaProvider.GetUILocation,
-			"img_to_string":              luaProvider.ImgToString,
-			"is_process_running":         luaProvider.IsProcessRunning,
-			"kill_process":               luaProvider.KillProcess,
-			"initial_screen":             luaProvider.InitialScreen,
-			"pre_check":                  luaProvider.PreCheck,
-			"scan":                       luaProvider.Scan,
-			"scan_for":                   luaProvider.ScanFor,
-			"screen_dimensions":          luaProvider.ScreenDimensions,
-			"special_events":             luaProvider.SpecialEvents,
-			"start_process":              luaProvider.StartProcess,
-			"swipe":                      luaProvider.Swipe,
-			"swipe_time":                 luaProvider.SwipeTime,
-			"take_png_screen_shot":       luaProvider.TakePNGScreenShot,
-			"tap":           luaProvider.Tap,
-			"verify_battle": luaProvider.VerifyBattle,
-			"wait_for":      luaProvider.WaitFor,
-			"wait_for_ui":   luaProvider.WaitForUi,
+			"ensure_resolution_matches": luaProvider.EnsureResolutionMatches,
+			"get_area_location":         luaProvider.GetAreaLocation,
+			"get_asset":                 luaProvider.GetAsset,
+			"get_current_page":          luaProvider.GetCurrentPage,
+			"get_img_from_screen_shot":  luaProvider.GetImgFromScreenShot,
+			"get_location":              luaProvider.GetLocation,
+			"get_ui_location":           luaProvider.GetUILocation,
+			"img_to_string":             luaProvider.ImgToString,
+			"is_process_running":        luaProvider.IsProcessRunning,
+			"kill_process":              luaProvider.KillProcess,
+			"initial_screen":            luaProvider.InitialScreen,
+			"pre_check":                 luaProvider.PreCheck,
+			"scan_for":                  luaProvider.ScanFor,
+			"screen_dimensions":         luaProvider.ScreenDimensions,
+			"special_events":            luaProvider.SpecialEvents,
+			"start_process":             luaProvider.StartProcess,
+			"swipe":                     luaProvider.Swipe,
+			"swipe_time":                luaProvider.SwipeTime,
+			"take_png_screen_shot":      luaProvider.TakePNGScreenShot,
+			"tap":         luaProvider.Tap,
+			"wait_for":    luaProvider.WaitFor,
+			"wait_for_ui": luaProvider.WaitForUi,
 		}
 		mod := L.SetFuncs(L.NewTable(), exports)
 		L.SetField(mod, "name", lua.LString("provider"))
@@ -66,30 +59,6 @@ type LuaProvider struct {
 // NewLuaProvider returns a lua provider instance
 func NewLuaProvider(provider Provider) *LuaProvider {
 	return &LuaProvider{provider: provider}
-}
-
-// Battle wrapper for lua engine
-func (lp *LuaProvider) Battle(L *lua.LState) int {
-	lp.provider.Battle()
-	return 0
-}
-
-// CheckBattle wrapper for lua engine
-func (lp *LuaProvider) CheckBattle(L *lua.LState) int {
-	lp.provider.CheckBattle()
-	return 0
-}
-
-// CheckIfBattle wrapper for lua engine
-func (lp *LuaProvider) CheckIfBattle(L *lua.LState) int {
-	lp.provider.CheckIfBattle()
-	return 0
-}
-
-// DetermineAutoDuelStatus wrapper for lua engine
-func (lp *LuaProvider) DetermineAutoDuelStatus(L *lua.LState) int {
-	lp.provider.DetermineAutoDuelStatus()
-	return 0
 }
 
 // EnsureResolutionMatches wrapper for lua engine
@@ -193,12 +162,6 @@ func (lp *LuaProvider) PreCheck(L *lua.LState) int {
 	return 1
 }
 
-// Scan wrapper for lua engine
-func (lp *LuaProvider) Scan(L *lua.LState) int {
-	lp.provider.Scan()
-	return 0
-}
-
 // ScanFor wrapper for lua engine
 func (lp *LuaProvider) ScanFor(L *lua.LState) int {
 	lp.provider.ScanFor()
@@ -272,12 +235,6 @@ func (lp *LuaProvider) Tap(L *lua.LState) int {
 		args[i-1] = L.Get(i)
 	}
 	lp.provider.Tap(args...)
-	return 0
-}
-
-// VerifyBattle wrapper for lua engine
-func (lp *LuaProvider) VerifyBattle(L *lua.LState) int {
-	lp.provider.VerifyBattle()
 	return 0
 }
 

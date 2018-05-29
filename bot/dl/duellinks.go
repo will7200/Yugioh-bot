@@ -12,20 +12,13 @@ type DuelLinksInstanceInfo struct {
 }
 
 type DuelLinks interface {
-	Battle()
-	CheckBattle()
-	CheckIfBattle()
-	DetermineAutoDuelStatus()
 	GetCurrentPage(mat *gocv.Mat)
 	InitialScreen(started bool) (bool, error)
 	ScanFor()
-	Scan()
-	VerifyBattle()
 	WaitFor()
 }
 
 type BaseDuelLinks struct {
-	CurrentRun  int
 	SleepFactor float64
 	provider    Provider
 }
@@ -35,38 +28,6 @@ func (*BaseDuelLinks) ScanFor() {
 }
 
 func (*BaseDuelLinks) GetCurrentPage(mat *gocv.Mat) {
-	log.Panic("implement me")
-}
-
-func (*BaseDuelLinks) CheckIfBattleIsRunning() {
-	log.Panic("implement me")
-}
-
-func (*BaseDuelLinks) CheckBattle() {
-	log.Panic("implement me")
-}
-
-func (*BaseDuelLinks) Scan() {
-	log.Panic("implement me")
-}
-
-func (*BaseDuelLinks) MethodName() {
-	log.Panic("implement me")
-}
-
-func (*BaseDuelLinks) DetermineAutoDuelStatus() {
-	log.Panic("implement me")
-}
-
-func (*BaseDuelLinks) Battle() {
-	log.Panic("implement me")
-}
-
-func (*BaseDuelLinks) CheckIfBattle() {
-	log.Panic("implement me")
-}
-
-func (*BaseDuelLinks) VerifyBattle() {
 	log.Panic("implement me")
 }
 
@@ -81,7 +42,6 @@ func (*BaseDuelLinks) WaitFor() {
 
 func NewDuelLinks(no *Options) DuelLinks {
 	return &BaseDuelLinks{
-		0,
 		no.SleepFactor,
 		no.Provider,
 	}
