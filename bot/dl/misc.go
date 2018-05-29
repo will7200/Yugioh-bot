@@ -118,7 +118,7 @@ func (fb *fallBackMiscellaneous) ScreenDimensions() image.Point {
 
 func (fb *fallBackMiscellaneous) GetAsset(key string) AssetMap {
 	asset := fb.delegate.GetAsset(key)
-	if asset == (AssetMap{}) {
+	if asset.Key == "" {
 		return fb.predefined.GetAsset(AssetPrefix + TransformKey(key, fb.defaultDimensions))
 	}
 	return asset

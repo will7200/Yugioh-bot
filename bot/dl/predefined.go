@@ -60,6 +60,10 @@ func (p *Predefined) GetAreaLocation(key string) AreaLocation {
 	return AreaLocation{}
 }
 
+type Boundaries struct {
+	Lower image.Point
+	Upper image.Point
+}
 type basePredefined struct {
 	Key          string `xml:"key,attr"`
 	PropertyName string
@@ -89,6 +93,9 @@ type AssetMap struct {
 	ScaleFactor float64 `xml:"scalefactor"`
 	XThres      int     `xml:"x-threshold,attr"`
 	YThres      int     `xml:"y-threshold,attr"`
+
+	// If XThres and YThres will be phased out eventually, leave upper blank if only lower boundaries are required
+	Bounds []Boundaries `xml:"Bounds>Boundary"`
 }
 
 type BotConst struct {

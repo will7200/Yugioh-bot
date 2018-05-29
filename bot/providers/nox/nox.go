@@ -202,10 +202,10 @@ func (nox *NoxProvider) startApp() error {
 func (nox *NoxProvider) getImage(key string, tryDefault bool) (gocv.Mat, error) {
 	var asset dl.AssetMap
 	asset = nox.GetAsset(key)
-	if asset == (dl.AssetMap{}) && tryDefault {
+	if asset.Key == "" && tryDefault {
 		asset = nox.predefined.GetAsset("Asset-" + dl.TransformKey(key, dl.DefaultSize))
 	}
-	if asset == (dl.AssetMap{}) {
+	if asset.Key == "" {
 		log.Panicf("Asset resource %s does not have a mapping", key)
 	}
 	original, err := dl.OpenUIAsset(asset.Name, nox.options.HomeDir, nox.options.FileSystem)
