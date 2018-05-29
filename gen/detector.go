@@ -13,54 +13,54 @@ import (
 )
 
 const (
-	comparatorLoader = "ComparatorLoader"
-	comparator       = "LuaComparator"
+	detectorLoader = "DetectorLoader"
+	detector       = "LuaDetector"
 )
 
-func luacomparator() *File {
+func luadetector() *File {
 	f := NewFile("dl")
 	f.ImportAlias(gopherLua, "lua")
 	f.ImportName("gocv.io/x/gocv", "gocv")
 	registeredImports := map[string]string{
 		"gocv": "gocv.io/x/gocv",
 	}
-	f.Commentf("%s loads all exposed comparator methods", comparatorLoader)
+	f.Commentf("%s loads all exposed detector methods", detectorLoader)
 	mapFunctions := Dict{}
-	luaComparator := "luaComparator"
+	luaDetector := "luaDetector"
 	funcLoaderProvider := make([]Code, 6)
 	funcLoaderProvider = append(funcLoaderProvider, []Code{
-		Id(luaComparator).Op(":=").Id("NewLuaComparator").Params(Id("comparator")),
+		Id(luaDetector).Op(":=").Id("NewLuaDetector").Params(Id("detector")),
 		Id("exports").Op(":=").Map(String()).Qual(gopherLua, "LGFunction").Values(
 			mapFunctions,
 		),
 		Id("mod").Op(":=").Id("L").Op(".").Id("SetFuncs").Params(Id("L").Op(".").Id("NewTable").Call(), Id("exports")),
-		Id("L").Op(".").Id("SetField").Params(Id("mod"), Lit("name"), Qual(gopherLua, "LString").Params(Lit("comparator"))),
+		Id("L").Op(".").Id("SetField").Params(Id("mod"), Lit("name"), Qual(gopherLua, "LString").Params(Lit("detector"))),
 		Id("L").Op(".").Id("Push").Params(Id("mod")),
 		Return(Lit(1)),
 	}...)
-	loaderComparator := f.Func().Id(comparatorLoader).Params(Id("comparator").Id("Comparator")).Id(
+	loaderDetector := f.Func().Id(detectorLoader).Params(Id("detector").Id("Detector")).Id(
 		"func(*lua.LState) int",
 	)
-	f.Commentf("%s methods exposed in lua engine", comparator)
-	f.Type().Id(comparator).Struct(
-		Id("comparator").Id("Comparator"),
+	f.Commentf("%s methods exposed in lua engine", detector)
+	f.Type().Id(detector).Struct(
+		Id("detector").Id("Detector"),
 	)
-	f.Comment("NewLuaComparator returns a lua provider instance")
-	f.Func().Id("NewLuaComparator").Params(Id("comparator").Id("Comparator")).Op("*").Id("LuaComparator").Block(
+	f.Comment("NewLuaDetector returns a lua provider instance")
+	f.Func().Id("NewLuaDetector").Params(Id("detector").Id("Detector")).Op("*").Id("LuaDetector").Block(
 		Return(
-			Op("&").Id("LuaComparator").Values(
-				Id("comparator").Op(":").Id("comparator"),
+			Op("&").Id("LuaDetector").Values(
+				Id("detector").Op(":").Id("detector"),
 			),
 		),
 	)
-	comparator2 := dl.NewComparator(&dl.Options{})
-	fooType := reflect.TypeOf(comparator2)
+	detector2 := dl.NewDetector(&dl.Options{})
+	fooType := reflect.TypeOf(detector2)
 	setTypes := make(map[string]struct{})
 	for i := 0; i < fooType.NumMethod(); i++ {
 		method := fooType.Method(i)
 		fmt.Println(lib.Split(method.Name))
-		t := Id("lp.comparator." + method.Name)
-		mapFunctions[Lit(strings.ToLower(strings.Join(lib.Split(method.Name), "_")))] = Id(luaComparator).Op(".").Id(method.Name)
+		t := Id("lp.detector." + method.Name)
+		mapFunctions[Lit(strings.ToLower(strings.Join(lib.Split(method.Name), "_")))] = Id(luaDetector).Op(".").Id(method.Name)
 		paramsArray := make([]Code, method.Type.NumIn()-1)
 		for j := 1; j < method.Type.NumIn(); j++ {
 			l := method.Type.In(j)
@@ -142,7 +142,7 @@ func luacomparator() *File {
 		o.Add(t.Params(paramsArray...))
 		f.Commentf("%s wrapper for lua engine", method.Name)
 		f.Func().Params(
-			Id("lp").Op("*").Id(comparator),
+			Id("lp").Op("*").Id(detector),
 		).Id(method.Name).Params(
 			Id("L").Op("*").Qual(gopherLua, "LState"),
 		).Int().Block(retPush...)
@@ -155,7 +155,7 @@ func luacomparator() *File {
 		}
 	}
 	funcLoaderProvider = append(newSetTypes, funcLoaderProvider...)
-	loaderComparator.Block(
+	loaderDetector.Block(
 		Return(
 			Func().Params(Id("L").Op("*").Qual(gopherLua, "LState")).Int().Block(
 				funcLoaderProvider...,
