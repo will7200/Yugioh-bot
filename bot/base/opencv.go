@@ -27,7 +27,7 @@ func InRange(src, lb, ub gocv.Mat) gocv.Mat {
 }
 
 func BitwiseAnd(src, mask gocv.Mat) gocv.Mat {
-	if src.Cols() != mask.Cols() && src.Rows() != mask.Cols() {
+	if src.Cols() != mask.Cols() || src.Rows() != mask.Rows() || src.Channels() != mask.Channels() {
 		log.Panic("src and mask do not match")
 	}
 	mat := gocv.NewMat()
@@ -44,9 +44,13 @@ func CvtColor(src gocv.Mat, code gocv.ColorConversionCode) gocv.Mat {
 func MaskImage(src, lowerBound, upperBound gocv.Mat, applyMask bool) gocv.Mat {
 	dst := gocv.NewMat()
 	gocv.InRange(src, lowerBound, upperBound, &dst)
+	gocv.IMWrite("dst.png", dst)
 	if applyMask {
 		defer dst.Close()
-		return BitwiseAnd(src, dst)
+		ndst := gocv.NewMat()
+		src.CopyToWithMask(&ndst, dst)
+		return ndst
+		// return BitwiseAnd(src, dst)
 	}
 	return dst
 }

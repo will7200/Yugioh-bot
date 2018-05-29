@@ -2,12 +2,10 @@ package base
 
 import (
 	"image"
-	"reflect"
-	"testing"
-
-	"runtime"
-
 	"path"
+	"reflect"
+	"runtime"
+	"testing"
 
 	"github.com/mitchellh/go-homedir"
 	"gocv.io/x/gocv"
