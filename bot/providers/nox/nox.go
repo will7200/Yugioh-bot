@@ -217,8 +217,8 @@ func (nox *NoxProvider) getImage(key string, tryDefault bool) (gocv.Mat, error) 
 	if err != nil {
 		return gocv.Mat{}, err
 	}
-	imgMat := gocv.IMDecode(b, gocv.IMReadGrayScale)
-	if imgMat.Empty() {
+	imgMat, err := gocv.IMDecode(b, gocv.IMReadGrayScale)
+	if imgMat.Empty() || err != nil {
 		return imgMat, fmt.Errorf("Matrix is empty for resource %s", key)
 	}
 	if tryDefault {

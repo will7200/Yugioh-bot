@@ -72,8 +72,8 @@ func (action *BaseActions) GetImgFromScreenShot(fromCache bool, fail int) gocv.M
 			log.Error(err)
 			continue
 		}
-		img := gocv.IMDecode(screenShot, gocv.IMReadColor)
-		if img.Empty() {
+		img, err := gocv.IMDecode(screenShot, gocv.IMReadColor)
+		if img.Empty() || err != nil {
 			continue
 		}
 		action.cache.Set(LastImage, img.Clone(), cache.DefaultExpiration)

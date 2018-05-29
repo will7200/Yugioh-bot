@@ -64,8 +64,8 @@ func GetImageFromAsset(asset AssetMap, options Options) (gocv.Mat, error) {
 	if err != nil {
 		return gocv.Mat{}, err
 	}
-	imgMat := gocv.IMDecode(b, gocv.IMReadGrayScale)
-	if imgMat.Empty() {
+	imgMat, err := gocv.IMDecode(b, gocv.IMReadGrayScale)
+	if imgMat.Empty() || err != nil {
 		return imgMat, fmt.Errorf("Matrix is empty for resource %s", asset.Name)
 	}
 	return imgMat, nil
