@@ -8,7 +8,7 @@ import (
 var guiCmd = &cobra.Command{
 	Use:   "steam",
 	Short: "Starts a bot instance using the steam app",
-	Long:  `Starts a bot using the Yu-gi-oh App from steam. This is limited to max one instance per machine.`,
+	Long:  `Starts a bot using the Yu-gi-oh App from steam. This is limited to max one instance per machine and runs only on windows.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Panic("steam not implemented yet")
 	},
