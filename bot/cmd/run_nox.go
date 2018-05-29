@@ -65,10 +65,6 @@ func (t *remoteStart) Start() error {
 }
 
 func noxInstance(cmd *cobra.Command, args []string) {
-	if len(args) > 0 && args[0] == "client" {
-		client()
-		return
-	}
 	d := &base.Dispatcher{}
 	d.StartDispatcher(viper.GetInt(botWorkers))
 	rs := remoteStart{}
