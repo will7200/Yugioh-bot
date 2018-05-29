@@ -90,6 +90,12 @@
   version = "v1.4.7"
 
 [[projects]]
+  name = "github.com/gobuffalo/packr"
+  packages = ["."]
+  revision = "7f4074995d431987caaa35088199f13c44b24440"
+  version = "v1.11.0"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -314,14 +320,13 @@
   source = "github.com/gobotlogic/goadb"
 
 [[projects]]
-  branch = "master"
   name = "gocv.io/x/gocv"
   packages = [
     ".",
     "contrib"
   ]
-  revision = "db18c81a2d03c936a9fa5b7cb995b85190dbea52"
-  source = "github.com/will7200/gocv"
+  revision = "e15f50944641934b422fa4f907028058690bba00"
+  version = "0.12.0"
 
 [[projects]]
   branch = "master"
@@ -430,6 +435,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8ed8384a4aff5511464f857b561d65082edd4c189776402bd047816f45f52f08"
+  inputs-digest = "267db3d225b3fb91ced54e1c614422604d73ef45d9eabad14b791a9ac75806c7"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -78,8 +78,7 @@
 
 [[constraint]]
   name = "gocv.io/x/gocv"
-  branch = "master"
-  source = "github.com/will7200/gocv"
+  version = "0.12.0"
 
 [prune]
   go-tests = true
@@ -127,3 +126,7 @@
   branch = "master"
   name = "github.com/cdipaolo/goml"
   source = "github.com/will7200/goml"
+
+[[constraint]]
+  name = "github.com/gobuffalo/packr"
+  version = "1.11.0"
