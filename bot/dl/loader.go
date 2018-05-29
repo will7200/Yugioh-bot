@@ -23,7 +23,6 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 		luaProvider := NewLuaProvider(provider)
 		exports := map[string]lua.LGFunction{
 			"battle":                     luaProvider.Battle,
-			"battle_mode":                luaProvider.BattleMode,
 			"check_battle":               luaProvider.CheckBattle,
 			"check_if_battle":            luaProvider.CheckIfBattle,
 			"determine_auto_duel_status": luaProvider.DetermineAutoDuelStatus,
@@ -34,12 +33,10 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 			"get_img_from_screen_shot":   luaProvider.GetImgFromScreenShot,
 			"get_location":               luaProvider.GetLocation,
 			"get_ui_location":            luaProvider.GetUILocation,
-			"guided_mode":                luaProvider.GuidedMode,
 			"img_to_string":              luaProvider.ImgToString,
 			"is_process_running":         luaProvider.IsProcessRunning,
 			"kill_process":               luaProvider.KillProcess,
 			"initial_screen":             luaProvider.InitialScreen,
-			"possible_battle_points":     luaProvider.PossibleBattlePoints,
 			"pre_check":                  luaProvider.PreCheck,
 			"scan":                       luaProvider.Scan,
 			"scan_for":                   luaProvider.ScanFor,
@@ -48,7 +45,6 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 			"start_process":              luaProvider.StartProcess,
 			"swipe":                      luaProvider.Swipe,
 			"swipe_time":                 luaProvider.SwipeTime,
-			"system_call":                luaProvider.SystemCall,
 			"take_png_screen_shot":       luaProvider.TakePNGScreenShot,
 			"tap":           luaProvider.Tap,
 			"verify_battle": luaProvider.VerifyBattle,
@@ -75,12 +71,6 @@ func NewLuaProvider(provider Provider) *LuaProvider {
 // Battle wrapper for lua engine
 func (lp *LuaProvider) Battle(L *lua.LState) int {
 	lp.provider.Battle()
-	return 0
-}
-
-// BattleMode wrapper for lua engine
-func (lp *LuaProvider) BattleMode(L *lua.LState) int {
-	lp.provider.BattleMode(L.CheckString(1), L.CheckString(2), L.CheckString(3))
 	return 0
 }
 
@@ -165,12 +155,6 @@ func (lp *LuaProvider) GetUILocation(L *lua.LState) int {
 	return 1
 }
 
-// GuidedMode wrapper for lua engine
-func (lp *LuaProvider) GuidedMode(L *lua.LState) int {
-	lp.provider.GuidedMode()
-	return 0
-}
-
 // ImgToString wrapper for lua engine
 func (lp *LuaProvider) ImgToString(L *lua.LState) int {
 	lp.provider.ImgToString()
@@ -200,12 +184,6 @@ func (lp *LuaProvider) InitialScreen(L *lua.LState) int {
 	}
 	L.Push(lua.LBool(A))
 	return 1
-}
-
-// PossibleBattlePoints wrapper for lua engine
-func (lp *LuaProvider) PossibleBattlePoints(L *lua.LState) int {
-	lp.provider.PossibleBattlePoints()
-	return 0
 }
 
 // PreCheck wrapper for lua engine
@@ -269,12 +247,6 @@ func (lp *LuaProvider) SwipeTime(L *lua.LState) int {
 	return 0
 }
 
-// SystemCall wrapper for lua engine
-func (lp *LuaProvider) SystemCall(L *lua.LState) int {
-	lp.provider.SystemCall()
-	return 0
-}
-
 // TakePNGScreenShot wrapper for lua engine
 func (lp *LuaProvider) TakePNGScreenShot(L *lua.LState) int {
 	A, B := lp.provider.TakePNGScreenShot()
@@ -324,8 +296,12 @@ func (lp *LuaProvider) WaitForUi(L *lua.LState) int {
 // DetectorLoader loads all exposed detector methods
 func DetectorLoader(detector Detector) func(*lua.LState) int {
 	return func(L *lua.LState) int {
-		luaComparator := NewLuaComparator(comparator)
-		exports := map[string]lua.LGFunction{"compare": luaComparator.Compare}
+		_ = L.NewTypeMetatable("[]dl.Circle")
+		luaDetector := NewLuaDetector(detector)
+		exports := map[string]lua.LGFunction{
+			"circles": luaDetector.Circles,
+			"compare": luaDetector.Compare,
+		}
 		mod := L.SetFuncs(L.NewTable(), exports)
 		L.SetField(mod, "name", lua.LString("detector"))
 		L.Push(mod)
@@ -343,9 +319,15 @@ func NewLuaDetector(detector Detector) *LuaDetector {
 	return &LuaDetector{detector: detector}
 }
 
-// NewLuaComparator returns a lua provider instance
-func NewLuaComparator(comparator Comparator) *LuaComparator {
-	return &LuaComparator{comparator: comparator}
+// Circles wrapper for lua engine
+func (lp *LuaDetector) Circles(L *lua.LState) int {
+	A, B := lp.detector.Circles(L.CheckString(1), L.CheckUserData(2).Value.(gocv.Mat))
+	userDefinedA := L.NewUserData()
+	userDefinedA.Value = A
+	L.SetMetatable(userDefinedA, L.GetTypeMetatable("[]dl.Circle"))
+	L.Push(userDefinedA)
+	L.Push(lua.LBool(B))
+	return 2
 }
 
 // Compare wrapper for lua engine
