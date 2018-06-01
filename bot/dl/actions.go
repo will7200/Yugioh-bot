@@ -53,15 +53,11 @@ func (action *BaseActions) WaitForUi(timeSleep time.Duration) {
 }
 
 func (action *BaseActions) GetImgFromScreenShot(fromCache bool, fail int) gocv.Mat {
+	start := time.Now()
 	if lastImage, found := action.cache.Get(LastImage); found && fromCache {
+		log.Warn(time.Now().Sub(start))
 		return lastImage.(gocv.Mat)
-	} else if found {
-		img := lastImage.(gocv.Mat)
-		if !img.Empty() {
-			img.Close()
-		}
 	}
-	action.cache.DeleteExpired()
 	for timesFailed := 0; timesFailed < fail; timesFailed++ {
 		// I am cheating here really not a good design pattern
 		// Since go will call BaseActions implementation of TakePNGScreenShot
@@ -76,10 +72,18 @@ func (action *BaseActions) GetImgFromScreenShot(fromCache bool, fail int) gocv.M
 		if img.Empty() || err != nil {
 			continue
 		}
-		action.cache.Set(LastImage, img.Clone(), cache.DefaultExpiration)
+		go func() {
+			if lastImage, found := action.cache.Get(LastImage); found {
+				lt := lastImage.(gocv.Mat)
+				lt.Close()
+			}
+			action.cache.Set(LastImage, img, cache.DefaultExpiration)
+		}()
+		log.Warn(time.Now().Sub(start))
 		return img
 	}
 	log.Panicf("Cannot obtain proper image for provider")
+	log.Warn(time.Now().Sub(start))
 	return gocv.NewMat()
 }
 
@@ -88,5 +92,12 @@ func NewActions(o *Options) Actions {
 	action := new(BaseActions)
 	action.cache = o.ImageCache
 	action.options = o
+	ticker := time.NewTicker(5 * time.Minute)
+	go func() {
+		for t := range ticker.C {
+			log.Debug("Cleaning cache at %s", t.Format(time.RFC3339))
+			action.cache.DeleteExpired()
+		}
+	}()
 	return action
 }
