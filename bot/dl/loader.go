@@ -1,10 +1,9 @@
 package dl
 
 import (
-	"runtime"
+	"image"
 	"time"
 
-	"github.com/will7200/Yugioh-bot/bot/base"
 	"github.com/yuin/gopher-lua"
 	"gocv.io/x/gocv"
 )
@@ -98,7 +97,7 @@ func (lp *LuaProvider) GetImgFromScreenShot(L *lua.LState) int {
 	A := lp.provider.GetImgFromScreenShot(L.CheckBool(1), L.CheckInt(2))
 	userDefinedA := L.NewUserData()
 	userDefinedA.Value = A
-	runtime.SetFinalizer(&A, base.FreeMat)
+	// runtime.SetFinalizer(&A, base.FreeMat)
 	L.SetMetatable(userDefinedA, L.GetTypeMetatable("gocv.Mat"))
 	L.Push(userDefinedA)
 	return 1
@@ -232,7 +231,7 @@ func (lp *LuaProvider) Tap(L *lua.LState) int {
 			args[i-1] = lv.Value
 			continue
 		}
-		args[i-1] = L.Get(i)
+		args[i-1] = L.CheckInt(i)
 	}
 	lp.provider.Tap(args...)
 	return 0
@@ -254,6 +253,8 @@ func (lp *LuaProvider) WaitForUi(L *lua.LState) int {
 func DetectorLoader(detector Detector) func(*lua.LState) int {
 	return func(L *lua.LState) int {
 		_ = L.NewTypeMetatable("[]dl.Circle")
+		circle := L.NewTypeMetatable("dl.Circle")
+		L.SetField(circle, "__index", L.SetFuncs(L.NewTable(), circleMethods))
 		luaDetector := NewLuaDetector(detector)
 		exports := map[string]lua.LGFunction{
 			"circles": luaDetector.Circles,
@@ -276,13 +277,55 @@ func NewLuaDetector(detector Detector) *LuaDetector {
 	return &LuaDetector{detector: detector}
 }
 
+func checkCircle(L *lua.LState) *Circle {
+	ud := L.CheckUserData(1)
+	if v, ok := ud.Value.(Circle); ok {
+		return &v
+	}
+	L.ArgError(1, "array of circles expected")
+	return nil
+}
+
+// Getter and setter for the circles#Point
+func circlesGetSetPoint(L *lua.LState) int {
+	p := checkCircle(L)
+	if L.GetTop() == 3 {
+		p.Point = image.Pt(L.CheckInt(2), L.CheckInt(3))
+		return 0
+	}
+	L.Push(lua.LNumber(p.Point.X))
+	L.Push(lua.LNumber(p.Point.Y))
+	return 2
+}
+
+// Getter and setter for the Person#Name
+func circlesGetSetRadius(L *lua.LState) int {
+	p := checkCircle(L)
+	if L.GetTop() == 2 {
+		p.Radius = L.CheckInt(2)
+		return 0
+	}
+	L.Push(lua.LNumber(p.Radius))
+	return 1
+}
+
+var circleMethods = map[string]lua.LGFunction{
+	"point":  circlesGetSetPoint,
+	"radius": circlesGetSetRadius,
+}
+
 // Circles wrapper for lua engine
 func (lp *LuaDetector) Circles(L *lua.LState) int {
 	A, B := lp.detector.Circles(L.CheckString(1), L.CheckUserData(2).Value.(gocv.Mat))
-	userDefinedA := L.NewUserData()
-	userDefinedA.Value = A
-	L.SetMetatable(userDefinedA, L.GetTypeMetatable("[]dl.Circle"))
-	L.Push(userDefinedA)
+	luaCircles := L.NewTable()
+	for _, value := range A {
+		userDefined := L.NewUserData()
+		userDefined.Value = value
+		L.SetMetatable(userDefined, L.GetTypeMetatable("dl.Circle"))
+		luaCircles.Append(userDefined)
+	}
+	L.SetMetatable(luaCircles, L.GetTypeMetatable("[]dl.Circle"))
+	L.Push(luaCircles)
 	L.Push(lua.LBool(B))
 	return 2
 }
