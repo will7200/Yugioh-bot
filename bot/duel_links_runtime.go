@@ -179,6 +179,7 @@ func (rt *runTime) Main() error {
 	L.PreloadModule("provider", dl.ProviderLoader(rt.provider))
 	L.PreloadModule("rt", RunTimeLoader(rt))
 	L.PreloadModule("detector", dl.DetectorLoader(rt.detector))
+	L.PreloadModule("common", dl.CommonLoader(rt.provider.Options()))
 	L.SetGlobal("luaprint", L.NewFunction(luaPrint))
 	file.Close()
 	if err := L.DoFile(file.Name()); err != nil {

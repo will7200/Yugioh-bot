@@ -14,6 +14,13 @@ import (
 	"github.com/spf13/afero"
 )
 
+const (
+	AssetPrefix         = "Asset-"
+	UILocationPrefix    = "UILocation-"
+	LocationPrefix      = "Location-"
+	AreaLocationPrefeix = "AreaLocation-"
+)
+
 var (
 	DefaultSize = image.Pt(480, 800)
 	box         = packr.NewBox(path.Join(os.Getenv("HOME"), "DLBot"))
@@ -72,25 +79,23 @@ type basePredefined struct {
 	Key          string `xml:"key,attr"`
 	PropertyName string
 	Description  string
+	Height       string `xml:"height,attr"`
+	Width        string `xml:"width,attr"`
 }
 
 type UILocation struct {
 	basePredefined
-	Point  image.Point
-	Height string `xml:"height,attr"`
-	Width  string `xml:"width,attr"`
+	Point image.Point
 }
 
 type AreaLocation struct {
 	basePredefined
-	Left, Top, Width, Height int
+	Bounds Boundaries
 }
 
 type AssetMap struct {
 	basePredefined
-	Name   string
-	Height string `xml:"height,attr"`
-	Width  string `xml:"width,attr"`
+	Name string
 
 	// The following fields are options but all need to be defined if using as a comparator
 	Comparator  bool    `xml:"comparator,attr"`
@@ -165,14 +170,22 @@ func ReadPredefined(r io.Reader) (*Predefined, error) {
 func ConstructPredefined(v *Predefined) {
 	rbt := redblacktree.NewWithStringComparator()
 	var key string
+
 	for _, value := range v.AssetMap {
 		key = ConstructKey(value)
 		rbt.Put(key, value)
 	}
+
 	for _, value := range v.UILocations {
 		key = ConstructKey(value)
 		rbt.Put(key, value)
 	}
+
+	for _, value := range v.AreaLocations {
+		key = ConstructKey(value)
+		rbt.Put(key, value)
+	}
+
 	v.rbt = rbt
 	if v.BotConst.StartScreenSimilarity == 0 {
 		v.BotConst.StartScreenSimilarity = .85
@@ -183,7 +196,7 @@ func ConstructKey(v interface{}) (key string) {
 	key = ""
 	switch t := v.(type) {
 	case AssetMap:
-		key = "Asset-"
+		key = AssetPrefix
 		if t.Comparator {
 			return key + t.Key
 		}
@@ -194,7 +207,14 @@ func ConstructKey(v interface{}) (key string) {
 		key = key + t.Key + "-" + t.Width + "x" + t.Height
 		return
 	case UILocation:
-		key = "UILocation-"
+		key = UILocationPrefix
+		if t.Height == "" || t.Width == "" {
+			key = key + t.Key + "-unknown"
+			return
+		}
+		key = key + t.Key + "-" + t.Width + "x" + t.Height
+	case AreaLocation:
+		key = AreaLocationPrefeix
 		if t.Height == "" || t.Width == "" {
 			key = key + t.Key + "-unknown"
 			return

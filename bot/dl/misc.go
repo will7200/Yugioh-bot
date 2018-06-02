@@ -6,32 +6,30 @@ import (
 	"gocv.io/x/gocv"
 )
 
-const (
-	AssetPrefix         = "Asset-"
-	UILocationPrefix    = "UILocation-"
-	LocationPrefix      = "Location-"
-	AreaLocationPrefeix = "AreaLocation-"
-)
-
 // Miscellaneous all functions that don't fall under actions or are bot specific
 // fall under here
 type Miscellaneous interface {
-	IsProcessRunning() bool
-	StartProcess()
-	KillProcess()
 	EnsureResolutionMatches(mat *gocv.Mat)
-	// Ensures that every is ok
-	PreCheck() error
-	ScreenDimensions() image.Point
 	GetAsset(key string) AssetMap
-	GetUILocation(key string) UILocation
-	GetLocation(key string) Location
 	GetAreaLocation(key string) AreaLocation
+	GetLocation(key string) Location
+	GetUILocation(key string) UILocation
+	IsProcessRunning() bool
+	KillProcess()
+	PreCheck() error
+	Options() *Options
+	// Ensures that every is ok
+	ScreenDimensions() image.Point
+	StartProcess()
 }
 
 type BaseMiscellaneous struct {
 	options    *Options
 	predefined *Predefined
+}
+
+func (bm *BaseMiscellaneous) Options() *Options {
+	return bm.options
 }
 
 func (bm *BaseMiscellaneous) ScreenDimensions() image.Point {
@@ -51,6 +49,7 @@ func (bm *BaseMiscellaneous) GetLocation(key string) Location {
 }
 
 func (bm *BaseMiscellaneous) GetAreaLocation(key string) AreaLocation {
+	log.Warn(AreaLocationPrefeix + TransformKey(key, bm.ScreenDimensions()))
 	return bm.predefined.GetAreaLocation(AreaLocationPrefeix + TransformKey(key, bm.ScreenDimensions()))
 }
 
@@ -60,7 +59,7 @@ func (*BaseMiscellaneous) PreCheck() error {
 }
 
 func (*BaseMiscellaneous) IsProcessRunning() bool {
-	//log.Panic("implement me")
+	// log.Panic("implement me")
 	return true
 }
 
@@ -90,6 +89,10 @@ type fallBackMiscellaneous struct {
 	delegate          Miscellaneous
 	predefined        *Predefined
 	resize            Resizer
+}
+
+func (fb *fallBackMiscellaneous) Options() *Options {
+	return fb.delegate.Options()
 }
 
 func (fb *fallBackMiscellaneous) IsProcessRunning() bool {

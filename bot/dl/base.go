@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"image"
 	"path"
 	"runtime/debug"
 	"time"
@@ -71,15 +72,15 @@ func GetImageFromAsset(asset AssetMap, options Options) (gocv.Mat, error) {
 // Warning do not close the images from the cache, they will be closed on eviction
 // If you need to modify, clone it.
 func TryImageFromCache(asset AssetMap, options Options, c *cache.Cache) (gocv.Mat, error) {
-	if image, found := c.Get(asset.Key); found {
-		return image.(gocv.Mat), nil
+	if img, found := c.Get(asset.Key); found {
+		return img.(gocv.Mat), nil
 	}
-	image, err := GetImageFromAsset(asset, options)
+	img, err := GetImageFromAsset(asset, options)
 	if err != nil {
-		return image, err
+		return img, err
 	}
-	c.Add(asset.Key, image, cache.DefaultExpiration)
-	return image, nil
+	c.Add(asset.Key, img, cache.DefaultExpiration)
+	return img, nil
 }
 
 // NewProvider
@@ -203,7 +204,9 @@ func GetImage(key string, matType gocv.IMReadFlag, options Options) (*gocv.Mat, 
 
 }
 
-// IsStartScreen
+// IsStartScreen checks whether the image is the landing page of Yugioh duel links
+// The comparision of the image is compared against the image registered as start screen
+// under the AssetMap region. Accomplished through SSIM, defined in Bot Constants.
 func IsStartScreen(img gocv.Mat, options Options) (bool, error) {
 	imgMat, err := GetImage("start_screen", gocv.IMReadGrayScale, options)
 	if err != nil {
@@ -236,6 +239,36 @@ func IsStartScreen(img gocv.Mat, options Options) (bool, error) {
 	score := base.SSIM_GOCV(maskedMat, maskedOriginal)
 	log.Debugf("Start Screen Similarity: %.2f vs %.2f", score, options.Predefined.BotConst.StartScreenSimilarity)
 	if score > options.Predefined.BotConst.StartScreenSimilarity {
+		return true, nil
+	}
+	return false, nil
+}
+
+// CheckIfBattle Will Determine if the image is a precusor to a battle
+// It accomplishes this by looking for the white dialog at the bottom of the screen
+// The bounds are defined in the data file.
+func CheckIfBattle(img gocv.Mat, percentage float64, options Options) (bool, error) {
+
+	var asset AreaLocation
+	asset = options.Provider.GetAreaLocation("battle_mode_area")
+	topCorner := asset.Bounds.Lower
+	bottomCorner := asset.Bounds.Upper
+
+	if bottomCorner == (image.Point{}) {
+		return false, errors.New("invalid bottom point")
+	}
+	// use image.Rect in case data is wrong and the lower and upper bounds are switched
+	roi := img.Region(image.Rect(topCorner.X, topCorner.Y, bottomCorner.X, bottomCorner.Y))
+	whiteMin := gocv.NewScalar(250, 250, 250, 0)
+	whiteMax := gocv.NewScalar(255, 255, 255, 255)
+
+	whiteQuery := gocv.NewMat()
+	gocv.InRangeWithScalar(roi, whiteMin, whiteMax, &whiteQuery)
+
+	defer roi.Close()
+	defer whiteQuery.Close()
+
+	if gocv.CountNonZero(whiteQuery) > int(float64(roi.Rows()*roi.Cols())*percentage) {
 		return true, nil
 	}
 	return false, nil

@@ -44,6 +44,9 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 		}
 		mod := L.SetFuncs(L.NewTable(), exports)
 		L.SetField(mod, "name", lua.LString("provider"))
+		options := L.NewUserData()
+		options.Value = provider.Options()
+		L.SetField(mod, "options", options)
 		L.Push(mod)
 		return 1
 	}
@@ -238,7 +241,12 @@ func (lp *LuaProvider) WaitFor(L *lua.LState) int {
 
 // WaitForUi wrapper for lua engine
 func (lp *LuaProvider) WaitForUi(L *lua.LState) int {
-	lp.provider.WaitForUi(time.Duration(L.CheckInt(1)) * time.Second)
+	sleep := float64(L.CheckNumber(1))
+	if sleep < 1 {
+		lp.provider.WaitForUi(time.Duration(sleep*1000) * time.Millisecond)
+		return 0
+	}
+	lp.provider.WaitForUi(time.Duration(sleep) * time.Second)
 	return 0
 }
 
@@ -285,8 +293,8 @@ func checkCircle(L *lua.LState) *Circle {
 	return nil
 }
 
-// Getter and setter for the circles#Point
-func circlesGetSetPoint(L *lua.LState) int {
+// Getter and setter for the circle#Point
+func circleGetSetPoint(L *lua.LState) int {
 	p := checkCircle(L)
 	if L.GetTop() == 3 {
 		p.Point = image.Pt(L.CheckInt(2), L.CheckInt(3))
@@ -297,8 +305,8 @@ func circlesGetSetPoint(L *lua.LState) int {
 	return 2
 }
 
-// Getter and setter for the Person#Name
-func circlesGetSetRadius(L *lua.LState) int {
+// Getter and setter for the circle#Radius
+func circleGetSetRadius(L *lua.LState) int {
 	p := checkCircle(L)
 	if L.GetTop() == 2 {
 		p.Radius = L.CheckInt(2)
@@ -309,8 +317,8 @@ func circlesGetSetRadius(L *lua.LState) int {
 }
 
 var circleMethods = map[string]lua.LGFunction{
-	"point":  circlesGetSetPoint,
-	"radius": circlesGetSetRadius,
+	"point":  circleGetSetPoint,
+	"radius": circleGetSetRadius,
 }
 
 // Circles wrapper for lua engine
@@ -341,4 +349,51 @@ func (lp *LuaDetector) Compare(L *lua.LState) int {
 	A := lp.detector.Compare(L.CheckString(1), L.CheckUserData(2).Value.(gocv.Mat), corr)
 	L.Push(lua.LBool(A))
 	return 1
+}
+
+// Common functions exposed in lua engine
+func CommonLoader(options *Options) func(*lua.LState) int {
+	return func(L *lua.LState) int {
+		exports := map[string]lua.LGFunction{
+			"check_if_battle": checkIfBattle(options),
+			"is_start_screen": isStartScreen(options),
+		}
+		mod := L.SetFuncs(L.NewTable(), exports)
+		L.SetField(mod, "name", lua.LString("common"))
+		L.Push(mod)
+		return 1
+	}
+}
+
+func checkIfBattle(options *Options) func(*lua.LState) int {
+	return func(L *lua.LState) int {
+		A, B := CheckIfBattle(
+			L.CheckUserData(1).Value.(gocv.Mat),
+			float64(L.CheckNumber(2)),
+			*options,
+		)
+		if B != nil {
+			L.Push(lua.LBool(A))
+			L.Push(lua.LString(B.Error()))
+			return 2
+		}
+		L.Push(lua.LBool(A))
+		return 1
+	}
+}
+
+func isStartScreen(options *Options) func(*lua.LState) int {
+	return func(L *lua.LState) int {
+		A, B := IsStartScreen(
+			L.CheckUserData(1).Value.(gocv.Mat),
+			*options,
+		)
+		if B != nil {
+			L.Push(lua.LBool(A))
+			L.Push(lua.LString(B.Error()))
+			return 2
+		}
+		L.Push(lua.LBool(A))
+		return 1
+	}
 }
