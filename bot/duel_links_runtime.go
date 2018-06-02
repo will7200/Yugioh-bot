@@ -165,7 +165,6 @@ func (rt *runTime) Main() error {
 			log.Errorf("%v", r)
 			fmt.Print(string(debug.Stack()))
 			rt.signal <- struct{}{}
-			//panic(r)
 		}
 	}()
 	rt.options.Active = true
@@ -256,7 +255,7 @@ func NewRunTime(d *base.Dispatcher, provider dl.Provider, home string, appfs afe
 		log.Panic(err)
 	}
 	botOptions := config.Bot
-	options, fs := readPersistanceFile(&botOptions)
+	options, fs := readPersistenceFile(&botOptions)
 	return &runTime{
 		rtOptions:  botOptions,
 		options:    options,
@@ -268,7 +267,7 @@ func NewRunTime(d *base.Dispatcher, provider dl.Provider, home string, appfs afe
 	}
 }
 
-func readPersistanceFile(botOptions *BotOptions) (RunTimeOptions, afero.Fs) {
+func readPersistenceFile(botOptions *BotOptions) (RunTimeOptions, afero.Fs) {
 	rtfs := base.NewFSFromName(botOptions.PersistenceType)
 	file, err := rtfs.Open(botOptions.PersistenceLocation)
 	if err != nil {
