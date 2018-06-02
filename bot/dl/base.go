@@ -24,10 +24,9 @@ var (
 
 // Options
 type Options struct {
-	Path        string
-	HomeDir     string
-	SleepFactor float64
-	IsRemote    bool
+	Path     string
+	HomeDir  string
+	IsRemote bool
 
 	Provider   Provider
 	Predefined *Predefined

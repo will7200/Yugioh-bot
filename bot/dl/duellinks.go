@@ -20,8 +20,7 @@ type DuelLinks interface {
 }
 
 type BaseDuelLinks struct {
-	SleepFactor float64
-	provider    Provider
+	provider Provider
 }
 
 func (*BaseDuelLinks) SpecialEvents(info DuelLinksInstanceInfo) {
@@ -47,7 +46,6 @@ func (*BaseDuelLinks) WaitFor() {
 
 func NewDuelLinks(no *Options) DuelLinks {
 	return &BaseDuelLinks{
-		no.SleepFactor,
 		no.Provider,
 	}
 }

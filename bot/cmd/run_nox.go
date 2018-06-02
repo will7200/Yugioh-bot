@@ -116,14 +116,18 @@ func noxInstance(cmd *cobra.Command, args []string) {
 	}()
 	appfs := base.NewFSFromName("os")
 	options := &dl.Options{
-		Dispatcher:  d,
-		IsRemote:    viper.GetBool(noxAdbRemote),
-		SleepFactor: viper.GetFloat64(botSleepFactor),
-		Path:        viper.GetString(noxPath),
-		FileSystem:  appfs,
-		HomeDir:     home,
-		Predefined:  readDataFile(appfs),
-		ImageCache:  base.NewImageCache(),
+		Dispatcher: d,
+		IsRemote:   viper.GetBool(noxAdbRemote),
+		Path:       viper.GetString(noxPath),
+		FileSystem: appfs,
+		HomeDir:    home,
+		Predefined: readDataFile(appfs),
+		ImageCache: base.NewImageCache(),
+	}
+	if viper.GetFloat64(botSleepFactor) > 0 {
+		options.Predefined.BotConst.SleepFactor = viper.GetFloat64(botSleepFactor)
+	} else if options.Predefined.BotConst.SleepFactor <= 0 {
+		options.Predefined.BotConst.SleepFactor = 1
 	}
 	nox := dl.GetProvider("Nox", options)
 	options.Provider = nox

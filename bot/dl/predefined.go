@@ -109,6 +109,7 @@ type AssetMap struct {
 
 type BotConst struct {
 	StartScreenSimilarity float64
+	SleepFactor           float64
 	CompareDefinitions    CompareDefinitions
 	CirclesDefinitions    CirclesDefinitions
 }

@@ -48,8 +48,8 @@ func (action *BaseActions) SwipeTime(args ...interface{}) {
 }
 
 func (action *BaseActions) WaitForUi(timeSleep time.Duration) {
-	log.Debugf("Sleep for %.2f seconds", timeSleep.Seconds()*action.options.SleepFactor)
-	time.Sleep(time.Duration(int64(float64(timeSleep.Nanoseconds()) * action.options.SleepFactor)))
+	log.Debugf("Sleep for %.2f seconds", timeSleep.Seconds()*action.options.Predefined.BotConst.SleepFactor)
+	time.Sleep(time.Duration(int64(float64(timeSleep.Nanoseconds()) * action.options.Predefined.BotConst.SleepFactor)))
 }
 
 func (action *BaseActions) GetImgFromScreenShot(fromCache bool, fail int) gocv.Mat {
