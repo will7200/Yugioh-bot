@@ -3,12 +3,20 @@ package dl
 import (
 	"fmt"
 	"image"
+	"image/color"
+	"time"
 
 	cluster2 "github.com/cdipaolo/goml/cluster"
 	"github.com/patrickmn/go-cache"
 	"github.com/will7200/Yugioh-bot/bot/base"
 	"gocv.io/x/gocv"
 	"gocv.io/x/gocv/contrib"
+)
+
+var (
+	blue          = color.RGBA{0, 0, 255, 0}
+	red           = color.RGBA{255, 0, 0, 0}
+	debugDetector = base.CheckIfDebug()
 )
 
 // Correlation
@@ -62,9 +70,18 @@ func (d *detector) Compare(key string, img gocv.Mat, correlation Correlation) bo
 		kpQuery := kp1[m.QueryIdx]
 		kpTrain := kp2[m.TrainIdx]
 		_, p2 := base.PointFromKeyPoint(kpQuery), base.PointFromKeyPoint(kpTrain)
-		if m.Distance < scaleFactor*n.Distance && p2.Y > asset.YThres && p2.X < asset.XThres {
-			goodMatches = append(goodMatches, m)
-			cluster = append(cluster, []float64{kpTrain.X, kpTrain.Y})
+		if len(asset.Bounds) == 0 {
+			if m.Distance < scaleFactor*n.Distance && p2.Y > asset.YThres && p2.X < asset.XThres {
+				goodMatches = append(goodMatches, m)
+				cluster = append(cluster, []float64{kpTrain.X, kpTrain.Y})
+			}
+		} else if len(asset.Bounds) == 1 && (asset.Bounds[0].Upper == image.Point{}) {
+			if m.Distance < scaleFactor*n.Distance && p2.Y > asset.Bounds[0].Lower.Y && p2.X < asset.Bounds[0].Lower.X {
+				goodMatches = append(goodMatches, m)
+				cluster = append(cluster, []float64{kpTrain.X, kpTrain.Y})
+			}
+		} else {
+			log.Panic("Multiple bounds do not work right now")
 		}
 	}
 	log.Debugf("SIFT run for %s correlation %d: %d, %t", asset.Description, correlation, len(cluster), len(cluster) > int(correlation))
@@ -110,16 +127,24 @@ func (d *detector) Circles(key string, img gocv.Mat) ([]Circle, bool) {
 	whiteQuery.Close()
 
 	aCircles := make([]Circle, circles.Cols())
+	cimg := img.Clone()
 	for i := 0; i < circles.Cols(); i++ {
 		v := circles.GetVecfAt(0, i)
 		x := int(v[0])
 		y := int(v[1])
 		r := int(v[2])
 		aCircles = append(aCircles, Circle{image.Pt(x, y), r})
+
+		if debugDetector {
+			gocv.Circle(&cimg, image.Pt(x, y), r, blue, 2)
+			gocv.Circle(&cimg, image.Pt(x, y), 2, red, 3)
+		}
 	}
-
+	if debugDetector {
+		gocv.IMWrite(fmt.Sprintf("circles-%s.png", time.Now().Format(time.RFC3339)), cimg)
+	}
+	cimg.Close()
 	circles.Close()
-
 	return aCircles, false
 }
 
