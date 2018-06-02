@@ -13,11 +13,9 @@ import (
 	"github.com/ahmetb/go-linq"
 	"github.com/mitchellh/go-ps"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
 	"github.com/will7200/Yugioh-bot/bot/base"
 	"github.com/will7200/Yugioh-bot/bot/dl"
 	"github.com/zach-klippenstein/goadb"
-	"gocv.io/x/gocv"
 )
 
 var (
@@ -199,77 +197,6 @@ func (nox *NoxProvider) startApp() error {
 	return nil
 }
 
-func (nox *NoxProvider) getImage(key string, tryDefault bool) (gocv.Mat, error) {
-	var asset dl.AssetMap
-	asset = nox.GetAsset(key)
-	if asset.Key == "" && tryDefault {
-		asset = nox.predefined.GetAsset("Asset-" + dl.TransformKey(key, dl.DefaultSize))
-	}
-	if asset.Key == "" {
-		log.Panicf("Asset resource %s does not have a mapping", key)
-	}
-	original, err := dl.OpenUIAsset(asset.Name, nox.options.HomeDir, nox.options.FileSystem)
-	if err != nil {
-		return gocv.Mat{}, err
-	}
-	b, err := afero.ReadAll(original)
-	original.Close()
-	if err != nil {
-		return gocv.Mat{}, err
-	}
-	imgMat, err := gocv.IMDecode(b, gocv.IMReadGrayScale)
-	if imgMat.Empty() || err != nil {
-		return imgMat, fmt.Errorf("Matrix is empty for resource %s", key)
-	}
-	if tryDefault {
-		resizedImage := gocv.NewMat()
-		gocv.Resize(imgMat, &resizedImage, nox.dimensions, 0, 0, gocv.InterpolationNearestNeighbor)
-		imgMat.Close()
-		return resizedImage, nil
-	}
-	return imgMat, nil
-
-}
-
-func (nox *NoxProvider) isStartScreen() bool {
-	imgMat, err := nox.getImage("start_screen", true)
-	if err != nil {
-		log.Panic("Cannot make comparision against the open page, missing a start_screen asset")
-	}
-	against := nox.GetImgFromScreenShot(false, 1)
-	if !base.CVEqualDim(imgMat, against) {
-		log.Panic("Cannot compare two images that are not the same dimensions")
-	}
-	grayedMat := base.CvtColor(against, gocv.ColorBGRToGray)
-	against.Close()
-
-	if gocv.CountNonZero(grayedMat) == 0 {
-		grayedMat.Close()
-		imgMat.Close()
-		return false
-	}
-
-	lb := base.NewMatSCScalar(140)
-	ub := base.NewMatSCScalar(255)
-	maskedMat := base.MaskImage(grayedMat, lb, ub, true)
-	maskedOriginal := base.MaskImage(imgMat, lb, ub, true)
-
-	imgMat.Close()
-	grayedMat.Close()
-
-	lb.Close()
-	ub.Close()
-
-	defer maskedOriginal.Close()
-	defer maskedMat.Close()
-	score := base.SSIM_GOCV(maskedMat, maskedOriginal)
-	log.Debugf("Start Screen Similarity: %.2f vs %.2f", score, nox.predefined.BotConst.StartScreenSimilarity)
-	if score > nox.predefined.BotConst.StartScreenSimilarity {
-		return true
-	}
-	return false
-}
-
 func (nox *NoxProvider) InitialScreen(started bool) (bool, error) {
 	if err := nox.startApp(); err != nil {
 		return false, err
@@ -284,7 +211,12 @@ func (nox *NoxProvider) InitialScreen(started bool) (bool, error) {
 			nox, "DuelLinks Landing Page", func(i interface{}) bool {
 				return i.(bool)
 			}, func(i map[string]interface{}) interface{} {
-				return nox.isStartScreen()
+				against := nox.GetImgFromScreenShot(false, 1)
+				start, err := dl.IsStartScreen(against, *nox.options)
+				if err != nil {
+					log.Panic(err)
+				}
+				return start
 			}, map[string]interface{}{})
 		if err != nil {
 			return false, err
@@ -301,7 +233,12 @@ func (nox *NoxProvider) InitialScreen(started bool) (bool, error) {
 		nox, "DuelLinks Landing Page", func(i interface{}) bool {
 			return i.(bool)
 		}, func(i map[string]interface{}) interface{} {
-			return nox.isStartScreen()
+			against := nox.GetImgFromScreenShot(false, 1)
+			start, err := dl.IsStartScreen(against, *nox.options)
+			if err != nil {
+				log.Panic(err)
+			}
+			return start
 		}, map[string]interface{}{})
 	if err != nil {
 		log.Error("Error occurred while waiting for home screen")
@@ -311,8 +248,8 @@ func (nox *NoxProvider) InitialScreen(started bool) (bool, error) {
 		log.Warn("No home screen detected")
 		return false, nil
 	}
-	//log.Info("Passing through start screen")
-	//nox.Tap(nox.GetUILocation("initiate_link"))
+	// log.Info("Passing through start screen")
+	// nox.Tap(nox.GetUILocation("initiate_link"))
 	return true, nil
 }
 

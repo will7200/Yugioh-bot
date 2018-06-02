@@ -2,14 +2,10 @@ package dl
 
 import (
 	"context"
-	"fmt"
-
 	"errors"
-
-	"runtime/debug"
-
+	"fmt"
 	"path"
-
+	"runtime/debug"
 	"time"
 
 	"github.com/emirpasic/gods/sets/hashset"
@@ -101,20 +97,22 @@ func GetProvider(name string, options *Options) Provider {
 	return nil
 }
 
+// PreCheckError
 type PreCheckError struct {
 	Reason error
 }
 
+// Error
 func (e *PreCheckError) Error() string {
 	return fmt.Sprintf("Precheck error. Reason: %s", e.Reason.Error())
 }
 
-// returns error only when returnError is specified
+// GenericWaitFor returns error only when returnError is specified
 func GenericWaitFor(ctx context.Context, provider Provider, messeage string, checkCondition func(interface{}) bool,
 	fn func(map[string]interface{}) interface{}, args map[string]interface{}) (bool, error) {
 	log.Debug("Waiting for " + messeage)
-	//timeout := GetDefault(args, "timeout", 10).(int)
-	//returnError := GetDefault(args, "throw", true).(bool)
+	// timeout := GetDefault(args, "timeout", 10).(int)
+	// returnError := GetDefault(args, "throw", true).(bool)
 	tryAmount, ok := ctx.Value("tryAmount").(int)
 	if !ok {
 		tryAmount = 5
@@ -177,4 +175,68 @@ func GenericWaitFor(ctx context.Context, provider Provider, messeage string, che
 		}
 	}
 
+}
+
+// GetImage
+func GetImage(key string, matType gocv.IMReadFlag, options Options) (*gocv.Mat, error) {
+	var asset AssetMap
+	asset = options.Provider.GetAsset(key)
+	if asset.Key == "" {
+		log.Info(options.Predefined.rbt.Keys())
+		return nil, fmt.Errorf("Asset resource %s does not have a mapping", key)
+	}
+	original, err := OpenUIAsset(asset.Name, options.HomeDir, options.FileSystem)
+	if err != nil {
+		return nil, err
+	}
+	b, err := afero.ReadAll(original)
+	original.Close()
+	if err != nil {
+		return nil, err
+	}
+	imgMat, err := gocv.IMDecode(b, matType)
+	if imgMat.Empty() || err != nil {
+		imgMat.Close()
+		return nil, fmt.Errorf("Matrix is empty for resource %s", key)
+	}
+	return &imgMat, nil
+
+}
+
+// IsStartScreen
+func IsStartScreen(img gocv.Mat, options Options) (bool, error) {
+	imgMat, err := GetImage("start_screen", gocv.IMReadGrayScale, options)
+	if err != nil {
+		return false, err
+	}
+	if !base.CVEqualDim(*imgMat, img) {
+		return false, errors.New("Cannot compare two images that are not the same dimensions")
+	}
+	grayedMat := base.CvtColor(img, gocv.ColorBGRToGray)
+
+	if gocv.CountNonZero(grayedMat) == 0 {
+		grayedMat.Close()
+		imgMat.Close()
+		return false, nil
+	}
+
+	lb := base.NewMatSCScalar(140)
+	ub := base.NewMatSCScalar(255)
+	maskedMat := base.MaskImage(grayedMat, lb, ub, true)
+	maskedOriginal := base.MaskImage(*imgMat, lb, ub, true)
+
+	imgMat.Close()
+	grayedMat.Close()
+
+	lb.Close()
+	ub.Close()
+
+	defer maskedOriginal.Close()
+	defer maskedMat.Close()
+	score := base.SSIM_GOCV(maskedMat, maskedOriginal)
+	log.Debugf("Start Screen Similarity: %.2f vs %.2f", score, options.Predefined.BotConst.StartScreenSimilarity)
+	if score > options.Predefined.BotConst.StartScreenSimilarity {
+		return true, nil
+	}
+	return false, nil
 }
