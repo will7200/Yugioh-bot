@@ -27,7 +27,6 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 			"get_img_from_screen_shot":  luaProvider.GetImgFromScreenShot,
 			"get_location":              luaProvider.GetLocation,
 			"get_ui_location":           luaProvider.GetUILocation,
-			"img_to_string":             luaProvider.ImgToString,
 			"is_process_running":        luaProvider.IsProcessRunning,
 			"kill_process":              luaProvider.KillProcess,
 			"initial_screen":            luaProvider.InitialScreen,
@@ -121,12 +120,6 @@ func (lp *LuaProvider) GetUILocation(L *lua.LState) int {
 	L.SetMetatable(userDefinedA, L.GetTypeMetatable("dl.UILocation"))
 	L.Push(userDefinedA)
 	return 1
-}
-
-// ImgToString wrapper for lua engine
-func (lp *LuaProvider) ImgToString(L *lua.LState) int {
-	lp.provider.ImgToString()
-	return 0
 }
 
 // IsProcessRunning wrapper for lua engine

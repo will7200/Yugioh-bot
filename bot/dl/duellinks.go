@@ -15,12 +15,17 @@ type DuelLinks interface {
 	GetCurrentPage(mat *gocv.Mat)
 	InitialScreen(started bool) (bool, error)
 	ScanFor()
+	SpecialEvents(info DuelLinksInstanceInfo)
 	WaitFor()
 }
 
 type BaseDuelLinks struct {
 	SleepFactor float64
 	provider    Provider
+}
+
+func (*BaseDuelLinks) SpecialEvents(info DuelLinksInstanceInfo) {
+	panic("implement me")
 }
 
 func (*BaseDuelLinks) ScanFor() {

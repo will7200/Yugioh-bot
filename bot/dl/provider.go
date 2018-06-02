@@ -2,7 +2,6 @@ package dl
 
 // Provider abstracts away different providers to have a uniform api
 type Provider interface {
-	Bot
 	Actions
 	DuelLinks
 	Miscellaneous
@@ -12,7 +11,6 @@ type Provider interface {
 // Each provider should inherit this or like this (composition really)
 type BaseProvider struct {
 	Actions
-	Bot
 	DuelLinks
 	Miscellaneous
 }
@@ -21,7 +19,6 @@ type BaseProvider struct {
 func NewBaseProvider(no *Options) Provider {
 	return &BaseProvider{
 		NewActions(no),
-		NewBaseBot(no),
 		NewDuelLinks(no),
 		NewMisc(no),
 	}
