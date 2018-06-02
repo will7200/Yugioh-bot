@@ -249,11 +249,17 @@ func (lp *LuaProvider) WaitForUi(L *lua.LState) int {
 	return 0
 }
 
+const (
+	circleType      = "dl.Circle"
+	arrayCircleType = "[]dl.Circle"
+)
+
 // DetectorLoader loads all exposed detector methods
 func DetectorLoader(detector Detector) func(*lua.LState) int {
 	return func(L *lua.LState) int {
-		_ = L.NewTypeMetatable("[]dl.Circle")
-		circle := L.NewTypeMetatable("dl.Circle")
+		_ = L.NewTypeMetatable(arrayCircleType)
+		circle := L.NewTypeMetatable(circleType)
+		L.SetField(circle, "__type", lua.LString(circleType))
 		L.SetField(circle, "__index", L.SetFuncs(L.NewTable(), circleMethods))
 		luaDetector := NewLuaDetector(detector)
 		exports := map[string]lua.LGFunction{
@@ -321,10 +327,10 @@ func (lp *LuaDetector) Circles(L *lua.LState) int {
 	for _, value := range A {
 		userDefined := L.NewUserData()
 		userDefined.Value = value
-		L.SetMetatable(userDefined, L.GetTypeMetatable("dl.Circle"))
+		L.SetMetatable(userDefined, L.GetTypeMetatable(circleType))
 		luaCircles.Append(userDefined)
 	}
-	L.SetMetatable(luaCircles, L.GetTypeMetatable("[]dl.Circle"))
+	L.SetMetatable(luaCircles, L.GetTypeMetatable(arrayCircleType))
 	L.Push(luaCircles)
 	L.Push(lua.LBool(B))
 	return 2
