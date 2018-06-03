@@ -1,9 +1,5 @@
 package dl
 
-import (
-	"gocv.io/x/gocv"
-)
-
 // DuelLinksInstanceInfo
 type DuelLinksInstanceInfo struct {
 	X, Y, Page int
@@ -12,7 +8,6 @@ type DuelLinksInstanceInfo struct {
 }
 
 type DuelLinks interface {
-	GetCurrentPage(mat *gocv.Mat)
 	InitialScreen(started bool) (bool, error)
 	ScanFor()
 	SpecialEvents(info DuelLinksInstanceInfo)
@@ -29,10 +24,6 @@ func (*BaseDuelLinks) SpecialEvents(info DuelLinksInstanceInfo) {
 
 func (*BaseDuelLinks) ScanFor() {
 	panic("implement me")
-}
-
-func (*BaseDuelLinks) GetCurrentPage(mat *gocv.Mat) {
-	log.Panic("implement me")
 }
 
 func (*BaseDuelLinks) InitialScreen(bool) (bool, error) {

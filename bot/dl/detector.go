@@ -154,6 +154,7 @@ type Detector interface {
 	Circles(key string, img gocv.Mat) ([]Circle, bool)
 }
 
+// Circle
 type Circle struct {
 	Point  image.Point
 	Radius int

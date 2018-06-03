@@ -23,7 +23,6 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 			"ensure_resolution_matches": luaProvider.EnsureResolutionMatches,
 			"get_area_location":         luaProvider.GetAreaLocation,
 			"get_asset":                 luaProvider.GetAsset,
-			"get_current_page":          luaProvider.GetCurrentPage,
 			"get_img_from_screen_shot":  luaProvider.GetImgFromScreenShot,
 			"get_location":              luaProvider.GetLocation,
 			"get_ui_location":           luaProvider.GetUILocation,
@@ -86,12 +85,6 @@ func (lp *LuaProvider) GetAsset(L *lua.LState) int {
 	L.SetMetatable(userDefinedA, L.GetTypeMetatable("dl.AssetMap"))
 	L.Push(userDefinedA)
 	return 1
-}
-
-// GetCurrentPage wrapper for lua engine
-func (lp *LuaProvider) GetCurrentPage(L *lua.LState) int {
-	lp.provider.GetCurrentPage(L.CheckUserData(1).Value.(*gocv.Mat))
-	return 0
 }
 
 // GetImgFromScreenShot wrapper for lua engine
