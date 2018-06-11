@@ -14,7 +14,6 @@ import (
 	"github.com/will7200/Yugioh-bot/bot/base"
 	"github.com/will7200/Yugioh-bot/bot/dl"
 	"github.com/will7200/Yugioh-bot/bot/internal/controlserver"
-	_ "github.com/will7200/Yugioh-bot/bot/providers/nox"
 	nox2 "github.com/will7200/Yugioh-bot/bot/providers/nox"
 	"github.com/will7200/Yugioh-bot/bot/rpc/control"
 	"github.com/zach-klippenstein/goadb"
