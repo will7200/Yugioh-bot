@@ -80,6 +80,13 @@ func (nox *NoxProvider) Tap(args ...interface{}) {
 		x = t.Point.X
 		y = t.Point.Y
 
+	case dl.AreaLocation:
+		point, err := dl.CenterUIAreaLocation(t)
+		if err != nil {
+			log.Panic(err)
+		}
+		x = point.X
+		y = point.Y
 	case int:
 		if len(args) != 2 {
 			log.Panic("Tap: int type requires two arguments to be passed")
@@ -92,6 +99,8 @@ func (nox *NoxProvider) Tap(args ...interface{}) {
 		if err != nil {
 			log.Panic(err)
 		}
+	case image.Point:
+		x, y = t.X, t.Y
 	default:
 		log.Panicf("Tap: type %T", t)
 	}
