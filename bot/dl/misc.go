@@ -49,7 +49,6 @@ func (bm *BaseMiscellaneous) GetLocation(key string) Location {
 }
 
 func (bm *BaseMiscellaneous) GetAreaLocation(key string) AreaLocation {
-	log.Warn(AreaLocationPrefeix + TransformKey(key, bm.ScreenDimensions()))
 	return bm.predefined.GetAreaLocation(AreaLocationPrefeix + TransformKey(key, bm.ScreenDimensions()))
 }
 

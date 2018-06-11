@@ -48,14 +48,12 @@ func (action *BaseActions) SwipeTime(args ...interface{}) {
 }
 
 func (action *BaseActions) WaitForUi(timeSleep time.Duration) {
-	log.Debugf("Sleep for %.2f seconds", timeSleep.Seconds()*action.options.Predefined.BotConst.SleepFactor)
+	// log.Debugf("Sleep for %.2f seconds", timeSleep.Seconds()*action.options.Predefined.BotConst.SleepFactor)
 	time.Sleep(time.Duration(int64(float64(timeSleep.Nanoseconds()) * action.options.Predefined.BotConst.SleepFactor)))
 }
 
 func (action *BaseActions) GetImgFromScreenShot(fromCache bool, fail int) gocv.Mat {
-	start := time.Now()
 	if lastImage, found := action.cache.Get(LastImage); found && fromCache {
-		log.Warn(time.Now().Sub(start))
 		return lastImage.(gocv.Mat)
 	}
 	for timesFailed := 0; timesFailed < fail; timesFailed++ {
@@ -83,7 +81,6 @@ func (action *BaseActions) GetImgFromScreenShot(fromCache bool, fail int) gocv.M
 		return img
 	}
 	log.Panicf("Cannot obtain proper image for provider")
-	log.Warn(time.Now().Sub(start))
 	return gocv.NewMat()
 }
 
