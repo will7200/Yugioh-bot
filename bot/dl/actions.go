@@ -77,8 +77,7 @@ func (action *BaseActions) GetImgFromScreenShot(fromCache bool, fail int) gocv.M
 			}
 			action.cache.Set(LastImage, img, cache.DefaultExpiration)
 		}()
-		log.Warn(time.Now().Sub(start))
-		return img
+		return img.Clone()
 	}
 	log.Panicf("Cannot obtain proper image for provider")
 	return gocv.NewMat()

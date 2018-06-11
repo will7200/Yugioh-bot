@@ -2,8 +2,10 @@ package dl
 
 import (
 	"image"
+	"runtime"
 	"time"
 
+	"github.com/will7200/Yugioh-bot/bot/base"
 	"github.com/yuin/gopher-lua"
 	"gocv.io/x/gocv"
 )
@@ -91,8 +93,8 @@ func (lp *LuaProvider) GetAsset(L *lua.LState) int {
 func (lp *LuaProvider) GetImgFromScreenShot(L *lua.LState) int {
 	A := lp.provider.GetImgFromScreenShot(L.CheckBool(1), L.CheckInt(2))
 	userDefinedA := L.NewUserData()
-	userDefinedA.Value = A
-	// runtime.SetFinalizer(&A, base.FreeMat)
+	userDefinedA.Value = &A
+	runtime.SetFinalizer(&A, base.FreeMat)
 	L.SetMetatable(userDefinedA, L.GetTypeMetatable("gocv.Mat"))
 	L.Push(userDefinedA)
 	return 1
@@ -339,9 +341,19 @@ func (lp *LuaDetector) Compare(L *lua.LState) int {
 	} else {
 		corr = L.CheckUserData(3).Value.(Correlation)
 	}
-	A := lp.detector.Compare(L.CheckString(1), L.CheckUserData(2).Value.(gocv.Mat), corr)
+	var mat gocv.Mat
+	switch t := L.CheckUserData(2).Value.(type) {
+	case gocv.Mat:
+		mat = t
+	case *gocv.Mat:
+		mat = *t
+	}
+	A, B := lp.detector.Compare(L.CheckString(1), mat, corr)
 	L.Push(lua.LBool(A))
-	return 1
+	b := L.NewUserData()
+	b.Value = B
+	L.Push(b)
+	return 2
 }
 
 // Common functions exposed in lua engine
@@ -350,6 +362,9 @@ func CommonLoader(options *Options) func(*lua.LState) int {
 		exports := map[string]lua.LGFunction{
 			"check_if_battle": checkIfBattle(options),
 			"is_start_screen": isStartScreen(options),
+			"img_to_string":   imgToString(options),
+			"crop_image":      cropImage(options),
+			"center_ui_area":  centerUIArea(options),
 		}
 		mod := L.SetFuncs(L.NewTable(), exports)
 		L.SetField(mod, "name", lua.LString("common"))
@@ -360,8 +375,15 @@ func CommonLoader(options *Options) func(*lua.LState) int {
 
 func checkIfBattle(options *Options) func(*lua.LState) int {
 	return func(L *lua.LState) int {
+		var mat gocv.Mat
+		switch t := L.CheckUserData(1).Value.(type) {
+		case gocv.Mat:
+			mat = t
+		case *gocv.Mat:
+			mat = *t
+		}
 		A, B := CheckIfBattle(
-			L.CheckUserData(1).Value.(gocv.Mat),
+			mat,
 			float64(L.CheckNumber(2)),
 			*options,
 		)
@@ -388,5 +410,78 @@ func isStartScreen(options *Options) func(*lua.LState) int {
 		}
 		L.Push(lua.LBool(A))
 		return 1
+	}
+}
+
+func imgToString(options *Options) func(*lua.LState) int {
+	return func(L *lua.LState) int {
+		A, B := ImgToString(
+			L.CheckUserData(1).Value.(gocv.Mat),
+			L.CheckString(2),
+		)
+		L.Push(lua.LString(A))
+		if B != nil {
+			L.Push(lua.LString(B.Error()))
+			return 2
+		}
+		return 1
+	}
+}
+
+func cropImage(options *Options) func(*lua.LState) int {
+	return func(L *lua.LState) int {
+		var mat gocv.Mat
+		switch t := L.CheckUserData(1).Value.(type) {
+		case gocv.Mat:
+			mat = t
+		case *gocv.Mat:
+			mat = *t
+		}
+		A, B := CropImage(
+			mat,
+			L.CheckString(2),
+			*options,
+		)
+		count := 0
+		if A != nil {
+			runtime.SetFinalizer(A, base.FreeMat)
+			a := L.NewUserData()
+			a.Value = *A
+			L.Push(a)
+			count++
+		} else {
+			L.Push(lua.LNil)
+			count++
+		}
+		if B != nil {
+			L.Push(lua.LString(B.Error()))
+			count++
+		}
+		return count
+	}
+}
+
+func centerUIArea(options *Options) func(*lua.LState) int {
+	return func(L *lua.LState) int {
+		A, B := CenterUIArea(
+			L.CheckString(2),
+			*options,
+		)
+		count := 0
+		if A != nil {
+			a := L.NewUserData()
+			a.Value = *A
+			L.SetMetatable(a, L.GetTypeMetatable("image.Point"))
+			L.Push(a)
+			count++
+		} else {
+			L.Push(lua.LNil)
+			count++
+		}
+		if B != nil {
+			L.Push(lua.LString(B.Error()))
+			count++
+		}
+		return count
 	}
 }

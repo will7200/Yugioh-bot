@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/emirpasic/gods/sets/hashset"
+	"github.com/otiai10/gosseract"
 	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -20,6 +21,7 @@ import (
 var (
 	log       = base.CheckWithSourcedLog().With("package", "bot.base")
 	providers = map[string]NewProvider{}
+	client    = gosseract.NewClient()
 )
 
 // Options
@@ -271,4 +273,86 @@ func CheckIfBattle(img gocv.Mat, percentage float64, options Options) (bool, err
 		return true, nil
 	}
 	return false, nil
+}
+
+// ImgToString will convert an image to a string, the image should already be masked
+// to the area of focus
+func ImgToString(img gocv.Mat, charSet string) (string, error) {
+	if img.Empty() {
+		return "", errors.New("Image is empty")
+	}
+	client.SetWhitelist(charSet)
+	buffer, err := gocv.IMEncode(".tiff", img)
+	if err != nil {
+		return "", err
+	}
+	if img.Empty() {
+		return "", errors.New("Image is empty")
+	}
+	client.SetImageFromBytes(buffer)
+	text, err := client.Text()
+	return text, err
+}
+
+// ClientImgToString uses the provided client instead of making a new one
+func ClientImgToString(client gosseract.Client, img gocv.Mat) (string, error) {
+	buffer, err := gocv.IMEncode(".tiff", img)
+	if err != nil {
+		return "", err
+	}
+	client.SetImageFromBytes(buffer)
+	text, err := client.Text()
+	return text, err
+}
+
+// CropImage
+func CropImage(img gocv.Mat, key string, options Options) (*gocv.Mat, error) {
+	if img.Empty() {
+		return nil, errors.New("image cannot be empty")
+	}
+	area := options.Provider.GetAreaLocation(key)
+	if err := checkArea(area); err != nil {
+		return nil, err
+	}
+	topCorner := area.Bounds.Lower
+	bottomCorner := area.Bounds.Upper
+	roi := img.Region(image.Rect(topCorner.X, topCorner.Y, bottomCorner.X, bottomCorner.Y))
+	return &roi, nil
+}
+
+// CenterUIArea
+func CenterUIArea(key string, options Options) (*image.Point, error) {
+	area := options.Provider.GetAreaLocation(key)
+	if err := checkArea(area); err != nil {
+		return nil, err
+	}
+	topCorner := area.Bounds.Lower
+	bottomCorner := area.Bounds.Upper
+	rect := image.Rect(topCorner.X, topCorner.Y, bottomCorner.X, bottomCorner.Y)
+	t := image.Pt(rect.Min.X+rect.Dx()/2, rect.Min.Y+rect.Dy()/2)
+	return &t, nil
+}
+
+// CenterUIArea
+func CenterUIAreaLocation(area AreaLocation) (*image.Point, error) {
+	if err := checkArea(area); err != nil {
+		return nil, err
+	}
+	topCorner := area.Bounds.Lower
+	bottomCorner := area.Bounds.Upper
+	rect := image.Rect(topCorner.X, topCorner.Y, bottomCorner.X, bottomCorner.Y)
+	t := image.Pt(rect.Min.X+rect.Dx()/2, rect.Min.Y+rect.Dy()/2)
+	return &t, nil
+}
+
+func checkArea(area AreaLocation) (err error) {
+	if area == (AreaLocation{}) {
+		err = errors.New("unknown Area Location")
+	}
+	bottomCorner := area.Bounds.Upper
+
+	if bottomCorner == (image.Point{}) {
+		err = errors.New("invalid bottom point")
+	}
+	return
 }

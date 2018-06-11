@@ -30,7 +30,7 @@ type detector struct {
 }
 
 // Compare
-func (d *detector) Compare(key string, img gocv.Mat, correlation Correlation) bool {
+func (d *detector) Compare(key string, img gocv.Mat, correlation Correlation) (bool, image.Point) {
 	asset := d.predefined.GetAsset(AssetPrefix + key)
 	if asset.Key == "" {
 		log.Panic(fmt.Sprintf("Detector %s does not exist", key))
@@ -58,7 +58,7 @@ func (d *detector) Compare(key string, img gocv.Mat, correlation Correlation) bo
 	defer des2.Close()
 
 	if des1.Empty() || des2.Empty() {
-		return false
+		return false, image.Pt(0, 0)
 	}
 	bf := gocv.NewBFMatcher()
 	defer bf.Close()
@@ -86,7 +86,7 @@ func (d *detector) Compare(key string, img gocv.Mat, correlation Correlation) bo
 	}
 	log.Debugf("SIFT run for %s correlation %d: %d, %t", asset.Description, correlation, len(cluster), len(cluster) > int(correlation))
 	if len(cluster) < int(correlation) {
-		return false
+		return false, image.Pt(0, 0)
 	}
 
 	log.Debug("Running clustering algo")
@@ -95,9 +95,7 @@ func (d *detector) Compare(key string, img gocv.Mat, correlation Correlation) bo
 	if model.Learn() != nil {
 		log.Panic("Could not train model")
 	}
-	// log.Info(model.Centroids[0])
-	// matches =
-	return false
+	return true, image.Pt(int(model.Centroids[0][0]), int(model.Centroids[0][1]))
 }
 
 // Circles
@@ -150,7 +148,7 @@ func (d *detector) Circles(key string, img gocv.Mat) ([]Circle, bool) {
 
 // Detector
 type Detector interface {
-	Compare(key string, img gocv.Mat, correlation Correlation) bool
+	Compare(key string, img gocv.Mat, correlation Correlation) (bool, image.Point)
 	Circles(key string, img gocv.Mat) ([]Circle, bool)
 }
 
