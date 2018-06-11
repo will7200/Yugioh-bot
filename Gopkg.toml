@@ -130,3 +130,8 @@
 [[constraint]]
   name = "github.com/gobuffalo/packr"
   version = "1.11.0"
+
+[[constraint]]
+  name = "github.com/otiai10/gosseract"
+  branch = "dev"
+  source = "github.com/will7200/gosseract"

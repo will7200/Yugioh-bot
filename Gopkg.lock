@@ -182,6 +182,13 @@
   revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
 
 [[projects]]
+  branch = "dev"
+  name = "github.com/otiai10/gosseract"
+  packages = ["."]
+  revision = "82902d4a89f8a780487b6276ac12f6a04ab7c9c2"
+  source = "github.com/will7200/gosseract"
+
+[[projects]]
   name = "github.com/patrickmn/go-cache"
   packages = ["."]
   revision = "a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0"
@@ -435,6 +442,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e3451786926c46b350eeb97e06449b5a172956099829be7e1caa308b68229cbf"
+  inputs-digest = "6129f38c8aa4e1c506cc0e12f5a9e29ad52142363fb7ec21fa5f9b7e70fd9915"
   solver-name = "gps-cdcl"
   solver-version = 1
