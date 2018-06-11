@@ -9,30 +9,15 @@ type DuelLinksInstanceInfo struct {
 
 type DuelLinks interface {
 	InitialScreen(started bool) (bool, error)
-	ScanFor()
-	SpecialEvents(info DuelLinksInstanceInfo)
-	WaitFor()
 }
 
 type BaseDuelLinks struct {
 	provider Provider
 }
 
-func (*BaseDuelLinks) SpecialEvents(info DuelLinksInstanceInfo) {
-	panic("implement me")
-}
-
-func (*BaseDuelLinks) ScanFor() {
-	panic("implement me")
-}
-
 func (*BaseDuelLinks) InitialScreen(bool) (bool, error) {
 	log.Panic("implement me")
 	return false, nil
-}
-
-func (*BaseDuelLinks) WaitFor() {
-	log.Panic("implement me")
 }
 
 func NewDuelLinks(no *Options) DuelLinks {

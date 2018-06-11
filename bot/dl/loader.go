@@ -32,15 +32,12 @@ func ProviderLoader(provider Provider) func(*lua.LState) int {
 			"kill_process":              luaProvider.KillProcess,
 			"initial_screen":            luaProvider.InitialScreen,
 			"pre_check":                 luaProvider.PreCheck,
-			"scan_for":                  luaProvider.ScanFor,
 			"screen_dimensions":         luaProvider.ScreenDimensions,
-			"special_events":            luaProvider.SpecialEvents,
 			"start_process":             luaProvider.StartProcess,
 			"swipe":                     luaProvider.Swipe,
 			"swipe_time":                luaProvider.SwipeTime,
 			"take_png_screen_shot":      luaProvider.TakePNGScreenShot,
 			"tap":         luaProvider.Tap,
-			"wait_for":    luaProvider.WaitFor,
 			"wait_for_ui": luaProvider.WaitForUi,
 		}
 		mod := L.SetFuncs(L.NewTable(), exports)
@@ -152,12 +149,6 @@ func (lp *LuaProvider) PreCheck(L *lua.LState) int {
 	return 1
 }
 
-// ScanFor wrapper for lua engine
-func (lp *LuaProvider) ScanFor(L *lua.LState) int {
-	lp.provider.ScanFor()
-	return 0
-}
-
 // ScreenDimensions wrapper for lua engine
 func (lp *LuaProvider) ScreenDimensions(L *lua.LState) int {
 	A := lp.provider.ScreenDimensions()
@@ -166,12 +157,6 @@ func (lp *LuaProvider) ScreenDimensions(L *lua.LState) int {
 	L.SetMetatable(userDefinedA, L.GetTypeMetatable("image.Point"))
 	L.Push(userDefinedA)
 	return 1
-}
-
-// SpecialEvents wrapper for lua engine
-func (lp *LuaProvider) SpecialEvents(L *lua.LState) int {
-	lp.provider.SpecialEvents(L.CheckUserData(1).Value.(DuelLinksInstanceInfo))
-	return 0
 }
 
 // StartProcess wrapper for lua engine
@@ -225,12 +210,6 @@ func (lp *LuaProvider) Tap(L *lua.LState) int {
 		args[i-1] = L.CheckInt(i)
 	}
 	lp.provider.Tap(args...)
-	return 0
-}
-
-// WaitFor wrapper for lua engine
-func (lp *LuaProvider) WaitFor(L *lua.LState) int {
-	lp.provider.WaitFor()
 	return 0
 }
 
