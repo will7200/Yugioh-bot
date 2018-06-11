@@ -104,6 +104,7 @@ type BotOptions struct {
 	SleepFactor          float64
 	PersistenceLocation  string
 	PersistenceType      string
+	RunFrequency         string
 }
 
 type BotConfig struct {
@@ -146,7 +147,7 @@ func (rt *runTime) Start() error {
 		log.Panic(err)
 	}
 	if rt.mainJob == nil {
-		j := base.NewJob("Duel Links Main", "main", "PT1S",
+		j := base.NewJob("Duel Links Main", "main", rt.rtOptions.RunFrequency,
 			-1, map[string]interface{}{"rt": rt})
 		b := backoff.NewExponentialBackOff()
 		b.MaxElapsedTime = time.Hour * 1
