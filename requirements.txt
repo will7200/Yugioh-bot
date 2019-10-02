@@ -12,7 +12,7 @@ APScheduler>=3.4.0
 PyQt5>=5.10.1
 scikit_learn==0.19.1
 win32gui==221.6
-PyYAML==3.12
+PyYAML==5.1
 requests>=2.18.4
 lxml==4.1.1
 tqdm>=4.19.4
